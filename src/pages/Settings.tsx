@@ -8,7 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Users, CreditCard, Save } from 'lucide-react';
+import { Building2, Users, CreditCard, Save, AlertCircle } from 'lucide-react';
+import { RequirePermission } from '@/components/common/RequirePermission';
+import { useRBAC } from '@/hooks/useRBAC';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MembershipPlan {
   id: string;
@@ -22,6 +25,7 @@ interface MembershipPlan {
 export default function Settings() {
   const { currentGym, refreshGyms } = useGym();
   const { toast } = useToast();
+  const { hasPermission, hasMinimumRole, currentRole } = useRBAC();
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
 
@@ -189,52 +193,67 @@ export default function Settings() {
                     />
                   </div>
                 </div>
-                <Button onClick={handleSaveGymSettings} disabled={loading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </Button>
+                <RequirePermission permission="settings:update">
+                  <Button onClick={handleSaveGymSettings} disabled={loading}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </RequirePermission>
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="plans" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Membership Plan</CardTitle>
-                <CardDescription>Create a new membership plan for your gym</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleAddPlan} className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Plan name"
-                      value={planName}
-                      onChange={(e) => setPlanName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="w-full sm:w-32">
-                    <Input
-                      type="number"
-                      placeholder="Price"
-                      value={planPrice}
-                      onChange={(e) => setPlanPrice(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="w-full sm:w-32">
-                    <Input
-                      type="number"
-                      placeholder="Days"
-                      value={planDuration}
-                      onChange={(e) => setPlanDuration(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit">Add Plan</Button>
-                </form>
-              </CardContent>
-            </Card>
+            <RequirePermission 
+              minimumRole="admin" 
+              fallback={
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Read Only</AlertTitle>
+                  <AlertDescription>
+                    You can view membership plans but need admin access to modify them.
+                  </AlertDescription>
+                </Alert>
+              }
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add Membership Plan</CardTitle>
+                  <CardDescription>Create a new membership plan for your gym</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddPlan} className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Plan name"
+                        value={planName}
+                        onChange={(e) => setPlanName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="w-full sm:w-32">
+                      <Input
+                        type="number"
+                        placeholder="Price"
+                        value={planPrice}
+                        onChange={(e) => setPlanPrice(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="w-full sm:w-32">
+                      <Input
+                        type="number"
+                        placeholder="Days"
+                        value={planDuration}
+                        onChange={(e) => setPlanDuration(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit">Add Plan</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </RequirePermission>
 
             <Card>
               <CardHeader>
@@ -254,14 +273,16 @@ export default function Settings() {
                             {formatCurrency(plan.price)} / {plan.duration_days} days
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive"
-                          onClick={() => handleDeletePlan(plan.id)}
-                        >
-                          Delete
-                        </Button>
+                        <RequirePermission minimumRole="admin">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive"
+                            onClick={() => handleDeletePlan(plan.id)}
+                          >
+                            Delete
+                          </Button>
+                        </RequirePermission>
                       </div>
                     ))}
                   </div>

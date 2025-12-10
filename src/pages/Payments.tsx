@@ -31,6 +31,8 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { RequirePermission } from '@/components/common/RequirePermission';
+import { useRBAC } from '@/hooks/useRBAC';
 
 interface Member {
   id: string;
@@ -52,6 +54,7 @@ interface Payment {
 export default function Payments() {
   const { currentGym } = useGym();
   const { toast } = useToast();
+  const { hasPermission } = useRBAC();
   const [members, setMembers] = useState<Member[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,13 +203,14 @@ export default function Payments() {
             <p className="text-muted-foreground">Track member payments</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Record Payment
-              </Button>
-            </DialogTrigger>
+          <RequirePermission permission="payments:create">
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Record Payment
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Record New Payment</DialogTitle>
@@ -296,8 +300,9 @@ export default function Payments() {
                   Record Payment
                 </Button>
               </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </RequirePermission>
         </div>
 
         {/* Payments Table */}
