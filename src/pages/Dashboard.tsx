@@ -3,7 +3,9 @@ import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, UserCheck, CreditCard, TrendingUp, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, UserCheck, CreditCard, TrendingUp, Clock, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface DashboardStats {
   totalMembers: number;
@@ -30,8 +32,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentGym) return;
-
+    if (!currentGym) {
+      setLoading(false);
+      return;
+    }
     const fetchDashboardData = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
@@ -121,13 +125,35 @@ export default function Dashboard() {
     });
   };
 
+  // No gym state - show setup prompt
+  if (!currentGym) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+            <Building2 className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-3xl font-display font-bold mb-2">Welcome to GymFlow!</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Get started by setting up your gym. This will allow you to manage members, track check-ins, and process payments.
+          </p>
+          <Link to="/onboarding">
+            <Button size="lg" className="gradient-primary">
+              Set Up Your Gym
+            </Button>
+          </Link>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Welcome back! Here's what's happening at {currentGym?.name || 'your gym'}.
+            Welcome back! Here's what's happening at {currentGym.name}.
           </p>
         </div>
 
