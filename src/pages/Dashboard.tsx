@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, UserCheck, CreditCard, TrendingUp, Clock, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { RequirePermission } from '@/components/common/RequirePermission';
+import { useRBAC } from '@/hooks/useRBAC';
 
 interface DashboardStats {
   totalMembers: number;
@@ -22,6 +24,7 @@ interface RecentCheckIn {
 
 export default function Dashboard() {
   const { currentGym } = useGym();
+  const { hasPermission } = useRBAC();
   const [stats, setStats] = useState<DashboardStats>({
     totalMembers: 0,
     activeMembers: 0,
@@ -195,17 +198,19 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Monthly Revenue
-              </CardTitle>
-              <CreditCard className="w-4 h-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-display font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
-            </CardContent>
-          </Card>
+          <RequirePermission permission="payments:read">
+            <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Monthly Revenue
+                </CardTitle>
+                <CreditCard className="w-4 h-4 text-warning" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-display font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
+              </CardContent>
+            </Card>
+          </RequirePermission>
         </div>
 
         {/* Recent Activity */}
@@ -269,18 +274,20 @@ export default function Dashboard() {
                   </div>
                 </div>
               </a>
-              <a
-                href="/payments"
-                className="block p-4 rounded-lg bg-success/10 hover:bg-success/20 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5 text-success" />
-                  <div>
-                    <p className="font-medium">Record Payment</p>
-                    <p className="text-sm text-muted-foreground">Add a new payment</p>
+              <RequirePermission permission="payments:create">
+                <a
+                  href="/payments"
+                  className="block p-4 rounded-lg bg-success/10 hover:bg-success/20 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-success" />
+                    <div>
+                      <p className="font-medium">Record Payment</p>
+                      <p className="text-sm text-muted-foreground">Add a new payment</p>
+                    </div>
                   </div>
-                </div>
-              </a>
+                </a>
+              </RequirePermission>
             </CardContent>
           </Card>
         </div>

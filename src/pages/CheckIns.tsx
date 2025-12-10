@@ -23,6 +23,8 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Clock, LogOut } from 'lucide-react';
+import { RequirePermission } from '@/components/common/RequirePermission';
+import { useRBAC } from '@/hooks/useRBAC';
 
 interface Member {
   id: string;
@@ -40,6 +42,7 @@ interface CheckIn {
 export default function CheckIns() {
   const { currentGym } = useGym();
   const { toast } = useToast();
+  const { hasPermission } = useRBAC();
   const [members, setMembers] = useState<Member[]>([]);
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -172,52 +175,54 @@ export default function CheckIns() {
         </div>
 
         {/* Quick Check-in */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-primary" />
-              Quick Check-in
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Command className="border rounded-lg">
-                  <CommandInput
-                    placeholder="Search member..."
-                    value={searchQuery}
-                    onValueChange={setSearchQuery}
-                  />
-                  <CommandList>
-                    <CommandEmpty>No member found.</CommandEmpty>
-                    <CommandGroup>
-                      {filteredMembers.slice(0, 5).map((member) => (
-                        <CommandItem
-                          key={member.id}
-                          value={member.full_name}
-                          onSelect={() => {
-                            setSelectedMember(member);
-                            setSearchQuery(member.full_name);
-                          }}
-                        >
-                          {member.full_name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
+        <RequirePermission permission="checkins:create">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-primary" />
+                Quick Check-in
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Command className="border rounded-lg">
+                    <CommandInput
+                      placeholder="Search member..."
+                      value={searchQuery}
+                      onValueChange={setSearchQuery}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No member found.</CommandEmpty>
+                      <CommandGroup>
+                        {filteredMembers.slice(0, 5).map((member) => (
+                          <CommandItem
+                            key={member.id}
+                            value={member.full_name}
+                            onSelect={() => {
+                              setSelectedMember(member);
+                              setSearchQuery(member.full_name);
+                            }}
+                          >
+                            {member.full_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </div>
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={!selectedMember}
+                  className="gradient-primary"
+                >
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Check In
+                </Button>
               </div>
-              <Button
-                onClick={handleCheckIn}
-                disabled={!selectedMember}
-                className="gradient-primary"
-              >
-                <UserCheck className="w-4 h-4 mr-2" />
-                Check In
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </RequirePermission>
 
         {/* Currently in Gym */}
         <Card>
@@ -243,14 +248,16 @@ export default function CheckIns() {
                       <TableCell className="font-medium">{checkIn.member_name}</TableCell>
                       <TableCell>{formatTime(checkIn.checked_in_at)}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCheckOut(checkIn.id, checkIn.member_name)}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Check Out
-                        </Button>
+                        <RequirePermission permission="checkins:update">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCheckOut(checkIn.id, checkIn.member_name)}
+                          >
+                            <LogOut className="w-4 h-4 mr-2" />
+                            Check Out
+                          </Button>
+                        </RequirePermission>
                       </TableCell>
                     </TableRow>
                   ))
