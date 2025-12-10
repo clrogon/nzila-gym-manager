@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Clock, CreditCard, MapPin, ArrowRight, ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getAllDisciplines } from '@/lib/seedData';
 
 interface WizardStep {
   id: string;
@@ -161,6 +162,25 @@ export function GymSetupWizard() {
 
       if (locationError) {
         console.error('Error creating location:', locationError);
+        // Non-fatal, continue
+      }
+
+      // Seed default disciplines for the gym
+      const disciplines = getAllDisciplines();
+      const disciplineInserts = disciplines.map(d => ({
+        gym_id: gym.id,
+        name: d.name,
+        description: d.description,
+        category: d.category,
+        is_active: true,
+      }));
+
+      const { error: disciplineError } = await supabase
+        .from('disciplines')
+        .insert(disciplineInserts);
+
+      if (disciplineError) {
+        console.error('Error seeding disciplines:', disciplineError);
         // Non-fatal, continue
       }
 
