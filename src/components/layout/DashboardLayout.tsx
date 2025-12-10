@@ -136,7 +136,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
                 <Dumbbell className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-display text-sidebar-foreground">Nzila</span>
+              <div className="flex flex-col">
+                <span className="text-lg font-display text-sidebar-foreground leading-tight truncate max-w-[140px]">
+                  {currentGym?.name || 'Nzila'}
+                </span>
+                {currentGym && (
+                  <span className="text-[10px] text-muted-foreground">
+                    powered by <span className="font-medium text-primary">Nzila</span>
+                  </span>
+                )}
+              </div>
             </Link>
           </div>
 
