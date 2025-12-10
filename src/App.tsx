@@ -28,6 +28,7 @@ import { InventoryPage } from "./modules/inventory";
 import { POSPage } from "./modules/pos";
 import { KioskPage } from "./modules/kiosk";
 import { InvoicesPage } from "./modules/invoices";
+import { DisciplinesPage } from "./modules/disciplines";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ function AppRoutes() {
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
       <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
+      <Route path="/disciplines" element={<ProtectedRoute moduleName="Disciplines"><DisciplinesPage /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute moduleName="Invoices"><InvoicesPage /></ProtectedRoute>} />
       <Route path="/leads" element={<ProtectedRoute moduleName="Leads"><LeadsPage /></ProtectedRoute>} />

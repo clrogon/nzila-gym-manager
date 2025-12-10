@@ -36,6 +36,7 @@ import {
   ShoppingCart,
   FileText,
   Scan,
+  Award,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +56,7 @@ const gymNavItems: NavItem[] = [
   { icon: UserCheck, label: 'Check-ins', href: '/check-ins', permission: 'checkins:read' },
   { icon: CalendarDays, label: 'Calendar', href: '/calendar', permission: 'classes:read' },
   { icon: Target, label: 'Training', href: '/training', permission: 'training:read' },
+  { icon: Award, label: 'Disciplines', href: '/disciplines', permission: 'training:read' },
   { icon: CreditCard, label: 'Finance', href: '/payments', permission: 'payments:read' },
   { icon: FileText, label: 'Invoices', href: '/invoices', permission: 'payments:read' },
   { icon: Package, label: 'Inventory', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
