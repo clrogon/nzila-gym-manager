@@ -334,21 +334,21 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
-          gym_id: string
+          gym_id: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
-          gym_id: string
+          gym_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
-          gym_id?: string
+          gym_id?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -377,6 +377,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "gym_owner" | "admin" | "staff" | "member"
