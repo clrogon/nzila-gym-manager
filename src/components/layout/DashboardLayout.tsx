@@ -31,6 +31,11 @@ import {
   UserCog,
   CalendarDays,
   Target,
+  TrendingUp,
+  Package,
+  ShoppingCart,
+  FileText,
+  Scan,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,10 +51,15 @@ type NavItem = {
 const gymNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Members', href: '/members', permission: 'members:read' },
+  { icon: TrendingUp, label: 'Leads', href: '/leads', permission: 'members:read' },
   { icon: UserCheck, label: 'Check-ins', href: '/check-ins', permission: 'checkins:read' },
   { icon: CalendarDays, label: 'Calendar', href: '/calendar', permission: 'classes:read' },
   { icon: Target, label: 'Training', href: '/training', permission: 'training:read' },
   { icon: CreditCard, label: 'Finance', href: '/payments', permission: 'payments:read' },
+  { icon: FileText, label: 'Invoices', href: '/invoices', permission: 'payments:read' },
+  { icon: Package, label: 'Inventory', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: ShoppingCart, label: 'POS', href: '/pos', permission: 'payments:read' },
+  { icon: Scan, label: 'Kiosk', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
   { icon: UserCog, label: 'Staff', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: Settings, label: 'Settings', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
 ];

@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      assets: {
+        Row: {
+          asset_tag: string | null
+          category: string | null
+          condition: string | null
+          created_at: string
+          gym_id: string
+          id: string
+          is_active: boolean | null
+          last_maintenance_date: string | null
+          location_id: string | null
+          name: string
+          next_maintenance_date: string | null
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          asset_tag?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          gym_id: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location_id?: string | null
+          name: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          asset_tag?: string | null
+          category?: string | null
+          condition?: string | null
+          created_at?: string
+          gym_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_maintenance_date?: string | null
+          location_id?: string | null
+          name?: string
+          next_maintenance_date?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -274,6 +343,82 @@ export type Database = {
           },
         ]
       }
+      discipline_ranks: {
+        Row: {
+          color: string | null
+          created_at: string
+          discipline_id: string
+          id: string
+          level: number
+          name: string
+          requirements: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          discipline_id: string
+          id?: string
+          level?: number
+          name: string
+          requirements?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          discipline_id?: string
+          id?: string
+          level?: number
+          name?: string
+          requirements?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discipline_ranks_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disciplines: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          gym_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          gym_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          gym_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplines_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discounts: {
         Row: {
           code: string
@@ -387,6 +532,224 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number | null
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number | null
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number | null
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          gym_id: string
+          id: string
+          invoice_number: string
+          member_id: string
+          notes: string | null
+          paid_at: string | null
+          status: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal: number
+          tax: number | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          gym_id: string
+          id?: string
+          invoice_number: string
+          member_id: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          gym_id?: string
+          id?: string
+          invoice_number?: string
+          member_id?: string
+          notes?: string | null
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"] | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          gym_id: string
+          id: string
+          lead_id: string
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          gym_id: string
+          id?: string
+          lead_id: string
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          gym_id?: string
+          id?: string
+          lead_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_tasks_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          converted_at: string | null
+          converted_member_id: string | null
+          created_at: string
+          email: string | null
+          estimated_value: number | null
+          full_name: string
+          gym_id: string
+          id: string
+          notes: string | null
+          phone: string | null
+          source: Database["public"]["Enums"]["lead_source"] | null
+          status: Database["public"]["Enums"]["lead_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          converted_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          full_name: string
+          gym_id: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: Database["public"]["Enums"]["lead_source"] | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          converted_at?: string | null
+          converted_member_id?: string | null
+          created_at?: string
+          email?: string | null
+          estimated_value?: number | null
+          full_name?: string
+          gym_id?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          source?: Database["public"]["Enums"]["lead_source"] | null
+          status?: Database["public"]["Enums"]["lead_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_converted_member_id_fkey"
+            columns: ["converted_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           address: string | null
@@ -424,6 +787,58 @@ export type Database = {
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_ranks: {
+        Row: {
+          awarded_at: string
+          awarded_by: string | null
+          discipline_id: string
+          id: string
+          member_id: string
+          notes: string | null
+          rank_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by?: string | null
+          discipline_id: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          rank_id: string
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string | null
+          discipline_id?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          rank_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_ranks_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_ranks_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_ranks_rank_id_fkey"
+            columns: ["rank_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_ranks"
             referencedColumns: ["id"]
           },
         ]
@@ -488,8 +903,12 @@ export type Database = {
           emergency_contact: string | null
           emergency_phone: string | null
           full_name: string
+          gdpr_anonymized_at: string | null
+          gdpr_consent_at: string | null
           gym_id: string
+          health_conditions: string | null
           id: string
+          is_minor: boolean | null
           membership_end_date: string | null
           membership_plan_id: string | null
           membership_start_date: string | null
@@ -497,6 +916,7 @@ export type Database = {
           phone: string | null
           photo_url: string | null
           status: Database["public"]["Enums"]["member_status"] | null
+          tutor_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -508,8 +928,12 @@ export type Database = {
           emergency_contact?: string | null
           emergency_phone?: string | null
           full_name: string
+          gdpr_anonymized_at?: string | null
+          gdpr_consent_at?: string | null
           gym_id: string
+          health_conditions?: string | null
           id?: string
+          is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
           membership_start_date?: string | null
@@ -517,6 +941,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
+          tutor_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -528,8 +953,12 @@ export type Database = {
           emergency_contact?: string | null
           emergency_phone?: string | null
           full_name?: string
+          gdpr_anonymized_at?: string | null
+          gdpr_consent_at?: string | null
           gym_id?: string
+          health_conditions?: string | null
           id?: string
+          is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
           membership_start_date?: string | null
@@ -537,6 +966,7 @@ export type Database = {
           phone?: string | null
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
+          tutor_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -553,6 +983,13 @@ export type Database = {
             columns: ["membership_plan_id"]
             isOneToOne: false
             referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
         ]
@@ -667,6 +1104,116 @@ export type Database = {
           },
         ]
       }
+      performance_records: {
+        Row: {
+          exercise_name: string
+          gym_id: string
+          id: string
+          is_pr: boolean | null
+          member_id: string
+          notes: string | null
+          recorded_at: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          exercise_name: string
+          gym_id: string
+          id?: string
+          is_pr?: boolean | null
+          member_id: string
+          notes?: string | null
+          recorded_at?: string
+          unit: string
+          value: number
+        }
+        Update: {
+          exercise_name?: string
+          gym_id?: string
+          id?: string
+          is_pr?: boolean | null
+          member_id?: string
+          notes?: string | null
+          recorded_at?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_records_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_records_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: Database["public"]["Enums"]["product_category"] | null
+          cost: number | null
+          created_at: string
+          description: string | null
+          gym_id: string
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          low_stock_threshold: number | null
+          name: string
+          price: number
+          sku: string | null
+          stock_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["product_category"] | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          gym_id: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          low_stock_threshold?: number | null
+          name: string
+          price?: number
+          sku?: string | null
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["product_category"] | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          gym_id?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          low_stock_threshold?: number | null
+          name?: string
+          price?: number
+          sku?: string | null
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -696,6 +1243,105 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sale_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          sale_id: string
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          sale_id: string
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          sale_id?: string
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          cashier_id: string | null
+          created_at: string
+          gym_id: string
+          id: string
+          member_id: string | null
+          notes: string | null
+          payment_method: string | null
+          subtotal: number
+          tax: number | null
+          total: number
+        }
+        Insert: {
+          cashier_id?: string | null
+          created_at?: string
+          gym_id: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+        }
+        Update: {
+          cashier_id?: string | null
+          created_at?: string
+          gym_id?: string
+          id?: string
+          member_id?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          subtotal?: number
+          tax?: number | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_absences: {
         Row: {
@@ -879,9 +1525,26 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "gym_owner" | "admin" | "staff" | "member"
+      invoice_status: "draft" | "issued" | "paid" | "overdue" | "void"
+      lead_source:
+        | "walk_in"
+        | "instagram"
+        | "facebook"
+        | "referral"
+        | "website"
+        | "other"
+      lead_status:
+        | "new"
+        | "contacted"
+        | "qualified"
+        | "proposal"
+        | "negotiation"
+        | "won"
+        | "lost"
       member_status: "active" | "inactive" | "suspended" | "pending"
       payment_method: "multicaixa" | "cash" | "bank_transfer" | "other"
       payment_status: "pending" | "completed" | "failed" | "refunded"
+      product_category: "supplement" | "gear" | "apparel" | "snack" | "other"
       subscription_status:
         | "trial"
         | "active"
@@ -1016,9 +1679,28 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "gym_owner", "admin", "staff", "member"],
+      invoice_status: ["draft", "issued", "paid", "overdue", "void"],
+      lead_source: [
+        "walk_in",
+        "instagram",
+        "facebook",
+        "referral",
+        "website",
+        "other",
+      ],
+      lead_status: [
+        "new",
+        "contacted",
+        "qualified",
+        "proposal",
+        "negotiation",
+        "won",
+        "lost",
+      ],
       member_status: ["active", "inactive", "suspended", "pending"],
       payment_method: ["multicaixa", "cash", "bank_transfer", "other"],
       payment_status: ["pending", "completed", "failed", "refunded"],
+      product_category: ["supplement", "gear", "apparel", "snack", "other"],
       subscription_status: [
         "trial",
         "active",

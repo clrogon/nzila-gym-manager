@@ -23,6 +23,11 @@ import { SuperAdminPage } from "./modules/superadmin";
 import { StaffPage } from "./modules/staff";
 import { CalendarPage } from "./modules/calendar";
 import { TrainingPage } from "./modules/training";
+import { LeadsPage } from "./modules/leads";
+import { InventoryPage } from "./modules/inventory";
+import { POSPage } from "./modules/pos";
+import { KioskPage } from "./modules/kiosk";
+import { InvoicesPage } from "./modules/invoices";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +91,11 @@ function AppRoutes() {
       <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute moduleName="Invoices"><InvoicesPage /></ProtectedRoute>} />
+      <Route path="/leads" element={<ProtectedRoute moduleName="Leads"><LeadsPage /></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute moduleName="Inventory"><InventoryPage /></ProtectedRoute>} />
+      <Route path="/pos" element={<ProtectedRoute moduleName="POS"><POSPage /></ProtectedRoute>} />
+      <Route path="/kiosk" element={<KioskPage />} />
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
       <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
