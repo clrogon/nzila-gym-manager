@@ -1,2 +1,3 @@
-// Re-export from existing page
-export { default as OnboardingPage } from '@/pages/Onboarding';
+export { OnboardingPage } from './pages/OnboardingPage';
+export { GymSetupWizard } from './components/GymSetupWizard';
+export { UnauthorizedAccess } from './components/UnauthorizedAccess';
