@@ -5,27 +5,27 @@ import { Dumbbell, Users, UserCheck, CreditCard, ArrowRight, CheckCircle } from 
 const features = [
   {
     icon: Users,
-    title: 'Member Management',
-    description: 'Easily register and manage all your gym members in one place.',
+    title: 'Gestão de Membros',
+    description: 'Registe e gira facilmente todos os membros do seu ginásio num único lugar.',
   },
   {
     icon: UserCheck,
-    title: 'Check-in System',
-    description: 'Track member attendance with quick and easy check-ins.',
+    title: 'Sistema de Entradas',
+    description: 'Controle a frequência dos membros com entradas rápidas e fáceis.',
   },
   {
     icon: CreditCard,
-    title: 'Payment Tracking',
-    description: 'Record payments with Multicaixa Express, cash, or bank transfer.',
+    title: 'Controlo de Pagamentos',
+    description: 'Registe pagamentos via Multicaixa Express, numerário ou transferência bancária.',
   },
 ];
 
 const benefits = [
-  'Multi-tenant SaaS for multiple gyms',
-  'Real-time attendance tracking',
-  'Angolan market focused (AOA currency)',
-  'Mobile-responsive design',
-  'Secure authentication',
+  'SaaS multi-inquilino para vários ginásios',
+  'Controlo de frequência em tempo real',
+  'Focado no mercado angolano (moeda AOA)',
+  'Design responsivo para dispositivos móveis',
+  'Autenticação segura',
 ];
 
 export default function Index() {
@@ -47,10 +47,10 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-4">
             <Link to="/auth">
-              <Button variant="ghost">Sign In</Button>
+              <Button variant="ghost">Entrar</Button>
             </Link>
             <Link to="/auth">
-              <Button className="gradient-primary">Get Started</Button>
+              <Button className="gradient-primary">Começar</Button>
             </Link>
           </div>
         </nav>
@@ -58,17 +58,17 @@ export default function Index() {
         <div className="relative container mx-auto px-4 py-24 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
             <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight">
-              Manage Your Gym
-              <span className="block text-primary">With Ease</span>
+              Gira o Seu Ginásio
+              <span className="block text-primary">Com Facilidade</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              The complete gym management solution built for the Angolan market. 
-              Track members, check-ins, and payments all in one place.
+              A solução completa de gestão de ginásio desenvolvida para o mercado angolano. 
+              Gerir membros, entradas e pagamentos tudo numa única plataforma.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Link to="/auth">
                 <Button size="lg" className="gradient-primary text-lg px-8">
-                  Start Free Trial
+                  Iniciar Teste Gratuito
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -82,10 +82,10 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              Everything You Need
+              Tudo o Que Precisa
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Powerful features to help you run your gym efficiently
+              Funcionalidades poderosas para ajudá-lo a gerir o seu ginásio com eficiência
             </p>
           </div>
 
@@ -113,11 +113,11 @@ export default function Index() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-                Built for Angolan Gyms
+                Desenvolvido para Ginásios Angolanos
               </h2>
               <p className="text-muted-foreground text-lg mb-8">
-              Nzila is designed specifically for the Angolan market, with support for 
-              local payment methods like Multicaixa Express and AOA currency.
+                Nzila foi desenhado especificamente para o mercado angolano, com suporte para 
+                métodos de pagamento locais como Multicaixa Express e moeda AOA.
               </p>
               <ul className="space-y-4">
                 {benefits.map((benefit) => (
@@ -149,14 +149,14 @@ export default function Index() {
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-3xl md:text-4xl font-display font-bold">
-              Ready to Transform Your Gym?
+              Pronto para Transformar o Seu Ginásio?
             </h2>
             <p className="text-muted-foreground text-lg">
-              Join Nzila today and take your gym management to the next level.
+              Junte-se ao Nzila hoje e eleve a gestão do seu ginásio para o próximo nível.
             </p>
             <Link to="/auth">
               <Button size="lg" className="gradient-primary text-lg px-8">
-                Get Started Now
+                Começar Agora
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -167,7 +167,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Nzila. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Nzila. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
