@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   Building2,
   UserCog,
+  CalendarDays,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -45,7 +47,9 @@ const gymNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Members', href: '/members', permission: 'members:read' },
   { icon: UserCheck, label: 'Check-ins', href: '/check-ins', permission: 'checkins:read' },
-  { icon: CreditCard, label: 'Payments', href: '/payments', permission: 'payments:read' },
+  { icon: CalendarDays, label: 'Calendar', href: '/calendar', permission: 'classes:read' },
+  { icon: Target, label: 'Training', href: '/training', permission: 'training:read' },
+  { icon: CreditCard, label: 'Finance', href: '/payments', permission: 'payments:read' },
   { icon: UserCog, label: 'Staff', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: Settings, label: 'Settings', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
 ];

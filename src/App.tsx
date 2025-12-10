@@ -21,6 +21,8 @@ import { SettingsPage } from "./modules/settings";
 import { OnboardingPage } from "./modules/onboarding";
 import { SuperAdminPage } from "./modules/superadmin";
 import { StaffPage } from "./modules/staff";
+import { CalendarPage } from "./modules/calendar";
+import { TrainingPage } from "./modules/training";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +83,8 @@ function AppRoutes() {
       <Route path="/dashboard" element={<ProtectedRoute moduleName="Dashboard"><DashboardPage /></ProtectedRoute>} />
       <Route path="/members" element={<ProtectedRoute moduleName="Members"><MembersPage /></ProtectedRoute>} />
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
+      <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
