@@ -24,14 +24,12 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children, moduleName }: { children: React.ReactNode; moduleName: string }) {
   const { user, loading: authLoading } = useAuth();
-  const { gyms, loading: gymLoading } = useGym();
 
-  if (authLoading || gymLoading) {
+  if (authLoading) {
     return <ModuleLoader message="Loading..." />;
   }
 
   if (!user) return <Navigate to="/auth" replace />;
-  if (gyms.length === 0) return <Navigate to="/onboarding" replace />;
 
   return (
     <ErrorBoundary moduleName={moduleName}>
