@@ -43,9 +43,17 @@ function ProtectedRoute({ children, moduleName }: { children: React.ReactNode; m
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return <ModuleLoader />;
-  if (user) return <Navigate to="/dashboard" replace />;
+  const { user, loading: authLoading } = useAuth();
+  const { gyms, loading: gymLoading } = useGym();
+  
+  if (authLoading || gymLoading) return <ModuleLoader />;
+  
+  if (user) {
+    // Redirect to onboarding if no gyms, otherwise to dashboard
+    if (gyms.length === 0) return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   return <>{children}</>;
 }
 
