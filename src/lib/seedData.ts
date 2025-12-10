@@ -15,12 +15,30 @@ export interface RankSeed {
   requirements?: string;
 }
 
+export interface WorkoutSeed {
+  name: string;
+  description?: string;
+}
+
+export interface ClassSeed {
+  name: string;
+  description?: string;
+}
+
+export interface ExerciseSeed {
+  name: string;
+  description?: string;
+}
+
 export interface CategorySeed {
   name: string;
   description: string;
   equipment: string;
   instructorProfile: string;
   disciplines: string[];
+  workouts: string[];
+  classes: string[];
+  exercises: string[];
 }
 
 // Belt/Rank systems for martial arts disciplines
@@ -196,6 +214,36 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Bodybuilding",
       "TRX Training",
       "Strongman"
+    ],
+    workouts: [
+      "5x5 Strength Block",
+      "Linear Progression Program",
+      "Upper/Lower Split",
+      "Push/Pull/Legs",
+      "Conjugate Method",
+      "German Volume Training",
+      "Functional Strength Circuit"
+    ],
+    classes: [
+      "Iron Warriors",
+      "PowerHour",
+      "Strongman Saturday",
+      "Functional Flow",
+      "Olympic Lifting Lab",
+      "Bodybuilding Foundations",
+      "Kettlebell Club"
+    ],
+    exercises: [
+      "Back Squat",
+      "Bench Press",
+      "Deadlift",
+      "Overhead Press",
+      "Clean & Jerk",
+      "Snatch",
+      "Kettlebell Swing",
+      "Turkish Get-Up",
+      "Farmer's Walk",
+      "Sled Push"
     ]
   },
   {
@@ -213,6 +261,34 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Low-Impact Elliptical",
       "Air Bike MetCon",
       "Fat-Burning Cardio"
+    ],
+    workouts: [
+      "30-30 HIIT Protocol",
+      "Tabata Intervals",
+      "Steady-State Endurance",
+      "Pyramid Intervals",
+      "MetCon Blaster",
+      "Fat Burn Zone (HR-based)",
+      "Fartlek Training"
+    ],
+    classes: [
+      "Spin Revolution",
+      "RowFit",
+      "CardioBlast",
+      "Tread & Shred",
+      "Bike & Burn",
+      "Endurance Crew",
+      "Peak Performance"
+    ],
+    exercises: [
+      "Treadmill Sprint",
+      "Air Bike Intervals",
+      "Rowing 500m Splits",
+      "SkiErg Pulls",
+      "Stair Climb",
+      "Elliptical Steady",
+      "Assault Bike Sprints",
+      "Hill Runs"
     ]
   },
   {
@@ -232,6 +308,36 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Pound Fitness",
       "BodyPump",
       "Stretch & Tone"
+    ],
+    workouts: [
+      "Full-Body Bootcamp",
+      "HIIT Circuit",
+      "Dance Cardio Session",
+      "Step Interval",
+      "Rhythmic Conditioning",
+      "Barbell Strength Fusion",
+      "Active Recovery Flow"
+    ],
+    classes: [
+      "Zumba Fusion",
+      "Kuduro Fit",
+      "Afro-Fusion Dance",
+      "Bootcamp Warriors",
+      "HIIT Nation",
+      "Pound Rockout",
+      "BodyPump Elite",
+      "Tone & Stretch"
+    ],
+    exercises: [
+      "Jumping Jacks",
+      "Mountain Climbers",
+      "Burpees",
+      "Step-Up",
+      "High Knees",
+      "Dance Grapevine",
+      "Squat Pulse",
+      "Ripstix Drumming",
+      "Light Barbell Press"
     ]
   },
   {
@@ -253,6 +359,35 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Posture Correction",
       "Meditation",
       "Balance & Core Stability"
+    ],
+    workouts: [
+      "Vinyasa Flow Sequence",
+      "Power Yoga 60",
+      "Yin Restore Session",
+      "Pilates Core Sculpt",
+      "Mobility Routine",
+      "Breathwork & Meditation",
+      "Posture Realignment"
+    ],
+    classes: [
+      "Sunrise Flow",
+      "Power Hour Yoga",
+      "Yin & Restore",
+      "Pilates Core Lab",
+      "Flexibility Workshop",
+      "Breathe & Balance",
+      "Restorative Evening"
+    ],
+    exercises: [
+      "Sun Salutation",
+      "Warrior Poses",
+      "Downward Dog",
+      "Pigeon Pose",
+      "Pilates Hundred",
+      "Plank to Pike",
+      "Cat-Cow",
+      "Seated Spinal Twist",
+      "Box Breathing"
     ]
   },
   {
@@ -272,6 +407,36 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Krav Maga",
       "Self-Defense",
       "Kids Martial Arts"
+    ],
+    workouts: [
+      "3-Round Boxing Drill",
+      "Muay Thai Combo Flow",
+      "BJJ Rolling Session",
+      "MMA Circuit",
+      "Striking & Conditioning",
+      "Grappling Fundamentals",
+      "Self-Defense Scenarios"
+    ],
+    classes: [
+      "Fight Club Boxing",
+      "Muay Thai Mavericks",
+      "BJJ Open Mat",
+      "MMA Warriors",
+      "Kickboxing Kondition",
+      "Self-Defense Essentials",
+      "Kids' Martial Arts"
+    ],
+    exercises: [
+      "Jab-Cross",
+      "Hook-Uppercut",
+      "Roundhouse Kick",
+      "Teep (Push Kick)",
+      "Double-Leg Takedown",
+      "Rear Naked Choke",
+      "Armbar",
+      "Sprawl",
+      "Elbow Strike",
+      "Guard Pass"
     ]
   },
   {
@@ -290,6 +455,36 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Animal Flow",
       "Movement Flow",
       "Parkour Basics"
+    ],
+    workouts: [
+      "Calisthenics Foundations",
+      "Static Hold Progression",
+      "Handstand Training",
+      "Rings Strength Work",
+      "Movement Flow Session",
+      "Parkour Vault Drills",
+      "Acrobatic Conditioning"
+    ],
+    classes: [
+      "BodyWeight Mastery",
+      "Handstand Academy",
+      "Rings Warriors",
+      "Flow State",
+      "Parkour Basics",
+      "Acro Fundamentals",
+      "Animal Movement"
+    ],
+    exercises: [
+      "Pull-Up",
+      "Dip",
+      "Muscle-Up",
+      "Front Lever",
+      "Back Lever",
+      "Handstand Hold",
+      "L-Sit",
+      "Pistol Squat",
+      "Ring Support",
+      "Wall Run"
     ]
   },
   {
@@ -307,6 +502,35 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Recreational Leagues",
       "Court Rentals",
       "Mini-Tournaments"
+    ],
+    workouts: [
+      "5v5 Scrimmage",
+      "Skill Drills Session",
+      "Shoot-Around",
+      "Court Conditioning",
+      "Tournament Prep",
+      "Recreational League Match",
+      "Open Court Play"
+    ],
+    classes: [
+      "Hoops League",
+      "Futsal Fridays",
+      "Volleyball Club",
+      "Padel Open",
+      "Badminton Socials",
+      "Table Tennis Tourneys",
+      "Court Clash"
+    ],
+    exercises: [
+      "Layup",
+      "Three-Point Shot",
+      "Chest Pass",
+      "Futsal Dribble",
+      "Spike",
+      "Serve",
+      "Forehand Smash",
+      "Padel Lob",
+      "Drop Shot"
     ]
   },
   {
@@ -323,6 +547,35 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Hydrotherapy",
       "Water Confidence",
       "Lifesaving Workshops"
+    ],
+    workouts: [
+      "Lap Swim Session",
+      "Sprint Set (50m repeats)",
+      "Endurance Swim (1000m+)",
+      "Aqua Circuit",
+      "Water Resistance Training",
+      "Technique Drills",
+      "Hydrotherapy Recovery"
+    ],
+    classes: [
+      "AquaFit",
+      "Swim Technique Lab",
+      "Masters Swim",
+      "Aqua Strength",
+      "Deep Water Workout",
+      "Hydro Therapy",
+      "Learn-to-Swim Kids"
+    ],
+    exercises: [
+      "Freestyle Stroke",
+      "Backstroke",
+      "Breaststroke",
+      "Butterfly",
+      "Flip Turn",
+      "Treading Water",
+      "Aqua Jogging",
+      "Water Flutter Kick",
+      "Pool Pull-Up"
     ]
   },
   {
@@ -340,6 +593,35 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Vertical Jump Training",
       "Movement Screening",
       "Injury Prevention Programs"
+    ],
+    workouts: [
+      "Speed Development Block",
+      "Agility Ladder Drills",
+      "Plyometric Circuit",
+      "Sport-Specific Strength",
+      "Movement Screening",
+      "Injury-Prevention Protocol",
+      "Acceleration Training"
+    ],
+    classes: [
+      "Speed Academy",
+      "Athletic Performance",
+      "Explosive Power",
+      "Agility Lab",
+      "Plyo Power",
+      "ACL Prevention Program",
+      "Pre-Season Prep"
+    ],
+    exercises: [
+      "40-Yard Dash",
+      "Cone Drills",
+      "Box Jump",
+      "Broad Jump",
+      "Lateral Shuffle",
+      "Depth Jump",
+      "Pro Agility",
+      "Single-Leg RDL",
+      "Nordic Curl"
     ]
   },
   {
@@ -357,6 +639,34 @@ export const DEFAULT_WORKOUT_CATEGORIES: CategorySeed[] = [
       "Rehab Support",
       "Obesity Workout Programs",
       "Adaptive Training"
+    ],
+    workouts: [
+      "Senior Strength & Balance",
+      "Low-Impact Conditioning",
+      "Kids' Play Fitness",
+      "Youth Athletic Development",
+      "Prenatal Safe Movement",
+      "Postpartum Recovery Program",
+      "Rehab Circuit"
+    ],
+    classes: [
+      "Silver Strong",
+      "Kids' Fitness Fun",
+      "Youth Athletes",
+      "Prenatal Wellness",
+      "New Mom Strength",
+      "Adaptive Fit",
+      "Rehab & Restore"
+    ],
+    exercises: [
+      "Seated Leg Press",
+      "Balance Stand",
+      "Wall Push-Up",
+      "Light Dumbbell Curl",
+      "Pelvic Floor Exercise",
+      "Resistance Band Row",
+      "Stability Ball Squat",
+      "Assisted Step-Up"
     ]
   }
 ];
@@ -378,6 +688,44 @@ export const getAllDisciplines = (): DisciplineSeed[] => {
   });
   
   return disciplines;
+};
+
+// Get all workouts grouped by category
+export const getAllWorkouts = (): { name: string; category: string }[] => {
+  const workouts: { name: string; category: string }[] = [];
+  DEFAULT_WORKOUT_CATEGORIES.forEach(category => {
+    category.workouts.forEach(workout => {
+      workouts.push({ name: workout, category: category.name });
+    });
+  });
+  return workouts;
+};
+
+// Get all classes grouped by category
+export const getAllClasses = (): { name: string; category: string }[] => {
+  const classes: { name: string; category: string }[] = [];
+  DEFAULT_WORKOUT_CATEGORIES.forEach(category => {
+    category.classes.forEach(cls => {
+      classes.push({ name: cls, category: category.name });
+    });
+  });
+  return classes;
+};
+
+// Get all exercises grouped by category
+export const getAllExercises = (): { name: string; category: string }[] => {
+  const exercises: { name: string; category: string }[] = [];
+  DEFAULT_WORKOUT_CATEGORIES.forEach(category => {
+    category.exercises.forEach(exercise => {
+      exercises.push({ name: exercise, category: category.name });
+    });
+  });
+  return exercises;
+};
+
+// Get category by name
+export const getCategoryByName = (name: string): CategorySeed | undefined => {
+  return DEFAULT_WORKOUT_CATEGORIES.find(cat => cat.name === name);
 };
 
 // Get unique category names
