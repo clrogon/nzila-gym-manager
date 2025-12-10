@@ -475,6 +475,51 @@ export type Database = {
           },
         ]
       }
+      gym_owner_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          full_name: string
+          gym_name: string
+          id: string
+          invited_by: string
+          message: string | null
+          phone: string | null
+          status: string
+          temp_password: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          gym_name: string
+          id?: string
+          invited_by: string
+          message?: string | null
+          phone?: string | null
+          status?: string
+          temp_password?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          gym_name?: string
+          id?: string
+          invited_by?: string
+          message?: string | null
+          phone?: string | null
+          status?: string
+          temp_password?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gyms: {
         Row: {
           address: string | null
