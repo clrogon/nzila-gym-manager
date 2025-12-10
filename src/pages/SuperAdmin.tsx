@@ -46,6 +46,7 @@ import {
   ShieldCheck, TrendingUp, Globe 
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { GymOwnerPreRegistration } from '@/modules/superadmin/components/GymOwnerPreRegistration';
 
 interface Gym {
   id: string;
@@ -268,13 +269,15 @@ export default function SuperAdmin() {
             <p className="text-muted-foreground">Manage all gyms on the platform</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Gym
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <GymOwnerPreRegistration />
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Gym
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>{editingGym ? 'Edit Gym' : 'Add New Gym'}</DialogTitle>
@@ -339,6 +342,7 @@ export default function SuperAdmin() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
