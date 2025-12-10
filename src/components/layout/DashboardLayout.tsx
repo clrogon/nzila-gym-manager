@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useRBAC, AppRole } from '@/hooks/useRBAC';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,60 +32,65 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Gym-level navigation
-const gymNavItems = [
+type NavItem = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+  requiredRoles?: AppRole[];
+  permission?: string;
+};
+
+// Gym-level navigation with role requirements
+const gymNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: Users, label: 'Members', href: '/members' },
-  { icon: UserCheck, label: 'Check-ins', href: '/check-ins' },
-  { icon: CreditCard, label: 'Payments', href: '/payments' },
-  { icon: UserCog, label: 'Staff', href: '/staff' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
+  { icon: Users, label: 'Members', href: '/members', permission: 'members:read' },
+  { icon: UserCheck, label: 'Check-ins', href: '/check-ins', permission: 'checkins:read' },
+  { icon: CreditCard, label: 'Payments', href: '/payments', permission: 'payments:read' },
+  { icon: UserCog, label: 'Staff', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: Settings, label: 'Settings', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
 ];
 
 // Platform-level navigation (Super Admin only)
-const platformNavItems = [
+const platformNavItems: NavItem[] = [
   { icon: Building2, label: 'Gyms', href: '/super-admin' },
   { icon: UserCog, label: 'All Staff', href: '/staff' },
 ];
 
+const ROLE_LABELS: Record<AppRole, string> = {
+  super_admin: 'Super Admin',
+  gym_owner: 'Owner',
+  admin: 'Admin',
+  staff: 'Staff',
+  member: 'Member',
+};
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
   const { currentGym, gyms, setCurrentGym } = useGym();
+  const { isSuperAdmin, currentRole, hasPermission, hasRole } = useRBAC();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [viewMode, setViewMode] = useState<'platform' | 'gym'>('gym');
-
-  useEffect(() => {
-    const checkSuperAdmin = async () => {
-      if (!user) return;
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'super_admin')
-        .maybeSingle();
-      const isSuper = !!data;
-      setIsSuperAdmin(isSuper);
-      // Default to platform view for super admins on super-admin route
-      if (isSuper && location.pathname === '/super-admin') {
-        setViewMode('platform');
-      }
-    };
-    checkSuperAdmin();
-  }, [user, location.pathname]);
+  const [viewMode, setViewMode] = useState<'platform' | 'gym'>(() => 
+    location.pathname === '/super-admin' ? 'platform' : 'gym'
+  );
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
 
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'platform' ? 'gym' : 'platform');
-  };
-
-  const navItems = viewMode === 'platform' ? platformNavItems : gymNavItems;
+  // Filter nav items based on permissions
+  const baseNavItems = viewMode === 'platform' ? platformNavItems : gymNavItems;
+  const navItems = baseNavItems.filter(item => {
+    if (item.requiredRoles) {
+      return hasRole(item.requiredRoles);
+    }
+    if (item.permission) {
+      return hasPermission(item.permission);
+    }
+    return true;
+  });
 
   const initials = user?.user_metadata?.full_name
     ?.split(' ')
@@ -211,6 +217,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <p className="text-sm font-medium truncate">
                       {user?.user_metadata?.full_name || user?.email}
                     </p>
+                    {currentRole && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 mt-1">
+                        {ROLE_LABELS[currentRole]}
+                      </Badge>
+                    )}
                   </div>
                 </Button>
               </DropdownMenuTrigger>

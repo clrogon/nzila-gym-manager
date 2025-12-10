@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
+import { useRBAC } from '@/hooks/useRBAC';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { RequirePermission } from '@/components/common/RequirePermission';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,13 +68,12 @@ interface Gym {
 }
 
 export default function Staff() {
-  const { user } = useAuth();
   const { currentGym } = useGym();
+  const { isSuperAdmin, isGymOwner, isAdmin, hasPermission, loading: rbacLoading } = useRBAC();
+  
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [isGymOwner, setIsGymOwner] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -86,36 +86,20 @@ export default function Staff() {
     gym_id: '',
   });
 
-  useEffect(() => {
-    if (user) {
-      checkUserRoles();
-    }
-  }, [user]);
+  const canManageStaff = hasPermission('staff:create') || hasPermission('staff:update');
+  const canDeleteStaff = hasPermission('staff:delete');
+  const canViewStaff = hasPermission('staff:read');
 
   useEffect(() => {
-    if (isSuperAdmin || isGymOwner) {
+    if (!rbacLoading && canViewStaff) {
       fetchStaffMembers();
       if (isSuperAdmin) {
         fetchGyms();
       }
+    } else if (!rbacLoading) {
+      setLoading(false);
     }
-  }, [isSuperAdmin, isGymOwner, currentGym]);
-
-  const checkUserRoles = async () => {
-    if (!user) return;
-    
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role, gym_id')
-      .eq('user_id', user.id);
-
-    const superAdmin = roles?.some(r => r.role === 'super_admin');
-    const gymOwner = roles?.some(r => r.role === 'gym_owner' && r.gym_id === currentGym?.id);
-    
-    setIsSuperAdmin(!!superAdmin);
-    setIsGymOwner(!!gymOwner);
-    setLoading(false);
-  };
+  }, [rbacLoading, canViewStaff, isSuperAdmin, currentGym]);
 
   const fetchGyms = async () => {
     const { data } = await supabase.from('gyms').select('id, name').order('name');
@@ -293,7 +277,7 @@ export default function Staff() {
     staff.gym?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
+  if (loading || rbacLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -303,12 +287,12 @@ export default function Staff() {
     );
   }
 
-  if (!isSuperAdmin && !isGymOwner) {
+  if (!canViewStaff) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <Users className="w-12 h-12 mb-4" />
-          <p>You don't have permission to manage staff.</p>
+          <p>You don't have permission to view staff.</p>
         </div>
       </DashboardLayout>
     );
@@ -325,13 +309,14 @@ export default function Staff() {
               {isSuperAdmin ? 'Manage staff across all gyms' : `Manage staff for ${currentGym?.name}`}
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Staff
-              </Button>
-            </DialogTrigger>
+          {canManageStaff && (
+            <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Staff
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{selectedStaff ? 'Edit Staff Role' : 'Add Staff Member'}</DialogTitle>
@@ -402,6 +387,7 @@ export default function Staff() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Search */}
@@ -451,24 +437,28 @@ export default function Staff() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(staff)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            setSelectedStaff(staff);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {canManageStaff && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(staff)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canDeleteStaff && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setSelectedStaff(staff);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
