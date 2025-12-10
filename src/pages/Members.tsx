@@ -6,8 +6,12 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -30,8 +34,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, ShieldAlert } from 'lucide-react';
+import { 
+  Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, 
+  ShieldAlert, Mail, Phone, MapPin, Calendar, CreditCard, 
+  Activity, MoreHorizontal, Eye, AlertTriangle
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 interface Member {
   id: string;
@@ -39,8 +61,23 @@ interface Member {
   email: string | null;
   phone: string | null;
   status: string;
+  address: string | null;
+  date_of_birth: string | null;
+  emergency_contact: string | null;
+  emergency_phone: string | null;
+  photo_url: string | null;
+  notes: string | null;
+  membership_plan_id: string | null;
+  membership_start_date: string | null;
   membership_end_date: string | null;
   created_at: string;
+}
+
+interface MembershipPlan {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
 }
 
 export default function Members() {
@@ -48,17 +85,32 @@ export default function Members() {
   const { hasPermission, loading: rbacLoading } = useRBAC();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [viewingMember, setViewingMember] = useState<Member | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Form state
+  // Form state - Basic Info
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [address, setAddress] = useState('');
+  const [photoUrl, setPhotoUrl] = useState('');
+  
+  // Form state - Emergency Contact
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  
+  // Form state - Membership
   const [status, setStatus] = useState<string>('active');
+  const [membershipPlanId, setMembershipPlanId] = useState('');
+  const [membershipStartDate, setMembershipStartDate] = useState('');
+  const [notes, setNotes] = useState('');
 
   // Permission checks
   const canViewMembers = hasPermission('members:read');
@@ -69,6 +121,7 @@ export default function Members() {
   useEffect(() => {
     if (currentGym && !rbacLoading && canViewMembers) {
       fetchMembers();
+      fetchPlans();
     } else if (!rbacLoading) {
       setLoading(false);
     }
@@ -80,7 +133,7 @@ export default function Members() {
     try {
       const { data, error } = await supabase
         .from('members')
-        .select('id, full_name, email, phone, status, membership_end_date, created_at')
+        .select('*')
         .eq('gym_id', currentGym.id)
         .order('created_at', { ascending: false });
 
@@ -93,6 +146,19 @@ export default function Members() {
     }
   };
 
+  const fetchPlans = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('membership_plans')
+      .select('id, name, price, duration_days')
+      .eq('gym_id', currentGym.id)
+      .eq('is_active', true)
+      .order('price');
+
+    setPlans(data || []);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGym) {
@@ -100,11 +166,38 @@ export default function Members() {
       return;
     }
 
+    // Calculate membership end date based on plan
+    let endDate = null;
+    if (membershipPlanId && membershipStartDate) {
+      const plan = plans.find(p => p.id === membershipPlanId);
+      if (plan) {
+        const start = new Date(membershipStartDate);
+        start.setDate(start.getDate() + plan.duration_days);
+        endDate = start.toISOString().split('T')[0];
+      }
+    }
+
+    const memberData = {
+      full_name: fullName,
+      email: email || null,
+      phone: phone || null,
+      date_of_birth: dateOfBirth || null,
+      address: address || null,
+      photo_url: photoUrl || null,
+      emergency_contact: emergencyContact || null,
+      emergency_phone: emergencyPhone || null,
+      status: status as 'active' | 'inactive' | 'pending' | 'suspended',
+      membership_plan_id: membershipPlanId || null,
+      membership_start_date: membershipStartDate || null,
+      membership_end_date: endDate,
+      notes: notes || null,
+    };
+
     try {
       if (editingMember) {
         const { error } = await supabase
           .from('members')
-          .update({ full_name: fullName, email, phone, status: status as 'active' | 'inactive' | 'pending' | 'suspended' })
+          .update(memberData)
           .eq('id', editingMember.id);
 
         if (error) throw error;
@@ -112,13 +205,7 @@ export default function Members() {
       } else {
         const { error } = await supabase
           .from('members')
-          .insert([{
-            gym_id: currentGym.id,
-            full_name: fullName,
-            email: email || null,
-            phone: phone || null,
-            status: status as 'active' | 'inactive' | 'pending' | 'suspended',
-          }]);
+          .insert([{ ...memberData, gym_id: currentGym.id }]);
 
         if (error) throw error;
         toast({ title: 'Member Added', description: 'New member has been registered.' });
@@ -138,12 +225,25 @@ export default function Members() {
     setFullName(member.full_name);
     setEmail(member.email || '');
     setPhone(member.phone || '');
+    setDateOfBirth(member.date_of_birth || '');
+    setAddress(member.address || '');
+    setPhotoUrl(member.photo_url || '');
+    setEmergencyContact(member.emergency_contact || '');
+    setEmergencyPhone(member.emergency_phone || '');
     setStatus(member.status);
+    setMembershipPlanId(member.membership_plan_id || '');
+    setMembershipStartDate(member.membership_start_date || '');
+    setNotes(member.notes || '');
     setDialogOpen(true);
   };
 
+  const handleViewDetails = (member: Member) => {
+    setViewingMember(member);
+    setDetailsOpen(true);
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this member?')) return;
+    if (!confirm('Are you sure you want to delete this member? This action cannot be undone.')) return;
 
     try {
       const { error } = await supabase.from('members').delete().eq('id', id);
@@ -161,7 +261,15 @@ export default function Members() {
     setFullName('');
     setEmail('');
     setPhone('');
+    setDateOfBirth('');
+    setAddress('');
+    setPhotoUrl('');
+    setEmergencyContact('');
+    setEmergencyPhone('');
     setStatus('active');
+    setMembershipPlanId('');
+    setMembershipStartDate('');
+    setNotes('');
   };
 
   const filteredMembers = members.filter((m) => {
@@ -178,6 +286,13 @@ export default function Members() {
     active: members.filter((m) => m.status === 'active').length,
     inactive: members.filter((m) => m.status === 'inactive').length,
     pending: members.filter((m) => m.status === 'pending').length,
+    expiringSoon: members.filter((m) => {
+      if (!m.membership_end_date) return false;
+      const endDate = new Date(m.membership_end_date);
+      const now = new Date();
+      const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+    }).length,
   };
 
   const getStatusBadge = (status: string) => {
@@ -188,6 +303,30 @@ export default function Members() {
       pending: 'outline',
     };
     return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('pt-AO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getMembershipStatus = (member: Member) => {
+    if (!member.membership_end_date) return null;
+    const endDate = new Date(member.membership_end_date);
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) return { status: 'expired', days: Math.abs(daysUntilExpiry), color: 'text-destructive' };
+    if (daysUntilExpiry <= 7) return { status: 'expiring', days: daysUntilExpiry, color: 'text-yellow-600' };
+    return { status: 'active', days: daysUntilExpiry, color: 'text-green-600' };
   };
 
   // No gym state
@@ -236,62 +375,167 @@ export default function Members() {
                   Add Member
                 </Button>
               </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingMember ? 'Edit Member' : 'Add New Member'}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name *</Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="suspended">Suspended</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="w-full">
-                  {editingMember ? 'Update Member' : 'Add Member'}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingMember ? 'Edit Member' : 'Register New Member'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                      <TabsTrigger value="emergency">Emergency</TabsTrigger>
+                      <TabsTrigger value="membership">Membership</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="basic" className="space-y-4 mt-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="fullName">Full Name *</Label>
+                          <Input
+                            id="fullName"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="John Doe"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="john@example.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone</Label>
+                          <Input
+                            id="phone"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="+244 923 456 789"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                          <Input
+                            id="dateOfBirth"
+                            type="date"
+                            value={dateOfBirth}
+                            onChange={(e) => setDateOfBirth(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Input
+                          id="address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Street, City, Province"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="photoUrl">Photo URL</Label>
+                        <Input
+                          id="photoUrl"
+                          value={photoUrl}
+                          onChange={(e) => setPhotoUrl(e.target.value)}
+                          placeholder="https://example.com/photo.jpg"
+                        />
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="emergency" className="space-y-4 mt-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
+                          <Input
+                            id="emergencyContact"
+                            value={emergencyContact}
+                            onChange={(e) => setEmergencyContact(e.target.value)}
+                            placeholder="Contact name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="emergencyPhone">Emergency Phone</Label>
+                          <Input
+                            id="emergencyPhone"
+                            value={emergencyPhone}
+                            onChange={(e) => setEmergencyPhone(e.target.value)}
+                            placeholder="+244 923 456 789"
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="membership" className="space-y-4 mt-4">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="status">Status</Label>
+                          <Select value={status} onValueChange={setStatus}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="suspended">Suspended</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="plan">Membership Plan</Label>
+                          <Select value={membershipPlanId} onValueChange={setMembershipPlanId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a plan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {plans.map((plan) => (
+                                <SelectItem key={plan.id} value={plan.id}>
+                                  {plan.name} - {plan.duration_days} days
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="startDate">Membership Start Date</Label>
+                          <Input
+                            id="startDate"
+                            type="date"
+                            value={membershipStartDate}
+                            onChange={(e) => setMembershipStartDate(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notes</Label>
+                        <Textarea
+                          id="notes"
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          placeholder="Any additional notes about this member..."
+                          rows={3}
+                        />
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  <Button type="submit" className="w-full">
+                    {editingMember ? 'Update Member' : 'Register Member'}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3">
@@ -344,6 +588,19 @@ export default function Members() {
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-orange-500/10">
+                  <AlertTriangle className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.expiringSoon}</p>
+                  <p className="text-xs text-muted-foreground">Expiring</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Search & Filter */}
@@ -381,35 +638,104 @@ export default function Members() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden sm:table-cell">Phone</TableHead>
+                  <TableHead>Member</TableHead>
+                  <TableHead className="hidden md:table-cell">Contact</TableHead>
+                  <TableHead className="hidden lg:table-cell">Membership</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMembers.length > 0 ? (
-                  filteredMembers.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.full_name}</TableCell>
-                      <TableCell className="hidden md:table-cell">{member.email || '-'}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{member.phone || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(member.status)}</TableCell>
-                      <TableCell className="text-right">
-                        {canUpdateMembers && (
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(member)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {canDeleteMembers && (
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(member.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredMembers.map((member) => {
+                    const membershipStatus = getMembershipStatus(member);
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={member.photo_url || undefined} />
+                              <AvatarFallback>{getInitials(member.full_name)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{member.full_name}</p>
+                              <p className="text-sm text-muted-foreground md:hidden">
+                                {member.email || member.phone || '-'}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <div className="space-y-1">
+                            {member.email && (
+                              <div className="flex items-center gap-1 text-sm">
+                                <Mail className="w-3 h-3 text-muted-foreground" />
+                                {member.email}
+                              </div>
+                            )}
+                            {member.phone && (
+                              <div className="flex items-center gap-1 text-sm">
+                                <Phone className="w-3 h-3 text-muted-foreground" />
+                                {member.phone}
+                              </div>
+                            )}
+                            {!member.email && !member.phone && '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {membershipStatus ? (
+                            <div className={membershipStatus.color}>
+                              <p className="text-sm font-medium">
+                                {membershipStatus.status === 'expired' 
+                                  ? `Expired ${membershipStatus.days}d ago`
+                                  : membershipStatus.status === 'expiring'
+                                  ? `Expires in ${membershipStatus.days}d`
+                                  : `${membershipStatus.days}d remaining`
+                                }
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Until {formatDate(member.membership_end_date)}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(member.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetails(member)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              {canUpdateMembers && (
+                                <DropdownMenuItem onClick={() => handleEdit(member)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              {canDeleteMembers && (
+                                <DropdownMenuItem 
+                                  className="text-destructive" 
+                                  onClick={() => handleDelete(member.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
@@ -421,6 +747,139 @@ export default function Members() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Member Details Sheet */}
+        <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <SheetContent className="sm:max-w-lg overflow-y-auto">
+            {viewingMember && (
+              <>
+                <SheetHeader>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-16 h-16">
+                      <AvatarImage src={viewingMember.photo_url || undefined} />
+                      <AvatarFallback className="text-xl">{getInitials(viewingMember.full_name)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <SheetTitle>{viewingMember.full_name}</SheetTitle>
+                      <SheetDescription>{getStatusBadge(viewingMember.status)}</SheetDescription>
+                    </div>
+                  </div>
+                </SheetHeader>
+                
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Contact Information</h4>
+                    <div className="space-y-3">
+                      {viewingMember.email && (
+                        <div className="flex items-center gap-3">
+                          <Mail className="w-4 h-4 text-muted-foreground" />
+                          <span>{viewingMember.email}</span>
+                        </div>
+                      )}
+                      {viewingMember.phone && (
+                        <div className="flex items-center gap-3">
+                          <Phone className="w-4 h-4 text-muted-foreground" />
+                          <span>{viewingMember.phone}</span>
+                        </div>
+                      )}
+                      {viewingMember.address && (
+                        <div className="flex items-center gap-3">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span>{viewingMember.address}</span>
+                        </div>
+                      )}
+                      {viewingMember.date_of_birth && (
+                        <div className="flex items-center gap-3">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span>{formatDate(viewingMember.date_of_birth)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Membership</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+                        <span>
+                          {viewingMember.membership_plan_id 
+                            ? plans.find(p => p.id === viewingMember.membership_plan_id)?.name || 'Unknown Plan'
+                            : 'No plan assigned'
+                          }
+                        </span>
+                      </div>
+                      {viewingMember.membership_start_date && (
+                        <div className="flex items-center gap-3">
+                          <Activity className="w-4 h-4 text-muted-foreground" />
+                          <span>Started: {formatDate(viewingMember.membership_start_date)}</span>
+                        </div>
+                      )}
+                      {viewingMember.membership_end_date && (
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span>Expires: {formatDate(viewingMember.membership_end_date)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {(viewingMember.emergency_contact || viewingMember.emergency_phone) && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Emergency Contact</h4>
+                        <div className="space-y-2">
+                          {viewingMember.emergency_contact && (
+                            <p>{viewingMember.emergency_contact}</p>
+                          )}
+                          {viewingMember.emergency_phone && (
+                            <div className="flex items-center gap-3">
+                              <Phone className="w-4 h-4 text-muted-foreground" />
+                              <span>{viewingMember.emergency_phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {viewingMember.notes && (
+                    <>
+                      <Separator />
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Notes</h4>
+                        <p className="text-sm">{viewingMember.notes}</p>
+                      </div>
+                    </>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex gap-2">
+                    {canUpdateMembers && (
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => {
+                          setDetailsOpen(false);
+                          handleEdit(viewingMember);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Member
+                      </Button>
+                    )}
+                    <Button variant="outline" onClick={() => setDetailsOpen(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </SheetContent>
+        </Sheet>
       </div>
     </DashboardLayout>
   );
