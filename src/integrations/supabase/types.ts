@@ -475,6 +475,115 @@ export type Database = {
           },
         ]
       }
+      gym_classes: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          default_capacity: number | null
+          default_duration: number | null
+          description: string | null
+          gym_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_capacity?: number | null
+          default_duration?: number | null
+          description?: string | null
+          gym_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_capacity?: number | null
+          default_duration?: number | null
+          description?: string | null
+          gym_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_classes_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gym_exercises: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          equipment: string | null
+          gym_id: string
+          id: string
+          instructions: string | null
+          is_active: boolean | null
+          muscle_groups: string[] | null
+          name: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment?: string | null
+          gym_id: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          muscle_groups?: string[] | null
+          name: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          equipment?: string | null
+          gym_id?: string
+          id?: string
+          instructions?: string | null
+          is_active?: boolean | null
+          muscle_groups?: string[] | null
+          name?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_exercises_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gym_owner_invitations: {
         Row: {
           accepted_at: string | null
@@ -519,6 +628,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gym_workouts: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: string | null
+          estimated_duration: number | null
+          exercises: Json | null
+          gym_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration?: number | null
+          exercises?: Json | null
+          gym_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: string | null
+          estimated_duration?: number | null
+          exercises?: Json | null
+          gym_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gym_workouts_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gyms: {
         Row: {
@@ -1288,6 +1450,74 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rank_promotions: {
+        Row: {
+          certificate_url: string | null
+          created_at: string
+          discipline_id: string
+          from_rank_id: string | null
+          id: string
+          member_id: string
+          notes: string | null
+          promoted_by: string | null
+          promotion_date: string
+          to_rank_id: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          created_at?: string
+          discipline_id: string
+          from_rank_id?: string | null
+          id?: string
+          member_id: string
+          notes?: string | null
+          promoted_by?: string | null
+          promotion_date?: string
+          to_rank_id: string
+        }
+        Update: {
+          certificate_url?: string | null
+          created_at?: string
+          discipline_id?: string
+          from_rank_id?: string | null
+          id?: string
+          member_id?: string
+          notes?: string | null
+          promoted_by?: string | null
+          promotion_date?: string
+          to_rank_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_promotions_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_promotions_from_rank_id_fkey"
+            columns: ["from_rank_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_promotions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_promotions_to_rank_id_fkey"
+            columns: ["to_rank_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_items: {
         Row: {
