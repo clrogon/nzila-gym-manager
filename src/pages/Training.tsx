@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { getCategoryNames } from '@/lib/seedData';
 import {
   Plus,
   Dumbbell,
@@ -48,7 +49,8 @@ interface Exercise {
   notes?: string;
 }
 
-const CATEGORIES = ['general', 'strength', 'cardio', 'flexibility', 'hiit', 'crossfit', 'yoga', 'pilates'];
+// Use categories from seed data
+const CATEGORIES = getCategoryNames();
 const DIFFICULTIES = ['beginner', 'intermediate', 'advanced'];
 
 const DIFFICULTY_COLORS = {
@@ -71,7 +73,7 @@ export default function Training() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'general',
+    category: CATEGORIES[0] || 'Strength & Conditioning',
     difficulty: 'intermediate',
     estimated_duration: 60,
     is_public: false,
@@ -152,7 +154,7 @@ export default function Training() {
     setFormData({
       name: '',
       description: '',
-      category: 'general',
+      category: CATEGORIES[0] || 'Strength & Conditioning',
       difficulty: 'intermediate',
       estimated_duration: 60,
       is_public: false,
