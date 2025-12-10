@@ -129,6 +129,14 @@ export default function Onboarding() {
               {loading ? 'Creating...' : 'Create Gym'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              className="w-full" 
+              onClick={() => navigate('/dashboard')}
+            >
+              Skip for now
+            </Button>
           </form>
         </CardContent>
       </Card>
