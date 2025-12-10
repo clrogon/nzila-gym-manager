@@ -19,6 +19,7 @@ import { CheckInsPage } from "./modules/checkins";
 import { PaymentsPage } from "./modules/payments";
 import { SettingsPage } from "./modules/settings";
 import { OnboardingPage } from "./modules/onboarding";
+import { SuperAdminPage } from "./modules/superadmin";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ function AppRoutes() {
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
+      <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

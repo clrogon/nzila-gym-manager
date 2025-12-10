@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -23,6 +24,7 @@ import {
   X,
   Dumbbell,
   ChevronDown,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +42,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'super_admin')
+        .maybeSingle();
+      setIsSuperAdmin(!!data);
+    };
+    checkSuperAdmin();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -109,6 +126,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
+            {isSuperAdmin && (
+              <Link
+                to="/super-admin"
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all mb-2',
+                  location.pathname === '/super-admin'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-primary/30'
+                )}
+              >
+                <ShieldCheck className="w-5 h-5" />
+                <span className="font-medium">Super Admin</span>
+              </Link>
+            )}
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
