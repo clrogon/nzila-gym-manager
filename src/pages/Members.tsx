@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
+import { useRBAC } from '@/hooks/useRBAC';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, ShieldAlert } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -44,6 +45,7 @@ interface Member {
 
 export default function Members() {
   const { currentGym } = useGym();
+  const { hasPermission, loading: rbacLoading } = useRBAC();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,13 +60,19 @@ export default function Members() {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<string>('active');
 
+  // Permission checks
+  const canViewMembers = hasPermission('members:read');
+  const canCreateMembers = hasPermission('members:create');
+  const canUpdateMembers = hasPermission('members:update');
+  const canDeleteMembers = hasPermission('members:delete');
+
   useEffect(() => {
-    if (currentGym) {
+    if (currentGym && !rbacLoading && canViewMembers) {
       fetchMembers();
-    } else {
+    } else if (!rbacLoading) {
       setLoading(false);
     }
-  }, [currentGym]);
+  }, [currentGym, rbacLoading, canViewMembers]);
 
   const fetchMembers = async () => {
     if (!currentGym) return;
@@ -198,6 +206,19 @@ export default function Members() {
     );
   }
 
+  // No permission state
+  if (!rbacLoading && !canViewMembers) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <ShieldAlert className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-display font-bold mb-2">Access Denied</h2>
+          <p className="text-muted-foreground">You don't have permission to view members.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -207,13 +228,14 @@ export default function Members() {
             <p className="text-muted-foreground">Manage your gym members</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Member
-              </Button>
-            </DialogTrigger>
+          {canCreateMembers && (
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Member
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingMember ? 'Edit Member' : 'Add New Member'}</DialogTitle>
@@ -265,6 +287,7 @@ export default function Members() {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -374,12 +397,16 @@ export default function Members() {
                       <TableCell className="hidden sm:table-cell">{member.phone || '-'}</TableCell>
                       <TableCell>{getStatusBadge(member.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(member)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(member.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        {canUpdateMembers && (
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(member)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canDeleteMembers && (
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(member.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
