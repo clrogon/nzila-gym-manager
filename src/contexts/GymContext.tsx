@@ -59,11 +59,24 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (rolesData && rolesData.length > 0) {
         setUserRoles(rolesData);
 
-        const gymIds = rolesData.map(r => r.gym_id);
-        const { data: gymsData } = await supabase
-          .from('gyms')
-          .select('*')
-          .in('id', gymIds);
+        // Filter out null gym_ids (super_admin entries have null gym_id)
+        const gymIds = rolesData
+          .map(r => r.gym_id)
+          .filter((id): id is string => id !== null);
+
+        // Check if user is super_admin (has role with null gym_id)
+        const isSuperAdmin = rolesData.some(r => r.role === 'super_admin' && r.gym_id === null);
+
+        let gymsData;
+        if (isSuperAdmin) {
+          // Super admins can see all gyms
+          const { data } = await supabase.from('gyms').select('*').order('name');
+          gymsData = data;
+        } else if (gymIds.length > 0) {
+          // Regular users see only their assigned gyms
+          const { data } = await supabase.from('gyms').select('*').in('id', gymIds);
+          gymsData = data;
+        }
 
         if (gymsData) {
           setGyms(gymsData);
