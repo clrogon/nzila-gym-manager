@@ -18,6 +18,8 @@ import { PolymorphicWodBuilder } from '@/components/training/PolymorphicWodBuild
 import { WorkoutAssignment } from '@/components/training/WorkoutAssignment';
 import { RankPromotion } from '@/components/training/RankPromotion';
 import { GymContentCrud } from '@/components/training/GymContentCrud';
+import { MemberProgressDashboard } from '@/components/training/MemberProgressDashboard';
+import { TrainingLibraryView } from '@/components/training/TrainingLibraryView';
 import {
   Plus,
   Dumbbell,
@@ -34,6 +36,8 @@ import {
   Award,
   ClipboardList,
   Settings2,
+  BookOpen,
+  TrendingUp,
 } from 'lucide-react';
 
 interface WorkoutTemplate {
@@ -69,7 +73,7 @@ const DIFFICULTY_COLORS = {
 export default function Training() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-  const [activeTab, setActiveTab] = useState('templates');
+  const [activeTab, setActiveTab] = useState('library');
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -222,7 +226,11 @@ export default function Training() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="library" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Library</span>
+            </TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <Dumbbell className="w-4 h-4" />
               <span className="hidden sm:inline">Templates</span>
@@ -230,6 +238,10 @@ export default function Training() {
             <TabsTrigger value="assignments" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />
               <span className="hidden sm:inline">Assignments</span>
+            </TabsTrigger>
+            <TabsTrigger value="progress" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Progress</span>
             </TabsTrigger>
             <TabsTrigger value="promotions" className="flex items-center gap-2">
               <Award className="w-4 h-4" />
@@ -240,6 +252,10 @@ export default function Training() {
               <span className="hidden sm:inline">Custom</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="library" className="mt-6">
+            <TrainingLibraryView />
+          </TabsContent>
 
           <TabsContent value="templates" className="mt-6">
             <div className="flex justify-end mb-4">
@@ -344,6 +360,10 @@ export default function Training() {
 
           <TabsContent value="assignments" className="mt-6">
             <WorkoutAssignment />
+          </TabsContent>
+
+          <TabsContent value="progress" className="mt-6">
+            <MemberProgressDashboard />
           </TabsContent>
 
           <TabsContent value="promotions" className="mt-6">

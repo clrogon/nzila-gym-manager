@@ -62,7 +62,7 @@ const gymNavItems: NavItem[] = [
   { icon: Package, label: 'Inventory', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: ShoppingCart, label: 'POS', href: '/pos', permission: 'payments:read' },
   { icon: Scan, label: 'Kiosk', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
-  { icon: UserCog, label: 'Staff', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: UserCog, label: 'Trainers', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: Settings, label: 'Settings', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
 ];
 
