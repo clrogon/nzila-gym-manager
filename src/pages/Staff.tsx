@@ -107,53 +107,62 @@ export default function Staff() {
   };
 
   const fetchStaffMembers = async () => {
-    let query = supabase
-      .from('user_roles')
-      .select(`
-        id,
-        user_id,
-        role,
-        gym_id,
-        created_at
-      `)
-      .in('role', ['gym_owner', 'admin', 'staff']);
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('user_roles')
+        .select(`
+          id,
+          user_id,
+          role,
+          gym_id,
+          created_at
+        `)
+        .in('role', ['gym_owner', 'admin', 'staff']);
 
-    // If not super admin, only show staff for current gym
-    if (!isSuperAdmin && currentGym) {
-      query = query.eq('gym_id', currentGym.id);
+      // If not super admin, only show staff for current gym
+      if (!isSuperAdmin && currentGym) {
+        query = query.eq('gym_id', currentGym.id);
+      }
+
+      const { data: rolesData, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching staff:', error);
+        setLoading(false);
+        return;
+      }
+
+      if (!rolesData || rolesData.length === 0) {
+        setStaffMembers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profiles and gym names
+      const userIds = [...new Set(rolesData.map(r => r.user_id))];
+      const gymIds = [...new Set(rolesData.map(r => r.gym_id).filter((id): id is string => Boolean(id)))];
+
+      const [profilesRes, gymsRes] = await Promise.all([
+        supabase.from('profiles').select('id, full_name, email').in('id', userIds),
+        gymIds.length > 0 ? supabase.from('gyms').select('id, name').in('id', gymIds) : Promise.resolve({ data: [] as { id: string; name: string }[] })
+      ]);
+
+      const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
+      const gymsMap = new Map((gymsRes.data || []).map(g => [g.id, g]));
+
+      const enrichedStaff: StaffMember[] = rolesData.map(role => ({
+        ...role,
+        profile: profilesMap.get(role.user_id),
+        gym: role.gym_id ? gymsMap.get(role.gym_id) : undefined,
+      }));
+
+      setStaffMembers(enrichedStaff);
+    } catch (error) {
+      console.error('Error in fetchStaffMembers:', error);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: rolesData, error } = await query.order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching staff:', error);
-      return;
-    }
-
-    if (!rolesData) {
-      setStaffMembers([]);
-      return;
-    }
-
-    // Fetch profiles and gym names
-    const userIds = [...new Set(rolesData.map(r => r.user_id))];
-    const gymIds = [...new Set(rolesData.map(r => r.gym_id).filter((id): id is string => Boolean(id)))];
-
-    const [profilesRes, gymsRes] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, email').in('id', userIds),
-      gymIds.length > 0 ? supabase.from('gyms').select('id, name').in('id', gymIds) : Promise.resolve({ data: [] as { id: string; name: string }[] })
-    ]);
-
-    const profilesMap = new Map(profilesRes.data?.map(p => [p.id, p]) || []);
-    const gymsMap = new Map((gymsRes.data || []).map(g => [g.id, g]));
-
-    const enrichedStaff: StaffMember[] = rolesData.map(role => ({
-      ...role,
-      profile: profilesMap.get(role.user_id),
-      gym: role.gym_id ? gymsMap.get(role.gym_id) : undefined,
-    }));
-
-    setStaffMembers(enrichedStaff);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
