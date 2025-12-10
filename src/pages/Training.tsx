@@ -15,6 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { getCategoryNames } from '@/lib/seedData';
 import { PolymorphicWodBuilder } from '@/components/training/PolymorphicWodBuilder';
+import { WorkoutAssignment } from '@/components/training/WorkoutAssignment';
+import { RankPromotion } from '@/components/training/RankPromotion';
+import { GymContentCrud } from '@/components/training/GymContentCrud';
 import {
   Plus,
   Dumbbell,
@@ -28,6 +31,9 @@ import {
   BarChart3,
   Trophy,
   Search,
+  Award,
+  ClipboardList,
+  Settings2,
 } from 'lucide-react';
 
 interface WorkoutTemplate {
@@ -63,6 +69,7 @@ const DIFFICULTY_COLORS = {
 export default function Training() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
+  const [activeTab, setActiveTab] = useState('templates');
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -209,290 +216,144 @@ export default function Training() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Training Hub</h1>
-            <p className="text-muted-foreground">Create and manage workout programs</p>
+            <p className="text-muted-foreground">Manage workouts, assignments, and promotions</p>
           </div>
-
-          {hasPermission('training:create') && (
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Workout
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create Workout Template</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6 pt-4">
-                  {/* Basic Info */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="col-span-2 space-y-2">
-                      <Label>Workout Name</Label>
-                      <Input
-                        value={formData.name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="e.g., Full Body Strength"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Category</Label>
-                      <Select
-                        value={formData.category}
-                        onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map(cat => (
-                            <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Difficulty</Label>
-                      <Select
-                        value={formData.difficulty}
-                        onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DIFFICULTIES.map(diff => (
-                            <SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Duration (minutes)</Label>
-                      <Input
-                        type="number"
-                        value={formData.estimated_duration}
-                        onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-2">
-                      <Label>Description</Label>
-                      <Textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Describe the workout..."
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Polymorphic Exercises based on category */}
-                  <PolymorphicWodBuilder
-                    category={formData.category}
-                    exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))}
-                    onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))}
-                  />
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTemplate}>
-                      Create Template
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search workouts..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat} className="capitalize">{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  {DIFFICULTIES.map(diff => (
-                    <SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="templates" className="flex items-center gap-2">
+              <Dumbbell className="w-4 h-4" />
+              <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              <span className="hidden sm:inline">Assignments</span>
+            </TabsTrigger>
+            <TabsTrigger value="promotions" className="flex items-center gap-2">
+              <Award className="w-4 h-4" />
+              <span className="hidden sm:inline">Promotions</span>
+            </TabsTrigger>
+            <TabsTrigger value="custom" className="flex items-center gap-2">
+              <Settings2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Custom</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Dumbbell className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{templates.length}</p>
-                  <p className="text-sm text-muted-foreground">Total Workouts</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-green-500/10">
-                  <Target className="w-6 h-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{templates.filter(t => t.difficulty === 'beginner').length}</p>
-                  <p className="text-sm text-muted-foreground">Beginner</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-yellow-500/10">
-                  <BarChart3 className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{templates.filter(t => t.difficulty === 'intermediate').length}</p>
-                  <p className="text-sm text-muted-foreground">Intermediate</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-red-500/10">
-                  <Trophy className="w-6 h-6 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{templates.filter(t => t.difficulty === 'advanced').length}</p>
-                  <p className="text-sm text-muted-foreground">Advanced</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Workout Templates Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="capitalize">{template.category}</CardDescription>
-                  </div>
-                  <Badge className={DIFFICULTY_COLORS[template.difficulty as keyof typeof DIFFICULTY_COLORS]}>
-                    {template.difficulty}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {template.description && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {template.description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {template.estimated_duration} min
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Dumbbell className="w-4 h-4" />
-                    {template.exercises?.length || 0} exercises
-                  </span>
-                </div>
-
-                {template.exercises && template.exercises.length > 0 && (
-                  <div className="space-y-1 mb-4">
-                    {template.exercises.slice(0, 3).map((ex: Exercise, i: number) => (
-                      <div key={i} className="text-sm flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs">
-                          {i + 1}
-                        </span>
-                        <span>{ex.name}</span>
-                        <span className="text-muted-foreground ml-auto">
-                          {ex.sets}×{ex.reps}
-                        </span>
+          <TabsContent value="templates" className="mt-6">
+            <div className="flex justify-end mb-4">
+              {hasPermission('training:create') && (
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Workout
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create Workout Template</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 pt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2 space-y-2">
+                          <Label>Workout Name</Label>
+                          <Input
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="e.g., Full Body Strength"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Category</Label>
+                          <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {CATEGORIES.map(cat => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Difficulty</Label>
+                          <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {DIFFICULTIES.map(diff => (<SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Duration (minutes)</Label>
+                          <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
+                        </div>
+                        <div className="col-span-2 space-y-2">
+                          <Label>Description</Label>
+                          <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe the workout..." rows={2} />
+                        </div>
                       </div>
-                    ))}
-                    {template.exercises.length > 3 && (
-                      <p className="text-xs text-muted-foreground pl-7">
-                        +{template.exercises.length - 3} more exercises
-                      </p>
-                    )}
-                  </div>
-                )}
+                      <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+                        <Button onClick={handleCreateTemplate}>Create Template</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
 
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <Play className="w-4 h-4 mr-1" />
-                    Assign
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    onClick={() => handleDeleteTemplate(template.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTemplates.map((template) => (
+                <Card key={template.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{template.name}</CardTitle>
+                        <CardDescription className="capitalize">{template.category}</CardDescription>
+                      </div>
+                      <Badge className={DIFFICULTY_COLORS[template.difficulty as keyof typeof DIFFICULTY_COLORS]}>{template.difficulty}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {template.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{template.description}</p>}
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{template.estimated_duration} min</span>
+                      <span className="flex items-center gap-1"><Dumbbell className="w-4 h-4" />{template.exercises?.length || 0} exercises</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Assign</Button>
+                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTemplate(template.id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-        {filteredTemplates.length === 0 && !loading && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No workout templates found</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first workout template to get started
-              </p>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Workout
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+            {filteredTemplates.length === 0 && !loading && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No workout templates found</h3>
+                  <p className="text-muted-foreground mb-4">Create your first workout template to get started</p>
+                  <Button onClick={() => setIsCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Create Workout</Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="assignments" className="mt-6">
+            <WorkoutAssignment />
+          </TabsContent>
+
+          <TabsContent value="promotions" className="mt-6">
+            <RankPromotion />
+          </TabsContent>
+
+          <TabsContent value="custom" className="mt-6">
+            <GymContentCrud />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
