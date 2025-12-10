@@ -20,6 +20,7 @@ import { PaymentsPage } from "./modules/payments";
 import { SettingsPage } from "./modules/settings";
 import { OnboardingPage } from "./modules/onboarding";
 import { SuperAdminPage } from "./modules/superadmin";
+import { StaffPage } from "./modules/staff";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ function AppRoutes() {
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
+      <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

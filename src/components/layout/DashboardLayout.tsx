@@ -21,19 +21,30 @@ import {
   Settings,
   LogOut,
   Menu,
-  X,
   Dumbbell,
   ChevronDown,
   ShieldCheck,
+  Building2,
+  UserCog,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+// Gym-level navigation
+const gymNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Members', href: '/members' },
   { icon: UserCheck, label: 'Check-ins', href: '/check-ins' },
   { icon: CreditCard, label: 'Payments', href: '/payments' },
+  { icon: UserCog, label: 'Staff', href: '/staff' },
   { icon: Settings, label: 'Settings', href: '/settings' },
+];
+
+// Platform-level navigation (Super Admin only)
+const platformNavItems = [
+  { icon: Building2, label: 'Gyms', href: '/super-admin' },
+  { icon: UserCog, label: 'All Staff', href: '/staff' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -43,6 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [viewMode, setViewMode] = useState<'platform' | 'gym'>('gym');
 
   useEffect(() => {
     const checkSuperAdmin = async () => {
@@ -53,15 +65,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .eq('user_id', user.id)
         .eq('role', 'super_admin')
         .maybeSingle();
-      setIsSuperAdmin(!!data);
+      const isSuper = !!data;
+      setIsSuperAdmin(isSuper);
+      // Default to platform view for super admins on super-admin route
+      if (isSuper && location.pathname === '/super-admin') {
+        setViewMode('platform');
+      }
     };
     checkSuperAdmin();
-  }, [user]);
+  }, [user, location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
   };
+
+  const toggleViewMode = () => {
+    setViewMode(prev => prev === 'platform' ? 'gym' : 'platform');
+  };
+
+  const navItems = viewMode === 'platform' ? platformNavItems : gymNavItems;
 
   const initials = user?.user_metadata?.full_name
     ?.split(' ')
@@ -124,23 +147,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
+          {/* View Mode Toggle (Super Admin only) */}
+          {isSuperAdmin && (
+            <div className="px-4 py-3 border-b border-sidebar-border">
+              <button
+                onClick={toggleViewMode}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  {viewMode === 'platform' ? (
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Dumbbell className="w-4 h-4 text-primary" />
+                  )}
+                  <span className="text-sm font-medium text-sidebar-foreground">
+                    {viewMode === 'platform' ? 'Platform View' : 'Gym View'}
+                  </span>
+                </div>
+                {viewMode === 'platform' ? (
+                  <ToggleRight className="w-5 h-5 text-primary" />
+                ) : (
+                  <ToggleLeft className="w-5 h-5 text-muted-foreground" />
+                )}
+              </button>
+            </div>
+          )}
+
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
-            {isSuperAdmin && (
-              <Link
-                to="/super-admin"
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-3 rounded-lg transition-all mb-2',
-                  location.pathname === '/super-admin'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-primary/30'
-                )}
-              >
-                <ShieldCheck className="w-5 h-5" />
-                <span className="font-medium">Super Admin</span>
-              </Link>
-            )}
             {navItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
