@@ -313,9 +313,9 @@ export default function Staff() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Staff Management</h1>
+            <h1 className="text-2xl font-display font-bold text-foreground">Trainers & Staff</h1>
             <p className="text-muted-foreground">
-              {isSuperAdmin ? 'Manage staff across all gyms' : `Manage staff for ${currentGym?.name}`}
+              {isSuperAdmin ? 'Manage trainers across all gyms' : `Manage trainers for ${currentGym?.name}`}
             </p>
           </div>
           {canManageStaff && (

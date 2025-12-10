@@ -12,11 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, addDays, addWeeks } from 'date-fns';
 import {
   Plus, Calendar as CalendarIcon, Loader2, CheckCircle2,
-  Clock, User, Dumbbell, X, FileText
+  Clock, User, Dumbbell, Repeat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -47,6 +49,18 @@ interface MemberWorkout {
   workout_template?: WorkoutTemplate;
 }
 
+type RecurrenceType = 'none' | 'daily' | 'weekly' | 'custom';
+
+const DAYS_OF_WEEK = [
+  { value: 0, label: 'Sun' },
+  { value: 1, label: 'Mon' },
+  { value: 2, label: 'Tue' },
+  { value: 3, label: 'Wed' },
+  { value: 4, label: 'Thu' },
+  { value: 5, label: 'Fri' },
+  { value: 6, label: 'Sat' },
+];
+
 export function WorkoutAssignment() {
   const { currentGym } = useGym();
   const { user } = useAuth();
@@ -64,6 +78,13 @@ export function WorkoutAssignment() {
     workout_template_id: '',
     assigned_date: new Date(),
     notes: '',
+  });
+
+  const [recurrence, setRecurrence] = useState({
+    enabled: false,
+    type: 'weekly' as RecurrenceType,
+    selectedDays: [1, 3, 5], // Mon, Wed, Fri default
+    weeks: 4,
   });
 
   const [completionData, setCompletionData] = useState({
@@ -119,6 +140,40 @@ export function WorkoutAssignment() {
     }
   };
 
+  const generateRecurringDates = (): Date[] => {
+    const dates: Date[] = [];
+    const startDate = formData.assigned_date;
+
+    if (!recurrence.enabled || recurrence.type === 'none') {
+      return [startDate];
+    }
+
+    if (recurrence.type === 'daily') {
+      for (let i = 0; i < recurrence.weeks * 7; i++) {
+        dates.push(addDays(startDate, i));
+      }
+    } else if (recurrence.type === 'weekly' || recurrence.type === 'custom') {
+      for (let week = 0; week < recurrence.weeks; week++) {
+        for (const dayOfWeek of recurrence.selectedDays) {
+          const date = addWeeks(startDate, week);
+          const currentDayOfWeek = date.getDay();
+          const daysToAdd = (dayOfWeek - currentDayOfWeek + 7) % 7;
+          const targetDate = addDays(date, daysToAdd);
+          if (targetDate >= startDate) {
+            dates.push(targetDate);
+          }
+        }
+      }
+    }
+
+    // Remove duplicates and sort
+    const uniqueDates = Array.from(new Set(dates.map(d => d.toISOString())))
+      .map(d => new Date(d))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    return uniqueDates;
+  };
+
   const handleAssign = async () => {
     if (!formData.member_id || !formData.workout_template_id) {
       toast.error('Please select a member and workout');
@@ -127,18 +182,22 @@ export function WorkoutAssignment() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('member_workouts').insert({
+      const dates = generateRecurringDates();
+      const assignments = dates.map(date => ({
         member_id: formData.member_id,
         workout_template_id: formData.workout_template_id,
-        assigned_date: format(formData.assigned_date, 'yyyy-MM-dd'),
+        assigned_date: format(date, 'yyyy-MM-dd'),
         assigned_by: user?.id,
         notes: formData.notes || null,
-      });
+      }));
+
+      const { error } = await supabase.from('member_workouts').insert(assignments);
 
       if (error) throw error;
-      toast.success('Workout assigned successfully');
+      toast.success(`${assignments.length} workout${assignments.length > 1 ? 's' : ''} assigned successfully`);
       setIsAssignDialogOpen(false);
       setFormData({ member_id: '', workout_template_id: '', assigned_date: new Date(), notes: '' });
+      setRecurrence({ enabled: false, type: 'weekly', selectedDays: [1, 3, 5], weeks: 4 });
       fetchData();
     } catch (error: any) {
       toast.error(error.message || 'Failed to assign workout');
@@ -178,6 +237,15 @@ export function WorkoutAssignment() {
     setSelectedAssignment(assignment);
     setCompletionData({ results: '', notes: assignment.notes || '' });
     setIsCompleteDialogOpen(true);
+  };
+
+  const toggleDay = (day: number) => {
+    setRecurrence(prev => ({
+      ...prev,
+      selectedDays: prev.selectedDays.includes(day)
+        ? prev.selectedDays.filter(d => d !== day)
+        : [...prev.selectedDays, day].sort((a, b) => a - b),
+    }));
   };
 
   const pendingAssignments = assignments.filter(a => !a.completed_at);
@@ -347,9 +415,9 @@ export function WorkoutAssignment() {
         </Card>
       )}
 
-      {/* Assign Dialog */}
+      {/* Assign Dialog with Recurrence */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Assign Workout</DialogTitle>
           </DialogHeader>
@@ -385,7 +453,7 @@ export function WorkoutAssignment() {
             </div>
 
             <div className="space-y-2">
-              <Label>Date</Label>
+              <Label>Start Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-full justify-start text-left font-normal")}>
@@ -404,6 +472,63 @@ export function WorkoutAssignment() {
               </Popover>
             </div>
 
+            {/* Recurring Assignment */}
+            <div className="space-y-4 p-4 rounded-lg border bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Repeat className="w-4 h-4 text-muted-foreground" />
+                  <Label>Recurring Assignment</Label>
+                </div>
+                <Switch
+                  checked={recurrence.enabled}
+                  onCheckedChange={(checked) => setRecurrence(prev => ({ ...prev, enabled: checked }))}
+                />
+              </div>
+
+              {recurrence.enabled && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Days of Week</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {DAYS_OF_WEEK.map((day) => (
+                        <Button
+                          key={day.value}
+                          type="button"
+                          size="sm"
+                          variant={recurrence.selectedDays.includes(day.value) ? 'default' : 'outline'}
+                          className="w-10 h-10 p-0"
+                          onClick={() => toggleDay(day.value)}
+                        >
+                          {day.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm">Duration (weeks)</Label>
+                    <Select 
+                      value={String(recurrence.weeks)} 
+                      onValueChange={(v) => setRecurrence(prev => ({ ...prev, weeks: parseInt(v) }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 4, 6, 8, 12].map((w) => (
+                          <SelectItem key={w} value={String(w)}>{w} week{w > 1 ? 's' : ''}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    This will create {generateRecurringDates().length} workout assignments
+                  </p>
+                </>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Notes (optional)</Label>
               <Textarea
@@ -418,7 +543,7 @@ export function WorkoutAssignment() {
             <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleAssign} disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Assign
+              Assign {recurrence.enabled ? `(${generateRecurringDates().length})` : ''}
             </Button>
           </DialogFooter>
         </DialogContent>
