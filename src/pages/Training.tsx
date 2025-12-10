@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { getCategoryNames } from '@/lib/seedData';
+import { PolymorphicWodBuilder } from '@/components/training/PolymorphicWodBuilder';
 import {
   Plus,
   Dumbbell,
@@ -285,66 +286,12 @@ export default function Training() {
                     </div>
                   </div>
 
-                  {/* Exercises */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold">Exercises</Label>
-                      <Button variant="outline" size="sm" onClick={addExercise}>
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Exercise
-                      </Button>
-                    </div>
-
-                    {formData.exercises.map((exercise, index) => (
-                      <Card key={index} className="p-4">
-                        <div className="grid grid-cols-12 gap-3">
-                          <div className="col-span-12 sm:col-span-4">
-                            <Label className="text-xs">Exercise Name</Label>
-                            <Input
-                              value={exercise.name}
-                              onChange={(e) => updateExercise(index, 'name', e.target.value)}
-                              placeholder="e.g., Squats"
-                            />
-                          </div>
-                          <div className="col-span-4 sm:col-span-2">
-                            <Label className="text-xs">Sets</Label>
-                            <Input
-                              type="number"
-                              value={exercise.sets}
-                              onChange={(e) => updateExercise(index, 'sets', parseInt(e.target.value) || 3)}
-                            />
-                          </div>
-                          <div className="col-span-4 sm:col-span-2">
-                            <Label className="text-xs">Reps</Label>
-                            <Input
-                              value={exercise.reps}
-                              onChange={(e) => updateExercise(index, 'reps', e.target.value)}
-                              placeholder="10"
-                            />
-                          </div>
-                          <div className="col-span-4 sm:col-span-2">
-                            <Label className="text-xs">Rest</Label>
-                            <Input
-                              value={exercise.rest}
-                              onChange={(e) => updateExercise(index, 'rest', e.target.value)}
-                              placeholder="60s"
-                            />
-                          </div>
-                          <div className="col-span-12 sm:col-span-2 flex items-end">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive"
-                              onClick={() => removeExercise(index)}
-                              disabled={formData.exercises.length === 1}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
+                  {/* Polymorphic Exercises based on category */}
+                  <PolymorphicWodBuilder
+                    category={formData.category}
+                    exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))}
+                    onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))}
+                  />
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
