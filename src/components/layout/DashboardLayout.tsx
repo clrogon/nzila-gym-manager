@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
                 <Dumbbell className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-display text-sidebar-foreground">GymFlow</span>
+              <span className="text-xl font-display text-sidebar-foreground">Nzila</span>
             </Link>
           </div>
 

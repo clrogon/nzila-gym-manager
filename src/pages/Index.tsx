@@ -43,7 +43,7 @@ export default function Index() {
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
               <Dumbbell className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-display font-bold">GymFlow</span>
+            <span className="text-xl font-display font-bold">Nzila</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/auth">
@@ -116,8 +116,8 @@ export default function Index() {
                 Built for Angolan Gyms
               </h2>
               <p className="text-muted-foreground text-lg mb-8">
-                GymFlow is designed specifically for the Angolan market, with support for 
-                local payment methods like Multicaixa Express and AOA currency.
+              Nzila is designed specifically for the Angolan market, with support for 
+              local payment methods like Multicaixa Express and AOA currency.
               </p>
               <ul className="space-y-4">
                 {benefits.map((benefit) => (
@@ -152,7 +152,7 @@ export default function Index() {
               Ready to Transform Your Gym?
             </h2>
             <p className="text-muted-foreground text-lg">
-              Join GymFlow today and take your gym management to the next level.
+              Join Nzila today and take your gym management to the next level.
             </p>
             <Link to="/auth">
               <Button size="lg" className="gradient-primary text-lg px-8">
@@ -167,7 +167,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} GymFlow. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Nzila. All rights reserved.</p>
         </div>
       </footer>
     </div>
