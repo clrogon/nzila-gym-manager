@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useGym } from '@/contexts/GymContext';
+import { supabase } from '@/integrations/supabase/client';
+import { ScheduleClassFromLibrary } from './ScheduleClassFromLibrary';
 import { 
   DEFAULT_WORKOUT_CATEGORIES, 
   getCategoryNames, 
@@ -15,9 +19,20 @@ import {
   Calendar,
   ListChecks,
   Activity,
+  CalendarPlus,
 } from 'lucide-react';
 
 type LibraryTab = 'workouts' | 'classes' | 'exercises';
+
+interface GymClass {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  default_duration: number | null;
+  default_capacity: number | null;
+  category: string | null;
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Strength & Conditioning": "bg-red-500/10 text-red-600 border-red-500/20",
@@ -32,12 +47,33 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Special Population Training": "bg-teal-500/10 text-teal-600 border-teal-500/20",
 };
 
+const DEFAULT_COLORS = ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#3B82F6', '#6366F1', '#8B5CF6', '#06B6D4', '#EC4899', '#14B8A6'];
+
 export function TrainingLibraryView() {
-  const [activeTab, setActiveTab] = useState<LibraryTab>('workouts');
+  const { currentGym } = useGym();
+  const [activeTab, setActiveTab] = useState<LibraryTab>('classes');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [gymClasses, setGymClasses] = useState<GymClass[]>([]);
 
   const categories = getCategoryNames();
+
+  // Fetch gym classes from database
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchGymClasses();
+    }
+  }, [currentGym?.id]);
+
+  const fetchGymClasses = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('gym_classes')
+      .select('*')
+      .eq('gym_id', currentGym.id)
+      .eq('is_active', true);
+    setGymClasses(data || []);
+  };
 
   const getDataForTab = () => {
     const category = filterCategory === 'all' ? null : getCategoryByName(filterCategory);
@@ -47,8 +83,38 @@ export function TrainingLibraryView() {
       return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.workouts.map(w => ({ name: w, category: c.name })));
     }
     if (activeTab === 'classes') {
-      if (category) return category.classes.map(c => ({ name: c, category: filterCategory }));
-      return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.classes.map(cl => ({ name: cl, category: c.name })));
+      // Combine seed data with gym classes
+      const seedClasses = filterCategory === 'all' 
+        ? DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.classes.map(cl => ({ 
+            name: cl, 
+            category: c.name,
+            isGymClass: false,
+            gymClass: null as GymClass | null,
+          })))
+        : (category?.classes || []).map(cl => ({ 
+            name: cl, 
+            category: filterCategory,
+            isGymClass: false,
+            gymClass: null as GymClass | null,
+          }));
+
+      // Check if gym has these classes stored
+      return seedClasses.map(sc => {
+        const gymClass = gymClasses.find(gc => gc.name === sc.name);
+        return {
+          ...sc,
+          isGymClass: !!gymClass,
+          gymClass: gymClass || {
+            id: '',
+            name: sc.name,
+            description: null,
+            color: DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)],
+            default_duration: 60,
+            default_capacity: 20,
+            category: sc.category,
+          },
+        };
+      });
     }
     if (activeTab === 'exercises') {
       if (category) return category.exercises.map(e => ({ name: e, category: filterCategory }));
@@ -123,13 +189,13 @@ export function TrainingLibraryView() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LibraryTab)}>
         <TabsList>
-          <TabsTrigger value="workouts" className="flex items-center gap-2">
-            <Dumbbell className="w-4 h-4" />
-            Workouts
-          </TabsTrigger>
           <TabsTrigger value="classes" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Classes
+          </TabsTrigger>
+          <TabsTrigger value="workouts" className="flex items-center gap-2">
+            <Dumbbell className="w-4 h-4" />
+            Workouts
           </TabsTrigger>
           <TabsTrigger value="exercises" className="flex items-center gap-2">
             <ListChecks className="w-4 h-4" />
@@ -189,13 +255,43 @@ export function TrainingLibraryView() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {items.map((item, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-sm py-1 px-3">
-                          {item.name}
-                        </Badge>
-                      ))}
-                    </div>
+                    {activeTab === 'classes' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {items.map((item: any, idx) => (
+                          <div 
+                            key={idx} 
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                          >
+                            <span className="font-medium text-sm">{item.name}</span>
+                            <ScheduleClassFromLibrary
+                              gymClass={item.gymClass || {
+                                id: '',
+                                name: item.name,
+                                description: null,
+                                color: DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+                                default_duration: 60,
+                                default_capacity: 20,
+                                category: item.category,
+                              }}
+                              trigger={
+                                <Button size="sm" variant="ghost" className="h-8">
+                                  <CalendarPlus className="w-4 h-4 mr-1" />
+                                  Schedule
+                                </Button>
+                              }
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {items.map((item: any, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-sm py-1 px-3">
+                            {item.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

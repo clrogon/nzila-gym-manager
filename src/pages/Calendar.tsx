@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, addHours, setHours, setMinutes } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay, parseISO, setHours } from 'date-fns';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
@@ -7,28 +7,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarWidget } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { RecurringClassForm } from '@/components/calendar/RecurringClassForm';
+import { ClassDetailDialog } from '@/components/calendar/ClassDetailDialog';
 import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  CalendarIcon,
   Clock,
   Users,
   MapPin,
-  User,
   Filter,
   LayoutGrid,
   List,
+  Repeat,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ClassEvent {
@@ -39,6 +34,8 @@ interface ClassEvent {
   end_time: string;
   capacity: number;
   status: string;
+  is_recurring?: boolean;
+  recurrence_rule?: string;
   class_type?: { name: string; color: string } | null;
   location?: { name: string } | null;
   bookings_count?: number;
@@ -55,33 +52,24 @@ interface ClassType {
 interface Location {
   id: string;
   name: string;
+  capacity?: number;
 }
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6); // 6 AM to 10 PM
+const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 
 export default function Calendar() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-  const [viewMode, setViewMode] = useState<'week' | 'day' | 'list'>('week');
+  const [viewMode, setViewMode] = useState<'week' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [classes, setClasses] = useState<ClassEvent[]>([]);
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const [filterType, setFilterType] = useState<string>('all');
-
-  // Form state
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    class_type_id: '',
-    location_id: '',
-    start_date: new Date(),
-    start_time: '09:00',
-    capacity: 20,
-  });
+  const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -116,7 +104,28 @@ export default function Calendar() {
 
       const { data, error } = await query;
       if (error) throw error;
-      setClasses(data || []);
+
+      // Fetch booking counts
+      const classIds = (data || []).map(c => c.id);
+      if (classIds.length > 0) {
+        const { data: bookings } = await supabase
+          .from('class_bookings')
+          .select('class_id')
+          .in('class_id', classIds)
+          .in('status', ['booked', 'confirmed']);
+
+        const bookingCounts = (bookings || []).reduce((acc, b) => {
+          acc[b.class_id] = (acc[b.class_id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+
+        setClasses((data || []).map(c => ({
+          ...c,
+          bookings_count: bookingCounts[c.id] || 0,
+        })));
+      } else {
+        setClasses(data || []);
+      }
     } catch (error) {
       console.error('Error fetching classes:', error);
     } finally {
@@ -144,44 +153,6 @@ export default function Calendar() {
     setLocations(data || []);
   };
 
-  const handleCreateClass = async () => {
-    if (!currentGym?.id) return;
-    
-    const selectedType = classTypes.find(t => t.id === formData.class_type_id);
-    const [hours, minutes] = formData.start_time.split(':').map(Number);
-    const startTime = setMinutes(setHours(formData.start_date, hours), minutes);
-    const endTime = addHours(startTime, (selectedType?.duration_minutes || 60) / 60);
-
-    try {
-      const { error } = await supabase.from('classes').insert({
-        gym_id: currentGym.id,
-        title: formData.title || selectedType?.name || 'Class',
-        description: formData.description || null,
-        class_type_id: formData.class_type_id || null,
-        location_id: formData.location_id || null,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        capacity: formData.capacity,
-      });
-
-      if (error) throw error;
-      toast.success('Class created successfully');
-      setIsCreateOpen(false);
-      fetchClasses();
-      setFormData({
-        title: '',
-        description: '',
-        class_type_id: '',
-        location_id: '',
-        start_date: new Date(),
-        start_time: '09:00',
-        capacity: 20,
-      });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create class');
-    }
-  };
-
   const getClassesForDay = (day: Date) => {
     return classes.filter(c => isSameDay(parseISO(c.start_time), day));
   };
@@ -196,6 +167,16 @@ export default function Calendar() {
 
   const navigateWeek = (direction: number) => {
     setCurrentDate(prev => addDays(prev, direction * 7));
+  };
+
+  const handleClassClick = (classEvent: ClassEvent) => {
+    setSelectedClass(classEvent);
+    setDetailOpen(true);
+  };
+
+  const handleCreateSuccess = () => {
+    setIsCreateOpen(false);
+    fetchClasses();
   };
 
   if (!currentGym) {
@@ -215,7 +196,7 @@ export default function Calendar() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Calendar</h1>
-            <p className="text-muted-foreground">Schedule and manage classes</p>
+            <p className="text-muted-foreground">Schedule and manage classes with recurring options</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -245,126 +226,22 @@ export default function Calendar() {
                     Add Class
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Schedule New Class</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                      Schedule Class
+                      <Badge variant="secondary" className="text-xs">
+                        <Repeat className="w-3 h-3 mr-1" />
+                        Recurring Supported
+                      </Badge>
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                      <Label>Class Type</Label>
-                      <Select
-                        value={formData.class_type_id}
-                        onValueChange={(v) => {
-                          const type = classTypes.find(t => t.id === v);
-                          setFormData(prev => ({
-                            ...prev,
-                            class_type_id: v,
-                            title: type?.name || prev.title,
-                            capacity: type?.capacity || prev.capacity,
-                          }));
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {classTypes.map(type => (
-                            <SelectItem key={type.id} value={type.id}>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: type.color }} />
-                                {type.name} ({type.duration_minutes} min)
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Title (optional)</Label>
-                      <Input
-                        value={formData.title}
-                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        placeholder="Class title"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Date</Label>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full justify-start text-left font-normal">
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {format(formData.start_date, 'PPP')}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <CalendarWidget
-                              mode="single"
-                              selected={formData.start_date}
-                              onSelect={(date) => date && setFormData(prev => ({ ...prev, start_date: date }))}
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Time</Label>
-                        <Input
-                          type="time"
-                          value={formData.start_time}
-                          onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Location</Label>
-                        <Select
-                          value={formData.location_id}
-                          onValueChange={(v) => setFormData(prev => ({ ...prev, location_id: v }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {locations.map(loc => (
-                              <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Capacity</Label>
-                        <Input
-                          type="number"
-                          value={formData.capacity}
-                          onChange={(e) => setFormData(prev => ({ ...prev, capacity: parseInt(e.target.value) || 20 }))}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Description (optional)</Label>
-                      <Textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Class description"
-                        rows={2}
-                      />
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleCreateClass}>
-                        Create Class
-                      </Button>
-                    </div>
-                  </div>
+                  <RecurringClassForm
+                    classTypes={classTypes}
+                    locations={locations}
+                    onSuccess={handleCreateSuccess}
+                    onCancel={() => setIsCreateOpen(false)}
+                  />
                 </DialogContent>
               </Dialog>
             )}
@@ -458,19 +335,39 @@ export default function Calendar() {
                             {dayClasses.map((classEvent) => (
                               <div
                                 key={classEvent.id}
-                                className="p-2 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                className={cn(
+                                  'p-2 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity relative',
+                                  classEvent.status === 'cancelled' && 'opacity-50'
+                                )}
                                 style={getClassStyle(classEvent)}
+                                onClick={() => handleClassClick(classEvent)}
                               >
-                                <div className="font-medium truncate">{classEvent.title}</div>
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium truncate">{classEvent.title}</span>
+                                  {classEvent.is_recurring && (
+                                    <Repeat className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                </div>
                                 <div className="text-muted-foreground">
                                   {format(parseISO(classEvent.start_time), 'h:mm a')}
                                 </div>
-                                {classEvent.location && (
-                                  <div className="flex items-center gap-1 text-muted-foreground mt-1">
-                                    <MapPin className="w-3 h-3" />
-                                    {classEvent.location.name}
-                                  </div>
-                                )}
+                                <div className="flex items-center gap-2 mt-1">
+                                  {classEvent.location && (
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <MapPin className="w-3 h-3" />
+                                      {classEvent.location.name}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Users className="w-3 h-3" />
+                                  <span className={classEvent.bookings_count! >= classEvent.capacity ? 'text-destructive font-medium' : ''}>
+                                    {classEvent.bookings_count || 0}/{classEvent.capacity}
+                                  </span>
+                                  {classEvent.bookings_count! >= classEvent.capacity && (
+                                    <AlertCircle className="w-3 h-3 text-destructive" />
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -502,11 +399,20 @@ export default function Calendar() {
                         {dayClasses.map((classEvent) => (
                           <div
                             key={classEvent.id}
-                            className="flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
+                            className={cn(
+                              'flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer',
+                              classEvent.status === 'cancelled' && 'opacity-50'
+                            )}
                             style={{ borderLeftColor: classEvent.class_type?.color || '#3B82F6', borderLeftWidth: 4 }}
+                            onClick={() => handleClassClick(classEvent)}
                           >
                             <div className="flex-1">
-                              <div className="font-medium">{classEvent.title}</div>
+                              <div className="font-medium flex items-center gap-2">
+                                {classEvent.title}
+                                {classEvent.is_recurring && (
+                                  <Repeat className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </div>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
@@ -518,9 +424,13 @@ export default function Calendar() {
                                     {classEvent.location.name}
                                   </span>
                                 )}
-                                <span className="flex items-center gap-1">
+                                <span className={cn(
+                                  'flex items-center gap-1',
+                                  classEvent.bookings_count! >= classEvent.capacity && 'text-destructive'
+                                )}>
                                   <Users className="w-4 h-4" />
                                   {classEvent.bookings_count || 0}/{classEvent.capacity}
+                                  {classEvent.bookings_count! >= classEvent.capacity && ' (Full)'}
                                 </span>
                               </div>
                             </div>
@@ -566,6 +476,14 @@ export default function Calendar() {
           </Card>
         )}
       </div>
+
+      {/* Class Detail Dialog */}
+      <ClassDetailDialog
+        classEvent={selectedClass}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        onRefresh={fetchClasses}
+      />
     </DashboardLayout>
   );
 }
