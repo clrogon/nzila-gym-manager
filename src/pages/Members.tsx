@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -30,7 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -48,6 +48,7 @@ export default function Members() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
 
@@ -58,7 +59,11 @@ export default function Members() {
   const [status, setStatus] = useState<string>('active');
 
   useEffect(() => {
-    if (currentGym) fetchMembers();
+    if (currentGym) {
+      fetchMembers();
+    } else {
+      setLoading(false);
+    }
   }, [currentGym]);
 
   const fetchMembers = async () => {
@@ -82,7 +87,10 @@ export default function Members() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentGym) return;
+    if (!currentGym) {
+      toast({ title: 'Error', description: 'Please create a gym first.', variant: 'destructive' });
+      return;
+    }
 
     try {
       if (editingMember) {
@@ -148,12 +156,21 @@ export default function Members() {
     setStatus('active');
   };
 
-  const filteredMembers = members.filter(
-    (m) =>
+  const filteredMembers = members.filter((m) => {
+    const matchesSearch =
       m.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.phone?.includes(searchQuery)
-  );
+      m.phone?.includes(searchQuery);
+    const matchesStatus = statusFilter === 'all' || m.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const stats = {
+    total: members.length,
+    active: members.filter((m) => m.status === 'active').length,
+    inactive: members.filter((m) => m.status === 'inactive').length,
+    pending: members.filter((m) => m.status === 'pending').length,
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -164,6 +181,22 @@ export default function Members() {
     };
     return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
   };
+
+  // No gym state
+  if (!currentGym) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <Users className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-display font-bold mb-2">No Gym Selected</h2>
+          <p className="text-muted-foreground mb-4">Create or select a gym to manage members.</p>
+          <Button onClick={() => window.location.href = '/onboarding'}>
+            Create Your Gym
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -234,17 +267,87 @@ export default function Members() {
           </Dialog>
         </div>
 
-        {/* Search */}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <UserCheck className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-xs text-muted-foreground">Active</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <UserX className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.inactive}</p>
+                  <p className="text-xs text-muted-foreground">Inactive</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <Clock className="w-5 h-5 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.pending}</p>
+                  <p className="text-xs text-muted-foreground">Pending</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search & Filter */}
         <Card>
           <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search members..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, email, or phone..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -283,7 +386,7 @@ export default function Members() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {loading ? 'Loading...' : 'No members found'}
+                      {loading ? 'Loading...' : 'No members found. Add your first member!'}
                     </TableCell>
                   </TableRow>
                 )}
