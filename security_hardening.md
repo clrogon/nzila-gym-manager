@@ -232,6 +232,48 @@ create table audit_log (
 2. Trigger para cada tabela sensível.
 
 ---
+---
+
+## ✅ Visual Checklist (Mermaid)
+```mermaid
+flowchart TD
+
+subgraph Frontend
+UI[React UI Components]
+Tailwind[CSS / Tailwind Classes]
+Shadcn[Shadcn Components]
+Theme[Theme System]
+Inputs[User Inputs / Forms]
+SVG[SVG Icons]
+end
+
+subgraph Backend
+Supabase[Supabase DB / RLS]
+Auth[Authentication]
+Logs[Audit Logging]
+end
+
+subgraph CI_CD
+Dependabot[Dependabot / npm audit]
+Actions[GitHub Actions]
+end
+
+UI --> Tailwind
+UI --> Shadcn
+Shadcn --> Inputs
+Inputs -->|sanitize| Inputs
+Theme --> UI
+SVG -->|import as component| UI
+UI --> Auth
+Auth --> Supabase
+Supabase --> Logs
+Dependabot --> Actions
+Actions --> UI
+```
+Este checklist visual representa rapidamente:
+- **Frontend**: UI, Tailwind, Shadcn, inputs, temas, SVGs
+- **Backend**: Auth, RLS, logs
+- **Supply Chain / CI-CD**: Dependabot, Actions
 
 # Fim do Security Hardening
 Seguindo estas instruções, o Nzila Gym Manager estará **fortemente protegido** em frontend, backend (Supabase), dependências e UI layer.
