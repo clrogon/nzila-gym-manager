@@ -12,6 +12,8 @@
   "test": "vitest",
   "test:ui": "vitest --ui",
   "test:run": "vitest run"
+  "type-check": "tsc --noEmit",
+  "type-check:strict": "tsc --project tsconfig.strict.json --noEmit"
 },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
