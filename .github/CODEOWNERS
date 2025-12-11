@@ -4,8 +4,8 @@
 # Frontend components
 /src/components/ @clrogon
 
-# Backend services
-/src/services/ @clrogon
+# Backend services (if added later)
+src/services/ @clrogon
 
 # Documentation
 *.md @clrogon
