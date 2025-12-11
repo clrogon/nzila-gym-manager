@@ -11,10 +11,10 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
     "type-check": "tsc --noEmit",
     "type-check:strict": "tsc --project tsconfig.strict.json --noEmit"
-},
+  },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
