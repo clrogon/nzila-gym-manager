@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# Nzila Gym Manager: The Open-Source Solution for Modern Fitness Centers
 
-## Project info
+## 🚀 Overview
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Nzila Gym Manager** is a comprehensive, open-source application designed to streamline the operations of modern fitness centers, martial arts studios, and cross-training facilities. Built with a focus on modularity, performance, and security, Nzila provides a single pane of glass for managing members, scheduling classes, tracking payments, and optimizing training programs.
 
-## How can I edit this code?
+## ✨ Key Features
 
-There are several ways of editing your application.
+Nzila is built around a powerful set of modules to cover every aspect of gym management:
 
-**Use Lovable**
+| Module | Description | Key Functionality |
+| :--- | :--- | :--- |
+| **Member Management** | Comprehensive member profiles, status tracking, and communication tools. | Member directory, profile editing, status updates. |
+| **Check-ins & Kiosk** | Fast, reliable member check-in system with a dedicated Kiosk interface. | Attendance logging, real-time status display. |
+| **Calendar & Scheduling** | Manage class schedules, recurring events, and staff assignments. | Class creation, recurring schedule management, staff calendar. |
+| **Training & Progress** | Tools for creating, assigning, and tracking member workouts and progress. | Workout builder, member progress dashboards, rank promotion tracking. |
+| **Financials** | Handle payments, generate invoices, and track financial health. | Payment processing, invoice generation, financial reporting. |
+| **Leads & Sales** | Manage prospective members through a dedicated Kanban-style lead pipeline. | Lead tracking, sales pipeline management. |
+| **Inventory & POS** | Point of Sale system for selling merchandise, supplements, and services. | Inventory management, transaction processing. |
+| **Super Admin** | Tools for gym owners to manage multi-location setups and initial onboarding. | Gym setup wizard, owner pre-registration. |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Technology Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+Nzila is built on a modern, robust, and scalable technology stack:
 
-**Use your preferred IDE**
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | **React** (with Vite) & **TypeScript** | Fast, type-safe, and component-based user interface. |
+| **Styling** | **Tailwind CSS** & **shadcn/ui** | Utility-first CSS framework for rapid, responsive design and accessible components. |
+| **Backend/Database** | **Supabase** (`@supabase/supabase-js`) | Open-source Firebase alternative providing PostgreSQL database, Authentication, and Serverless Functions. |
+| **State Management** | **React Query** (TanStack Query) | Efficient data fetching, caching, and synchronization. |
+| **Routing** | **React Router DOM** | Declarative routing for a seamless single-page application experience. |
+| **Validation** | **Zod** | Schema declaration and validation for ensuring data integrity and security. |
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔒 Security & Architecture Highlights
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The project is architected with security and maintainability as core principles:
 
-Follow these steps:
+1.  **Role-Based Access Control (RBAC):** Protected routes and a dedicated `useRBAC` hook ensure that users only access modules and data relevant to their assigned roles (e.g., Member, Staff, Owner).
+2.  **Strict Input Validation:** All data transfer objects (DTOs) and user inputs are strictly validated using **Zod** schemas, mitigating common injection and data integrity risks.
+3.  **Parameterized Queries:** The backend architecture (Supabase) encourages the use of parameterized queries, preventing SQL injection vulnerabilities.
+4.  **PII Protection:** Explicit development guidelines require contributors to avoid exposing Personally Identifiable Information (PII) in logs.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 💻 Getting Started
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+This project was initialized using the Lovable platform.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prerequisites
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+You will need:
+*   Node.js (LTS recommended)
+*   npm or pnpm
 
-**Edit a file directly in GitHub**
+### Local Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1.  **Clone the repository:**
+    ```sh
+    git clone https://github.com/clrogon/nzila-gym-manager.git
+    cd nzila-gym-manager
+    ```
+2.  **Install dependencies:**
+    ```sh
+    npm install
+    # or pnpm install
+    ```
+3.  **Start the development server:**
+    ```sh
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173` (or similar).
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*This document was generated and enhanced by Manus AI.*

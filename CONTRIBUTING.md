@@ -1,45 +1,75 @@
-# Contributing to Gym Manager
+# 💖 Contributing to Nzila Gym Manager
 
-Thank you for your interest in contributing to Gym Manager! This document outlines the standards and processes for contributing to this project.
+We are thrilled that you are considering contributing to Nzila Gym Manager! Your help is invaluable in making this the best open-source gym management solution available. Whether you're fixing a bug, adding a new feature, or improving documentation, every contribution is welcome.
 
-## Development Workflow
+## 🚀 Getting Started
 
-1.  **Fork & Clone**: Fork the repository and clone it locally.
-2.  **Branching**: Create a feature branch (`git checkout -b feature/amazing-feature`).
-3.  **Coding Standards**:
-    *   **Strict TypeScript**: No `any` types unless absolutely necessary.
-    *   **Validation**: All DTOs must have a corresponding Zod schema.
-    *   **Security**: All API calls must utilize the `checkPermission` middleware simulation.
-4.  **Commit Messages**: Use conventional commits (e.g., `feat: add workout module`, `fix: resolve calendar overlap`).
+### 1. Set Up Your Environment
 
-## Mock-First Strategy (CRITICAL)
+1.  **Fork & Clone**: Start by forking the repository to your own GitHub account and then cloning it locally.
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/nzila-gym-manager.git
+    cd nzila-gym-manager
+    ```
+2.  **Install Dependencies**:
+    ```bash
+    npm install # or pnpm install
+    ```
+3.  **Start Development**:
+    ```bash
+    npm run dev
+    ```
 
-**All new features must be implemented in the Development Environment first.**
+### 2. Development Workflow
 
-1.  **Simulate**: Implement business logic in `services/*.ts` using local memory arrays (e.g., `MEMBERS_DB`).
-2.  **Validate**: Ensure the feature is fully functional (UI + Logic) in "Mock Mode" before writing any backend code.
-3.  **Compatibility**: Design data types (`types.ts`) to match the future SQL schema, ensuring a smooth transition to Test/Production.
+1.  **Branching**: Create a descriptive feature branch from `main`.
+    ```bash
+    git checkout -b feat/add-member-dashboard
+    # or fix/resolve-calendar-overlap
+    ```
+2.  **Commit Messages**: We use **Conventional Commits** for clear history.
+    *   `feat`: A new feature
+    *   `fix`: A bug fix
+    *   `docs`: Documentation only changes
+    *   `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+    *   `refactor`: A code change that neither fixes a bug nor adds a feature
+    *   `test`: Adding missing tests or correcting existing tests
+    *   `chore`: Other changes that don't modify src or test files
 
-*Do not rely on the backend API being available during the initial feature development phase.*
+### 3. Architectural Guidelines
 
-## Modular Architecture
+We follow a **Modular Architecture** and a **Mock-First Strategy** to ensure rapid development and maintainability.
 
-When adding a new feature, please adhere to the modular structure:
-*   **Types**: Define interfaces in `types.ts` (or `modules/X/types.ts` in refactor).
-*   **Service**: Create a dedicated service (e.g., `services/workoutService.ts`) to handle business logic.
-*   **UI**: Create a dedicated folder in `pages/` (e.g., `pages/Coaching/`).
+#### A. Mock-First Strategy (CRITICAL)
 
-## Security Checklist
+**All new features must be implemented and fully functional in the Development Environment first, without relying on a live backend.**
 
-Before submitting a PR, ensure:
-- [ ] You are not exposing PII in logs.
-- [ ] New inputs are validated with Zod.
-- [ ] New database queries use parameterized inputs (in backend reference).
+*   **Simulate Business Logic**: Implement your feature's business logic in `services/*.ts` using local memory arrays (e.g., `MEMBERS_DB`). This allows for isolated testing of the UI and logic.
+*   **Validate Data Types**: Design your data types (`types.ts`) to match the expected future SQL schema. This ensures a smooth transition when connecting to the live Supabase backend.
 
-## Testing
+#### B. Modular Structure
 
-Run the test suite before pushing:
-```bash
-npm test
-```
-*(Note: Test suite implementation is pending in v1.1)*
+When adding a new feature (e.g., a new module like `pos`):
+*   **Module Folder**: Create a dedicated folder in `src/modules/` (e.g., `src/modules/pos`).
+*   **Types**: Define all related interfaces and types in a `types.ts` file within the module.
+*   **Service**: Create a dedicated service (e.g., `services/posService.ts`) to encapsulate all business logic for that module.
+*   **UI/Pages**: Implement the user interface components and pages within the module folder.
+
+### 4. Code Quality & Security
+
+| Standard | Description | Enforcement |
+| :--- | :--- | :--- |
+| **Strict TypeScript** | Avoid the use of `any` types. Strive for explicit typing to catch errors early. | **Mandatory** |
+| **Data Validation** | All Data Transfer Objects (DTOs) and user inputs **must** have a corresponding **Zod** schema for validation. | **Mandatory** |
+| **Security Middleware** | All API calls must utilize the `checkPermission` middleware simulation (or equivalent RBAC check) to enforce authorization. | **Mandatory** |
+| **PII Protection** | **NEVER** expose Personally Identifiable Information (PII) in logs or non-secure environments. | **Mandatory** |
+| **Testing** | Run `npm test` before submitting a Pull Request. *(Note: Test suite implementation is pending in v1.1)* | **Recommended** |
+
+## 🎁 Submitting Your Contribution
+
+1.  Ensure your branch is up-to-date with the `main` branch.
+2.  Open a Pull Request (PR) to the `main` branch of the `clrogon/nzila-gym-manager` repository.
+3.  The PR title should follow the Conventional Commit format (e.g., `feat: add dark mode toggle`).
+4.  Describe your changes clearly and link to any relevant issues.
+
+Thank you for helping us build Nzila!
