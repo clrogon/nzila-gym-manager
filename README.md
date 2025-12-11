@@ -68,6 +68,14 @@ You will need:
     npm run dev
     ```
     The application will be available at `http://localhost:5173` (or similar).
+## ⚠️ Security Setup
 
+1. **Never commit `.env` files**. Use `.env.example` as a template.
+2. Copy `.env.example` to `.env` and fill in your Supabase credentials:
+```bash
+   cp .env.example .env
+   # Edit .env with your actual values
+```
+3. Supabase RLS policies must be configured in your Supabase dashboard.
 ---
 *This document was generated and enhanced by Manus AI.*
