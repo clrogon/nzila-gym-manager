@@ -65,6 +65,52 @@ When adding a new feature (e.g., a new module like `pos`):
 | **PII Protection** | **NEVER** expose Personally Identifiable Information (PII) in logs or non-secure environments. | **Mandatory** |
 | **Testing** | Run `npm test` before submitting a Pull Request. *(Note: Test suite implementation is pending in v1.1)* | **Recommended** |
 
+### Supabase Row Level Security (RLS)
+
+All database tables **MUST** have RLS policies enabled. Example policies:
+
+#### Members Table
+```sql
+-- Enable RLS
+ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+
+-- Owners can see all members in their gym
+CREATE POLICY "owners_view_members" ON members
+  FOR SELECT
+  USING (
+    gym_id IN (
+      SELECT gym_id FROM staff WHERE user_id = auth.uid() AND role = 'owner'
+    )
+  );
+
+-- Staff can see members in their gym
+CREATE POLICY "staff_view_members" ON members
+  FOR SELECT
+  USING (
+    gym_id IN (
+      SELECT gym_id FROM staff WHERE user_id = auth.uid()
+    )
+  );
+```
+
+#### Payments Table
+```sql
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+-- Only owners and staff can view payments
+CREATE POLICY "gym_staff_view_payments" ON payments
+  FOR SELECT
+  USING (
+    member_id IN (
+      SELECT id FROM members WHERE gym_id IN (
+        SELECT gym_id FROM staff WHERE user_id = auth.uid()
+      )
+    )
+  );
+```
+
+**Test RLS policies before deploying to production.**
+
 ## 🎁 Submitting Your Contribution
 
 1.  Ensure your branch is up-to-date with the `main` branch.
