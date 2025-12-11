@@ -1,5 +1,12 @@
 // Default workout categories and disciplines for new gyms
 
+export const DEFAULT_USERS = [
+  { email: 'super_admin@nzila.ao', role: 'super_admin', full_name: 'Super Admin User' },
+  { email: 'gym_owner@nzila.ao', role: 'gym_owner', full_name: 'Gym Owner User' },
+  { email: 'staff@nzila.ao', role: 'staff', full_name: 'Staff User' },
+  { email: 'trainer@nzila.ao', role: 'trainer', full_name: 'Trainer User' },
+];
+
 export interface DisciplineSeed {
   name: string;
   description: string;
