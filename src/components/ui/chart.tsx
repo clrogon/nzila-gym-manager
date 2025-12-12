@@ -58,6 +58,52 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+// Sanitize color values to prevent XSS injection
+const sanitizeColor = (color: string | undefined): string | null => {
+  if (!color) return null;
+  
+  // Allow only valid CSS color formats:
+  // - Hex colors: #RGB, #RRGGBB, #RRGGBBAA
+  // - HSL: hsl(0, 0%, 0%) or hsl(0 0% 0%)
+  // - HSLA: hsla(0, 0%, 0%, 0) or hsla(0 0% 0% / 0)
+  // - RGB: rgb(0, 0, 0) or rgb(0 0 0)
+  // - RGBA: rgba(0, 0, 0, 0) or rgba(0 0 0 / 0)
+  // - CSS variables: var(--color-name)
+  // - Named colors: alphabetic only
+  const hexPattern = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
+  const hslPattern = /^hsla?\(\s*[\d.]+\s*[,\s]\s*[\d.]+%?\s*[,\s]\s*[\d.]+%?(\s*[,/]\s*[\d.]+%?)?\s*\)$/;
+  const rgbPattern = /^rgba?\(\s*[\d.]+\s*[,\s]\s*[\d.]+\s*[,\s]\s*[\d.]+(\s*[,/]\s*[\d.]+)?\s*\)$/;
+  const varPattern = /^var\(--[a-zA-Z0-9-]+\)$/;
+  const namedColorPattern = /^[a-zA-Z]+$/;
+  
+  const trimmedColor = color.trim();
+  
+  if (
+    hexPattern.test(trimmedColor) ||
+    hslPattern.test(trimmedColor) ||
+    rgbPattern.test(trimmedColor) ||
+    varPattern.test(trimmedColor) ||
+    namedColorPattern.test(trimmedColor)
+  ) {
+    return trimmedColor;
+  }
+  
+  // Invalid color format - reject to prevent XSS
+  console.warn(`Invalid color format rejected: ${trimmedColor.substring(0, 50)}`);
+  return null;
+};
+
+// Sanitize CSS key names to prevent injection
+const sanitizeKey = (key: string): string | null => {
+  // Only allow alphanumeric characters, hyphens, and underscores
+  const keyPattern = /^[a-zA-Z0-9_-]+$/;
+  if (keyPattern.test(key)) {
+    return key;
+  }
+  console.warn(`Invalid key format rejected: ${key.substring(0, 50)}`);
+  return null;
+};
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
 
@@ -74,9 +120,14 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const sanitizedKey = sanitizeKey(key);
+    if (!sanitizedKey) return null;
+    
+    const rawColor = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    const color = sanitizeColor(rawColor);
+    return color ? `  --color-${sanitizedKey}: ${color};` : null;
   })
+  .filter(Boolean)
   .join("\n")}
 }
 `,
