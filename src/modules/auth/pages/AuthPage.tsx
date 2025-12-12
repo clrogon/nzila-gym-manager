@@ -8,7 +8,7 @@ import { Dumbbell, Mail, Lock, User, Sparkles } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const passwordSchema = z.string().min(8, 'Password must be at least 8 characters');
 
 export default function AuthPage() {
   const { user, signIn, signUp, signInWithMagicLink, signInWithGoogle } = useAuth();
