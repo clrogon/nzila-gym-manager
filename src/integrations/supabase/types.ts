@@ -173,6 +173,13 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "check_ins_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       class_bookings: {
@@ -216,6 +223,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -838,6 +852,13 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       lead_tasks: {
@@ -949,6 +970,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "leads_converted_member_id_fkey"
+            columns: ["converted_member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "leads_gym_id_fkey"
             columns: ["gym_id"]
             isOneToOne: false
@@ -1042,6 +1070,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "member_ranks_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "member_ranks_rank_id_fkey"
             columns: ["rank_id"]
             isOneToOne: false
@@ -1090,6 +1125,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_workouts_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
             referencedColumns: ["id"]
           },
           {
@@ -1197,6 +1239,13 @@ export type Database = {
             columns: ["tutor_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1309,6 +1358,13 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       performance_records: {
@@ -1358,6 +1414,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_records_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1511,6 +1574,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "rank_promotions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "rank_promotions_to_rank_id_fkey"
             columns: ["to_rank_id"]
             isOneToOne: false
@@ -1614,6 +1684,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -1784,7 +1861,113 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      members_safe: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          email: string | null
+          emergency_contact: string | null
+          emergency_phone: string | null
+          full_name: string | null
+          gdpr_anonymized_at: string | null
+          gdpr_consent_at: string | null
+          gym_id: string | null
+          health_conditions: string | null
+          id: string | null
+          is_minor: boolean | null
+          membership_end_date: string | null
+          membership_plan_id: string | null
+          membership_start_date: string | null
+          notes: string | null
+          phone: string | null
+          photo_url: string | null
+          status: Database["public"]["Enums"]["member_status"] | null
+          tutor_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: never
+          emergency_phone?: never
+          full_name?: string | null
+          gdpr_anonymized_at?: string | null
+          gdpr_consent_at?: string | null
+          gym_id?: string | null
+          health_conditions?: never
+          id?: string | null
+          is_minor?: boolean | null
+          membership_end_date?: string | null
+          membership_plan_id?: string | null
+          membership_start_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          tutor_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          emergency_contact?: never
+          emergency_phone?: never
+          full_name?: string | null
+          gdpr_anonymized_at?: string | null
+          gdpr_consent_at?: string | null
+          gym_id?: string | null
+          health_conditions?: never
+          id?: string | null
+          is_minor?: boolean | null
+          membership_end_date?: string | null
+          membership_plan_id?: string | null
+          membership_start_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          tutor_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_membership_plan_id_fkey"
+            columns: ["membership_plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "members_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_user_gym_ids: { Args: { _user_id: string }; Returns: string[] }
