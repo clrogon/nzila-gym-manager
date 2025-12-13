@@ -51,35 +51,20 @@ Deno.serve(async (req) => {
 
     const results: { email: string; status: string; error?: string; user_id?: string }[] = [];
 
-    // First, get or create a test gym
+    // Use existing gym or first available gym
     let testGymId: string;
     
-    const { data: existingGym } = await supabaseAdmin
+    const { data: existingGyms, error: gymFetchError } = await supabaseAdmin
       .from("gyms")
-      .select("id")
-      .eq("slug", "test-gym-seed")
-      .single();
+      .select("id, name")
+      .limit(1);
 
-    if (existingGym) {
-      testGymId = existingGym.id;
-    } else {
-      // Create test gym using service role (bypasses RLS)
-      const { data: newGym, error: gymError } = await supabaseAdmin
-        .from("gyms")
-        .insert({
-          name: "Test Gym (Seed)",
-          slug: "test-gym-seed",
-          email: "testgym@nzila.ao",
-          subscription_status: "active",
-        })
-        .select("id")
-        .single();
-
-      if (gymError) {
-        throw new Error(`Failed to create test gym: ${gymError.message}`);
-      }
-      testGymId = newGym.id;
+    if (gymFetchError || !existingGyms || existingGyms.length === 0) {
+      throw new Error("No gym found. Please create a gym first via the onboarding wizard.");
     }
+    
+    testGymId = existingGyms[0].id;
+    console.log(`Using existing gym: ${existingGyms[0].name} (${testGymId})`);
 
     // Process each test user
     for (const testUser of TEST_USERS) {
