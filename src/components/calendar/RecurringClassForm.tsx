@@ -30,9 +30,15 @@ interface Location {
   capacity?: number;
 }
 
+interface Coach {
+  id: string;
+  full_name: string;
+}
+
 interface Props {
   classTypes: ClassType[];
   locations: Location[];
+  coaches: Coach[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -41,9 +47,11 @@ interface ConflictInfo {
   date: string;
   existingClass: string;
   location: string;
+  type: 'location' | 'coach';
+  coachName?: string;
 }
 
-export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel }: Props) {
+export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, onCancel }: Props) {
   const { currentGym } = useGym();
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
@@ -53,6 +61,7 @@ export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel 
     description: '',
     class_type_id: '',
     location_id: '',
+    coach_id: '',
     start_date: new Date(),
     start_time: '09:00',
     capacity: 20,
@@ -63,26 +72,53 @@ export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel 
   });
 
   const checkConflicts = async (classesToCreate: { start_time: Date; end_time: Date; location_id: string }[]) => {
-    if (!currentGym?.id || !formData.location_id) return [];
+    if (!currentGym?.id) return [];
     
     const foundConflicts: ConflictInfo[] = [];
     
     for (const cls of classesToCreate) {
-      const { data: existing } = await supabase
-        .from('classes')
-        .select('title, start_time, end_time, location:locations(name)')
-        .eq('gym_id', currentGym.id)
-        .eq('location_id', formData.location_id)
-        .neq('status', 'cancelled')
-        .lte('start_time', cls.end_time.toISOString())
-        .gte('end_time', cls.start_time.toISOString());
+      // Check location conflicts
+      if (formData.location_id) {
+        const { data: locationConflicts } = await supabase
+          .from('classes')
+          .select('title, start_time, end_time, location:locations(name)')
+          .eq('gym_id', currentGym.id)
+          .eq('location_id', formData.location_id)
+          .neq('status', 'cancelled')
+          .lte('start_time', cls.end_time.toISOString())
+          .gte('end_time', cls.start_time.toISOString());
+        
+        if (locationConflicts && locationConflicts.length > 0) {
+          foundConflicts.push({
+            date: format(cls.start_time, 'EEE, MMM d @ h:mm a'),
+            existingClass: locationConflicts[0].title,
+            location: (locationConflicts[0].location as any)?.name || 'Unknown',
+            type: 'location',
+          });
+        }
+      }
       
-      if (existing && existing.length > 0) {
-        foundConflicts.push({
-          date: format(cls.start_time, 'EEE, MMM d @ h:mm a'),
-          existingClass: existing[0].title,
-          location: (existing[0].location as any)?.name || 'Unknown',
-        });
+      // Check coach conflicts
+      if (formData.coach_id) {
+        const { data: coachConflicts } = await supabase
+          .from('classes')
+          .select('title, start_time, end_time')
+          .eq('gym_id', currentGym.id)
+          .eq('coach_id', formData.coach_id)
+          .neq('status', 'cancelled')
+          .lte('start_time', cls.end_time.toISOString())
+          .gte('end_time', cls.start_time.toISOString());
+        
+        if (coachConflicts && coachConflicts.length > 0) {
+          const coach = coaches.find(c => c.id === formData.coach_id);
+          foundConflicts.push({
+            date: format(cls.start_time, 'EEE, MMM d @ h:mm a'),
+            existingClass: coachConflicts[0].title,
+            location: '',
+            type: 'coach',
+            coachName: coach?.full_name || 'Coach',
+          });
+        }
       }
     }
     
@@ -156,6 +192,7 @@ export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel 
         description: formData.description || null,
         class_type_id: formData.class_type_id || null,
         location_id: formData.location_id || null,
+        coach_id: formData.coach_id || null,
         start_time: inst.start_time.toISOString(),
         end_time: inst.end_time.toISOString(),
         capacity: formData.capacity,
@@ -297,6 +334,27 @@ export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel 
         </div>
       </div>
 
+      <div className="space-y-2">
+        <Label>Coach (optional)</Label>
+        <Select
+          value={formData.coach_id}
+          onValueChange={(v) => {
+            setFormData(prev => ({ ...prev, coach_id: v }));
+            setConflicts([]);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select coach" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">No coach assigned</SelectItem>
+            {coaches.map(coach => (
+              <SelectItem key={coach.id} value={coach.id}>{coach.full_name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="flex items-center justify-between p-3 border rounded-lg">
         <div className="flex items-center gap-2">
           <Repeat className="w-4 h-4 text-muted-foreground" />
@@ -374,13 +432,16 @@ export function RecurringClassForm({ classTypes, locations, onSuccess, onCancel 
           <AlertDescription>
             <p className="font-medium mb-2">Scheduling conflicts detected:</p>
             <ul className="text-sm space-y-1">
-              {conflicts.slice(0, 3).map((c, i) => (
+              {conflicts.slice(0, 5).map((c, i) => (
                 <li key={i}>
-                  {c.date} - "{c.existingClass}" at {c.location}
+                  {c.type === 'coach' 
+                    ? `${c.date} - Coach "${c.coachName}" is already scheduled for "${c.existingClass}"`
+                    : `${c.date} - "${c.existingClass}" at ${c.location}`
+                  }
                 </li>
               ))}
-              {conflicts.length > 3 && (
-                <li>...and {conflicts.length - 3} more conflicts</li>
+              {conflicts.length > 5 && (
+                <li>...and {conflicts.length - 5} more conflicts</li>
               )}
             </ul>
           </AlertDescription>

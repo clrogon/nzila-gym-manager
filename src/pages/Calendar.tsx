@@ -55,6 +55,11 @@ interface Location {
   capacity?: number;
 }
 
+interface Coach {
+  id: string;
+  full_name: string;
+}
+
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 
 export default function Calendar() {
@@ -65,6 +70,7 @@ export default function Calendar() {
   const [classes, setClasses] = useState<ClassEvent[]>([]);
   const [classTypes, setClassTypes] = useState<ClassType[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [filterType, setFilterType] = useState<string>('all');
@@ -79,6 +85,7 @@ export default function Calendar() {
       fetchClasses();
       fetchClassTypes();
       fetchLocations();
+      fetchCoaches();
     }
   }, [currentGym?.id, currentDate, filterType]);
 
@@ -151,6 +158,29 @@ export default function Calendar() {
       .eq('gym_id', currentGym.id)
       .eq('is_active', true);
     setLocations(data || []);
+  };
+
+  const fetchCoaches = async () => {
+    if (!currentGym?.id) return;
+    // Fetch staff/coaches who have roles for this gym
+    const { data } = await supabase
+      .from('user_roles')
+      .select('user_id, profiles!inner(id, full_name)')
+      .eq('gym_id', currentGym.id)
+      .in('role', ['staff', 'admin', 'gym_owner']);
+    
+    const coachList = (data || [])
+      .filter((r: any) => r.profiles?.full_name)
+      .map((r: any) => ({
+        id: r.user_id,
+        full_name: r.profiles.full_name,
+      }));
+    
+    // Remove duplicates by user_id
+    const uniqueCoaches = coachList.filter((coach, index, self) =>
+      index === self.findIndex((c) => c.id === coach.id)
+    );
+    setCoaches(uniqueCoaches);
   };
 
   const getClassesForDay = (day: Date) => {
@@ -239,6 +269,7 @@ export default function Calendar() {
                   <RecurringClassForm
                     classTypes={classTypes}
                     locations={locations}
+                    coaches={coaches}
                     onSuccess={handleCreateSuccess}
                     onCancel={() => setIsCreateOpen(false)}
                   />
