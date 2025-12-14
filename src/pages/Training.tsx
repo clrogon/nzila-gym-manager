@@ -164,6 +164,32 @@ export default function Training() {
     }
   };
 
+  const handleDuplicateTemplate = async (template: WorkoutTemplate) => {
+    if (!currentGym?.id) return;
+    
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const insertData = {
+        gym_id: currentGym.id,
+        name: `${template.name} (Copy)`,
+        description: template.description,
+        category: template.category,
+        difficulty: template.difficulty as 'beginner' | 'intermediate' | 'advanced' | null,
+        estimated_duration: template.estimated_duration,
+        is_public: false,
+        exercises: template.exercises as unknown as any,
+        created_by: userData?.user?.id || null,
+      };
+      const { error } = await supabase.from('workout_templates').insert(insertData);
+
+      if (error) throw error;
+      toast.success('Template duplicated successfully');
+      fetchTemplates();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to duplicate template');
+    }
+  };
+
   const handleUpdateTemplate = async () => {
     if (!editingTemplate?.id || !formData.name) {
       toast.error('Please enter a workout name');
@@ -442,6 +468,7 @@ export default function Training() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Assign</Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateTemplate(template)} title="Duplicate"><Copy className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => openEditDialog(template)}><Edit className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTemplate(template.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
