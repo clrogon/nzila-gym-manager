@@ -77,6 +77,8 @@ export default function Training() {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplate | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
@@ -160,6 +162,55 @@ export default function Training() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete template');
     }
+  };
+
+  const handleUpdateTemplate = async () => {
+    if (!editingTemplate?.id || !formData.name) {
+      toast.error('Please enter a workout name');
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: formData.name,
+        description: formData.description || null,
+        category: formData.category,
+        difficulty: formData.difficulty as 'beginner' | 'intermediate' | 'advanced',
+        estimated_duration: formData.estimated_duration,
+        is_public: formData.is_public,
+        exercises: formData.exercises.filter(e => e.name) as unknown as any,
+      };
+      const { error } = await supabase.from('workout_templates').update(updateData).eq('id', editingTemplate.id);
+
+      if (error) throw error;
+      toast.success('Workout template updated');
+      setIsEditOpen(false);
+      setEditingTemplate(null);
+      fetchTemplates();
+      resetForm();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update template');
+    }
+  };
+
+  const openEditDialog = (template: WorkoutTemplate) => {
+    setEditingTemplate(template);
+    setFormData({
+      name: template.name,
+      description: template.description || '',
+      category: template.category || CATEGORIES[0] || 'Strength & Conditioning',
+      difficulty: template.difficulty || 'intermediate',
+      estimated_duration: template.estimated_duration || 60,
+      is_public: template.is_public || false,
+      exercises: (template.exercises || []).map((ex: any, i: number) => ({
+        name: ex.name || ex.exercise || '',
+        sets: ex.sets || 3,
+        reps: ex.reps || '10',
+        rest: ex.rest || '60s',
+        notes: ex.notes || '',
+      })),
+    });
+    setIsEditOpen(true);
   };
 
   const resetForm = () => {
@@ -317,6 +368,58 @@ export default function Training() {
                   </DialogContent>
                 </Dialog>
               )}
+
+              {/* Edit Template Dialog */}
+              <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingTemplate(null); resetForm(); } }}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Edit Workout Template</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6 pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-2">
+                        <Label>Workout Name</Label>
+                        <Input
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g., Full Body Strength"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Category</Label>
+                        <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIES.map(cat => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Difficulty</Label>
+                        <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {DIFFICULTIES.map(diff => (<SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Duration (minutes)</Label>
+                        <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label>Description</Label>
+                        <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe the workout..." rows={2} />
+                      </div>
+                    </div>
+                    <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button variant="outline" onClick={() => { setIsEditOpen(false); setEditingTemplate(null); resetForm(); }}>Cancel</Button>
+                      <Button onClick={handleUpdateTemplate}>Save Changes</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -339,6 +442,7 @@ export default function Training() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Assign</Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(template)}><Edit className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTemplate(template.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </CardContent>
