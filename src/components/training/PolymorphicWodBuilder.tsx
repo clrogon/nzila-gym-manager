@@ -4,12 +4,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getWodFieldsForCategory, WodFieldConfig, getCategoryNames } from '@/lib/seedData';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { getWodFieldsForCategory, WodFieldConfig, getCategoryNames, DEFAULT_WORKOUT_CATEGORIES } from '@/lib/seedData';
+import { useGym } from '@/contexts/GymContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Plus, Trash2, GripVertical, Search, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface WodExercise {
   id: string;
   [key: string]: any;
+}
+
+interface GymExercise {
+  id: string;
+  name: string;
+  category: string | null;
 }
 
 interface PolymorphicWodBuilderProps {
@@ -19,7 +30,43 @@ interface PolymorphicWodBuilderProps {
 }
 
 export function PolymorphicWodBuilder({ category, exercises, onChange }: PolymorphicWodBuilderProps) {
+  const { currentGym } = useGym();
+  const [gymExercises, setGymExercises] = useState<GymExercise[]>([]);
+  const [openPopoverIndex, setOpenPopoverIndex] = useState<number | null>(null);
   const fields = getWodFieldsForCategory(category);
+
+  // Get seed exercises for the category
+  const getSeedExercises = (): string[] => {
+    const categoryData = DEFAULT_WORKOUT_CATEGORIES.find(c => c.name === category);
+    if (categoryData) return categoryData.exercises;
+    return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.exercises);
+  };
+
+  // Fetch gym-specific exercises
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchGymExercises();
+    }
+  }, [currentGym?.id]);
+
+  const fetchGymExercises = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('gym_exercises')
+      .select('id, name, category')
+      .eq('gym_id', currentGym.id)
+      .eq('is_active', true)
+      .order('name');
+    setGymExercises(data || []);
+  };
+
+  // Combine seed exercises with gym-specific ones
+  const getAvailableExercises = (): string[] => {
+    const seedExercises = getSeedExercises();
+    const gymExerciseNames = gymExercises.map(e => e.name);
+    const combined = [...new Set([...seedExercises, ...gymExerciseNames])];
+    return combined.sort();
+  };
 
   const createEmptyExercise = (): WodExercise => {
     const exercise: WodExercise = { id: crypto.randomUUID() };
@@ -43,8 +90,79 @@ export function PolymorphicWodBuilder({ category, exercises, onChange }: Polymor
     onChange(exercises.filter(ex => ex.id !== id));
   };
 
-  const renderField = (field: WodFieldConfig, exercise: WodExercise) => {
+  const selectExerciseFromLibrary = (exerciseIndex: number, exerciseName: string) => {
+    const exercise = exercises[exerciseIndex];
+    if (exercise) {
+      // Find the main exercise field (could be 'exercise', 'technique', 'skill', 'pose', 'drill')
+      const mainField = fields.find(f => ['exercise', 'technique', 'skill', 'pose', 'drill'].includes(f.name));
+      if (mainField) {
+        updateExercise(exercise.id, mainField.name, exerciseName);
+      } else {
+        updateExercise(exercise.id, 'exercise', exerciseName);
+      }
+    }
+    setOpenPopoverIndex(null);
+  };
+
+  const renderField = (field: WodFieldConfig, exercise: WodExercise, exerciseIndex: number) => {
     const value = exercise[field.name] || '';
+    const isMainField = ['exercise', 'technique', 'skill', 'pose', 'drill'].includes(field.name);
+
+    // For main exercise field, show library selector
+    if (isMainField) {
+      const availableExercises = getAvailableExercises();
+      return (
+        <Popover open={openPopoverIndex === exerciseIndex} onOpenChange={(open) => setOpenPopoverIndex(open ? exerciseIndex : null)}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-full justify-between text-left font-normal"
+            >
+              {value || `Select ${field.label}...`}
+              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder={`Search ${field.label.toLowerCase()}...`} />
+              <CommandList>
+                <CommandEmpty>
+                  <div className="py-2 px-4 text-sm text-muted-foreground">
+                    No exercise found. Type a custom name below.
+                  </div>
+                </CommandEmpty>
+                <CommandGroup heading="Exercise Library">
+                  {availableExercises.slice(0, 50).map((ex) => (
+                    <CommandItem
+                      key={ex}
+                      value={ex}
+                      onSelect={() => selectExerciseFromLibrary(exerciseIndex, ex)}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === ex ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {ex}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+              <div className="border-t p-2">
+                <Input
+                  placeholder="Or type custom exercise..."
+                  value={value}
+                  onChange={(e) => updateExercise(exercise.id, field.name, e.target.value)}
+                  className="h-8"
+                />
+              </div>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      );
+    }
 
     switch (field.type) {
       case 'select':
@@ -155,11 +273,11 @@ export function PolymorphicWodBuilder({ category, exercises, onChange }: Polymor
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {fields.map(field => (
-                    <div key={field.name} className={field.name === 'exercise' || field.name === 'technique' || field.name === 'skill' || field.name === 'drill' || field.name === 'pose' ? 'col-span-2 sm:col-span-3' : ''}>
+                    <div key={field.name} className={['exercise', 'technique', 'skill', 'drill', 'pose'].includes(field.name) ? 'col-span-2 sm:col-span-3' : ''}>
                       <Label className="text-xs text-muted-foreground mb-1 block">
                         {field.label}
                       </Label>
-                      {renderField(field, exercise)}
+                      {renderField(field, exercise, index)}
                     </div>
                   ))}
                 </div>

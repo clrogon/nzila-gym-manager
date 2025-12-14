@@ -93,6 +93,32 @@ export function ScheduleClassFromLibrary({ gymClass, trigger }: Props) {
     return instances;
   };
 
+  const checkConflicts = async (instances: { start_time: Date; end_time: Date }[]) => {
+    if (!currentGym?.id || !formData.location_id) return [];
+    
+    const conflicts: { date: string; existingClass: string }[] = [];
+    
+    for (const inst of instances) {
+      const { data: existing } = await supabase
+        .from('classes')
+        .select('title, start_time')
+        .eq('gym_id', currentGym.id)
+        .eq('location_id', formData.location_id)
+        .neq('status', 'cancelled')
+        .lte('start_time', inst.end_time.toISOString())
+        .gte('end_time', inst.start_time.toISOString());
+      
+      if (existing && existing.length > 0) {
+        conflicts.push({
+          date: format(inst.start_time, 'EEE, MMM d @ h:mm a'),
+          existingClass: existing[0].title,
+        });
+      }
+    }
+    
+    return conflicts;
+  };
+
   const handleSchedule = async () => {
     if (!currentGym?.id) return;
     
@@ -102,7 +128,23 @@ export function ScheduleClassFromLibrary({ gymClass, trigger }: Props) {
       return;
     }
 
+    if (!formData.location_id) {
+      toast.error('Please select a location');
+      return;
+    }
+
     setLoading(true);
+    
+    // Check for conflicts BEFORE inserting
+    const conflicts = await checkConflicts(instances);
+    if (conflicts.length > 0) {
+      const conflictMessages = conflicts.slice(0, 3).map(c => `${c.date}: "${c.existingClass}"`);
+      const moreText = conflicts.length > 3 ? ` and ${conflicts.length - 3} more conflicts` : '';
+      toast.error(`Scheduling conflicts at ${formData.location_id ? 'this location' : ''}:\n${conflictMessages.join('\n')}${moreText}`);
+      setLoading(false);
+      return;
+    }
+    
     try {
       // First ensure class_type exists
       let classTypeId: string;
@@ -111,7 +153,7 @@ export function ScheduleClassFromLibrary({ gymClass, trigger }: Props) {
         .select('id')
         .eq('gym_id', currentGym.id)
         .eq('name', gymClass.name)
-        .single();
+        .maybeSingle();
 
       if (existingType) {
         classTypeId = existingType.id;
