@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom';
+// pages/index.tsx
+import { Link } from 'react-router-dom'; // or 'next/link' if using Next.js
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Users, UserCheck, CreditCard, ArrowRight, CheckCircle } from 'lucide-react';
+import Head from 'next/head';
 
 const features = [
   {
@@ -34,6 +36,14 @@ const dashboardFeatures = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
+      <Head>
+        <title>Nzila Gym Manager – Gestão de Ginásios</title>
+        <meta
+          name="description"
+          content="Nzila é um SaaS modular e seguro para gestão de ginásios. Controle membros, pagamentos e agendamentos facilmente."
+        />
+      </Head>
+
       {/* Hero Section */}
       <header className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -42,18 +52,21 @@ export default function Index() {
         </div>
 
         {/* Navigation */}
-        <nav className="relative container mx-auto px-4 py-6 flex items-center justify-between" aria-label="Principal">
-          <Link to="/" className="flex items-center gap-3">
+        <nav
+          className="relative container mx-auto px-4 py-6 flex items-center justify-between"
+          aria-label="Principal"
+        >
+          <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
               <Dumbbell className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-display font-bold">Nzila</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/auth?mode=login">
+            <Link href="/auth?mode=login">
               <Button variant="ghost">Entrar</Button>
             </Link>
-            <Link to="/auth?mode=signup">
+            <Link href="/auth?mode=signup">
               <Button className="gradient-primary">Começar</Button>
             </Link>
           </div>
@@ -67,17 +80,19 @@ export default function Index() {
               <span className="block text-primary">Gestão de ginásios modular e segura</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Para proprietários, administradores e treinadores que querem menos burocracia e mais crescimento. 
-              Membros, pagamentos e agendamentos — tudo num único lugar.
+              Para proprietários, administradores e treinadores que querem menos burocracia e mais
+              crescimento. Membros, pagamentos e agendamentos — tudo num único lugar.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link to="/auth?mode=signup">
-                <Button size="lg" className="gradient-primary text-lg px-8">
-                  Iniciar Teste Gratuito
-                  <ArrowRight className="w-5 h-5 ml-2" />
+              <Link href="/auth?mode=signup">
+                <Button
+                  size="lg"
+                  className="gradient-primary text-lg px-8 flex items-center justify-center"
+                >
+                  Iniciar Teste Gratuito <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <Link to="/auth?mode=login">
+              <Link href="/auth?mode=login">
                 <Button size="lg" variant="outline" className="text-lg px-8">
                   Entrar
                 </Button>
@@ -88,10 +103,10 @@ export default function Index() {
       </header>
 
       {/* Features Section */}
-      <section className="py-24 bg-muted/30">
+      <section aria-labelledby="features-heading" className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
+            <h2 id="features-heading" className="text-3xl md:text-4xl font-display font-bold mb-4">
               Tudo o Que Precisa
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -99,10 +114,11 @@ export default function Index() {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature) => (
+            {features.map((feature, index) => (
               <div
                 key={feature.id}
                 className="p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-shadow animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="w-14 h-14 gradient-primary rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="w-7 h-7 text-primary-foreground" />
@@ -116,18 +132,18 @@ export default function Index() {
       </section>
 
       {/* Dashboard Preview Section */}
-      <section className="py-24">
+      <section aria-labelledby="dashboard-heading" className="py-24">
         <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+            <h2 id="dashboard-heading" className="text-3xl md:text-4xl font-display font-bold mb-6">
               Visualize o Dashboard
             </h2>
             <p className="text-muted-foreground text-lg mb-8">
               Veja como o Nzila simplifica o controlo de membros, pagamentos e agendamentos.
             </p>
             <ul className="space-y-4">
-              {dashboardFeatures.map((feature, idx) => (
-                <li key={idx} className="flex items-center gap-3">
+              {dashboardFeatures.map((feature) => (
+                <li key={feature} className="flex items-center gap-3">
                   <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />
                   <span>{feature}</span>
                 </li>
@@ -157,10 +173,12 @@ export default function Index() {
             <p className="text-muted-foreground text-lg">
               Junte-se ao Nzila hoje e eleve a gestão do seu ginásio para o próximo nível.
             </p>
-            <Link to="/auth?mode=signup">
-              <Button size="lg" className="gradient-primary text-lg px-8">
-                Iniciar Teste Gratuito
-                <ArrowRight className="w-5 h-5 ml-2" />
+            <Link href="/auth?mode=signup">
+              <Button
+                size="lg"
+                className="gradient-primary text-lg px-8 flex items-center justify-center"
+              >
+                Iniciar Teste Gratuito <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
           </div>
@@ -173,6 +191,17 @@ export default function Index() {
           <p>&copy; {new Date().getFullYear()} Nzila. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      {/* Tailwind animation keyframes */}
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease forwards;
+        }
+      `}</style>
     </div>
   );
 }
