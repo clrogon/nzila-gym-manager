@@ -1,121 +1,389 @@
-# 💖 Contributing to Nzila Gym Manager
+# Contributing to Nzila Gym Manager
 
-We are thrilled that you are considering contributing to Nzila Gym Manager! Your help is invaluable in making this the best open-source gym management solution available. Whether you're fixing a bug, adding a new feature, or improving documentation, every contribution is welcome.
+Thank you for your interest in contributing to Nzila Gym Manager! We welcome contributions from the community and are grateful for your support.
 
-## 🚀 Getting Started
+## Table of Contents
 
-### 1. Set Up Your Environment
+- [Code of Conduct](#code-of-conduct)
+- [How Can I Contribute?](#how-can-i-contribute)
+- [Development Setup](#development-setup)
+- [Development Workflow](#development-workflow)
+- [Coding Standards](#coding-standards)
+- [Commit Guidelines](#commit-guidelines)
+- [Pull Request Process](#pull-request-process)
+- [Reporting Bugs](#reporting-bugs)
+- [Suggesting Features](#suggesting-features)
 
-1.  **Fork & Clone**: Start by forking the repository to your own GitHub account and then cloning it locally.
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/nzila-gym-manager.git
-    cd nzila-gym-manager
-    ```
-2.  **Install Dependencies**:
-    ```bash
-    npm install # or pnpm install
-    ```
-3.  **Start Development**:
-    ```bash
-    npm run dev
-    ```
+---
 
-### 2. Development Workflow
+## Code of Conduct
 
-1.  **Branching**: Create a descriptive feature branch from `main`.
-    ```bash
-    git checkout -b feat/add-member-dashboard
-    # or fix/resolve-calendar-overlap
-    ```
-2.  **Commit Messages**: We use **Conventional Commits** for clear history.
-    *   `feat`: A new feature
-    *   `fix`: A bug fix
-    *   `docs`: Documentation only changes
-    *   `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
-    *   `refactor`: A code change that neither fixes a bug nor adds a feature
-    *   `test`: Adding missing tests or correcting existing tests
-    *   `chore`: Other changes that don't modify src or test files
+This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to support@nzila.ao.
 
-### 3. Architectural Guidelines
+---
 
-We follow a **Modular Architecture** and a **Mock-First Strategy** to ensure rapid development and maintainability.
+## How Can I Contribute?
 
-#### A. Mock-First Strategy (CRITICAL)
+### **Reporting Bugs**
+- Check if the bug has already been reported in [Issues](https://github.com/clrogon/nzila-gym-manager/issues)
+- If not, create a new issue using the bug report template
+- Include detailed steps to reproduce, expected behavior, and actual behavior
+- Add screenshots or screen recordings if applicable
 
-**All new features must be implemented and fully functional in the Development Environment first, without relying on a live backend.**
+### **Suggesting Features**
+- Review existing feature requests in [Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
+- Create a new discussion with the "Feature Request" category
+- Clearly describe the problem you're trying to solve
+- Explain how your suggestion would benefit users
 
-*   **Simulate Business Logic**: Implement your feature's business logic in `services/*.ts` using local memory arrays (e.g., `MEMBERS_DB`). This allows for isolated testing of the UI and logic.
-*   **Validate Data Types**: Design your data types (`types.ts`) to match the expected future SQL schema. This ensures a smooth transition when connecting to the live Supabase backend.
+### **Contributing Code**
+- Fix bugs listed in the Issues tracker
+- Implement features from the roadmap
+- Improve documentation
+- Add or improve tests
+- Refactor existing code for better maintainability
 
-#### B. Modular Structure
+### **Improving Documentation**
+- Fix typos or unclear explanations
+- Add missing documentation
+- Translate documentation to other languages
+- Create tutorials or guides
 
-When adding a new feature (e.g., a new module like `pos`):
-*   **Module Folder**: Create a dedicated folder in `src/modules/` (e.g., `src/modules/pos`).
-*   **Types**: Define all related interfaces and types in a `types.ts` file within the module.
-*   **Service**: Create a dedicated service (e.g., `services/posService.ts`) to encapsulate all business logic for that module.
-*   **UI/Pages**: Implement the user interface components and pages within the module folder.
+---
 
-### 4. Code Quality & Security
+## Development Setup
 
-| Standard | Description | Enforcement |
-| :--- | :--- | :--- |
-| **Strict TypeScript** | Avoid the use of `any` types. Strive for explicit typing to catch errors early. | **Mandatory** |
-| **Data Validation** | All Data Transfer Objects (DTOs) and user inputs **must** have a corresponding **Zod** schema for validation. | **Mandatory** |
-| **Security Middleware** | All API calls must utilize the `checkPermission` middleware simulation (or equivalent RBAC check) to enforce authorization. | **Mandatory** |
-| **PII Protection** | **NEVER** expose Personally Identifiable Information (PII) in logs or non-secure environments. | **Mandatory** |
-| **Testing** | Run `npm test` before submitting a Pull Request. *(Note: Test suite implementation is pending in v1.1)* | **Recommended** |
+### **Prerequisites**
+- Node.js 18+ (LTS recommended)
+- npm or pnpm
+- Git
+- Supabase account (for database access)
+- Code editor (VS Code recommended)
 
-### Supabase Row Level Security (RLS)
+### **Initial Setup**
 
-All database tables **MUST** have RLS policies enabled. Example policies:
+1. **Fork the repository**
+   - Click "Fork" on the [GitHub repository](https://github.com/clrogon/nzila-gym-manager)
 
-#### Members Table
-```sql
--- Enable RLS
-ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/nzila-gym-manager.git
+   cd nzila-gym-manager
+   ```
 
--- Owners can see all members in their gym
-CREATE POLICY "owners_view_members" ON members
-  FOR SELECT
-  USING (
-    gym_id IN (
-      SELECT gym_id FROM staff WHERE user_id = auth.uid() AND role = 'owner'
-    )
-  );
+3. **Add upstream remote**
+   ```bash
+   git remote add upstream https://github.com/clrogon/nzila-gym-manager.git
+   ```
 
--- Staff can see members in their gym
-CREATE POLICY "staff_view_members" ON members
-  FOR SELECT
-  USING (
-    gym_id IN (
-      SELECT gym_id FROM staff WHERE user_id = auth.uid()
-    )
-  );
+4. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+5. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
+   ```
+
+6. **Run database migrations**
+   - Access Supabase Studio
+   - Execute migrations from `supabase/migrations/` in order
+
+7. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+### **Recommended VS Code Extensions**
+- ESLint
+- Prettier
+- Tailwind CSS IntelliSense
+- TypeScript + JavaScript
+- GitLens
+- Error Lens
+
+---
+
+## Development Workflow
+
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   # or
+   git checkout -b fix/bug-description
+   ```
+
+2. **Make your changes**
+   - Write clean, maintainable code
+   - Follow the coding standards below
+   - Add tests for new features
+   - Update documentation if needed
+
+3. **Test your changes**
+   ```bash
+   npm run lint        # Check for linting errors
+   npm run type-check  # Validate TypeScript
+   npm run test        # Run unit tests
+   npm run build       # Ensure production build works
+   ```
+
+4. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: add member export functionality"
+   ```
+
+5. **Keep your branch updated**
+   ```bash
+   git fetch upstream
+   git rebase upstream/main
+   ```
+
+6. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+7. **Create a Pull Request**
+   - Go to the original repository
+   - Click "New Pull Request"
+   - Select your fork and branch
+   - Fill out the PR template
+
+---
+
+## Coding Standards
+
+### **TypeScript**
+- Use strict mode (already configured)
+- Define explicit types, avoid `any`
+- Use interfaces for object shapes
+- Use type unions for literals
+- Prefer `const` over `let`, avoid `var`
+
+### **React**
+- Use functional components with hooks
+- Keep components small and focused (single responsibility)
+- Use meaningful component names (PascalCase)
+- Extract reusable logic into custom hooks
+- Avoid prop drilling - use context when needed
+
+### **File Organization**
+```
+src/
+├── components/
+│   └── members/
+│       ├── MemberCard.tsx        # Component
+│       ├── MemberCard.test.tsx   # Tests
+│       └── index.ts              # Barrel export
+├── hooks/
+│   └── useMembers.ts             # Custom hooks
+├── lib/
+│   └── utils.ts                  # Utility functions
+└── types/
+    └── member.ts                 # Type definitions
 ```
 
-#### Payments Table
-```sql
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+### **Naming Conventions**
+- **Components**: `PascalCase` (e.g., `MemberCard.tsx`)
+- **Hooks**: `camelCase` with `use` prefix (e.g., `useMembers.ts`)
+- **Utilities**: `camelCase` (e.g., `formatCurrency.ts`)
+- **Constants**: `SCREAMING_SNAKE_CASE` (e.g., `MAX_UPLOAD_SIZE`)
+- **Types/Interfaces**: `PascalCase` (e.g., `MemberProfile`)
 
--- Only owners and staff can view payments
-CREATE POLICY "gym_staff_view_payments" ON payments
-  FOR SELECT
-  USING (
-    member_id IN (
-      SELECT id FROM members WHERE gym_id IN (
-        SELECT gym_id FROM staff WHERE user_id = auth.uid()
-      )
-    )
-  );
+### **Styling**
+- Use Tailwind utility classes
+- Follow Flowbite component patterns
+- Keep custom CSS minimal
+- Use CSS modules for component-specific styles
+- Maintain responsive design (mobile-first)
+
+### **Comments**
+- Write self-documenting code (clear variable/function names)
+- Add comments for complex logic or business rules
+- Use JSDoc for public API functions
+- Avoid obvious comments
+
+```typescript
+// Bad
+const m = members.filter(x => x.s === 'active'); // filter active members
+
+// Good
+const activeMembers = members.filter(member => member.status === 'active');
+
+// Good (complex logic needs explanation)
+/**
+ * Calculates prorated membership fee based on days remaining in billing cycle.
+ * Uses 30-day months for consistency across different month lengths.
+ */
+function calculateProratedFee(baseFee: number, daysRemaining: number): number {
+  return (baseFee / 30) * daysRemaining;
+}
 ```
 
-**Test RLS policies before deploying to production.**
+---
 
-## 🎁 Submitting Your Contribution
+## Commit Guidelines
 
-1.  Ensure your branch is up-to-date with the `main` branch.
-2.  Open a Pull Request (PR) to the `main` branch of the `clrogon/nzila-gym-manager` repository.
-3.  The PR title should follow the Conventional Commit format (e.g., `feat: add dark mode toggle`).
-4.  Describe your changes clearly and link to any relevant issues.
+We follow [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
-Thank you for helping us build Nzila!
+### **Format**
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### **Types**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, semicolons, etc.)
+- `refactor`: Code refactoring without feature changes
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks (dependencies, config, etc.)
+- `ci`: CI/CD changes
+
+### **Examples**
+```bash
+feat(members): add member export to CSV functionality
+
+fix(calendar): resolve class overlap detection bug
+
+docs(readme): update installation instructions
+
+refactor(payments): simplify Multicaixa integration logic
+
+test(auth): add unit tests for login flow
+```
+
+### **Rules**
+- Use present tense ("add feature" not "added feature")
+- Use imperative mood ("move cursor to..." not "moves cursor to...")
+- Limit first line to 72 characters
+- Reference issues/PRs in footer when applicable
+
+---
+
+## Pull Request Process
+
+1. **Ensure all checks pass**
+   - Linting (ESLint)
+   - Type checking (TypeScript)
+   - Tests (Vitest)
+   - Build (Vite)
+
+2. **Update documentation**
+   - Update README if adding features
+   - Add JSDoc comments to new functions
+   - Update CHANGELOG.md
+
+3. **Fill out PR template**
+   - Describe what changed and why
+   - Link related issues
+   - Add screenshots for UI changes
+   - List breaking changes if any
+
+4. **Request review**
+   - Tag relevant maintainers
+   - Address review feedback promptly
+   - Keep discussions professional
+
+5. **Merge requirements**
+   - At least 1 approval from maintainer
+   - All CI checks passing
+   - No merge conflicts
+   - Up-to-date with main branch
+
+---
+
+## Reporting Bugs
+
+### **Before Submitting**
+- Check if the bug is already reported
+- Test on the latest version
+- Verify it's reproducible
+
+### **Bug Report Template**
+```markdown
+## Description
+Clear description of the bug
+
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '...'
+3. Scroll down to '...'
+4. See error
+
+## Expected Behavior
+What should happen
+
+## Actual Behavior
+What actually happens
+
+## Screenshots
+If applicable
+
+## Environment
+- OS: [e.g., Windows 11, macOS 14]
+- Browser: [e.g., Chrome 120, Safari 17]
+- Version: [e.g., 1.2.0]
+
+## Additional Context
+Any other relevant information
+```
+
+---
+
+## Suggesting Features
+
+### **Feature Request Template**
+```markdown
+## Problem Statement
+Describe the problem this feature would solve
+
+## Proposed Solution
+Describe your proposed solution
+
+## Alternatives Considered
+What other solutions did you consider?
+
+## Additional Context
+Mockups, examples, or references
+
+## Impact
+Who would benefit from this feature?
+```
+
+---
+
+## Security Vulnerabilities
+
+**DO NOT** create public issues for security vulnerabilities.
+
+Please email security concerns to: **security@nzila.ao**
+
+See [SECURITY.md](SECURITY.md) for our security policy.
+
+---
+
+## Questions?
+
+- **General Discussion**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
+- **Email**: support@nzila.ao
+
+---
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+**Thank you for contributing to Nzila Gym Manager! 🎉**
