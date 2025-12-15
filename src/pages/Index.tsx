@@ -67,12 +67,12 @@ export default function Index() {
               <span className="block text-primary">Gestão de ginásios modular e segura</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Para proprietários, administradores e treinadores que querem menos burocracia e mais crescimento. 
+              Para proprietários, administradores e treinadores que querem menos burocracia e mais crescimento.
               Membros, pagamentos e agendamentos — tudo num único lugar.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Link to="/auth?mode=signup">
-                <Button size="lg" className="gradient-primary text-lg px-8">
+                <Button size="lg" className="gradient-primary text-lg px-8 flex items-center">
                   Iniciar Teste Gratuito
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
@@ -91,9 +91,7 @@ export default function Index() {
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              Tudo o Que Precisa
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Tudo o Que Precisa</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Funcionalidades poderosas para ajudá-lo a gerir o seu ginásio com eficiência
             </p>
@@ -102,7 +100,7 @@ export default function Index() {
             {features.map((feature) => (
               <div
                 key={feature.id}
-                className="p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-shadow animate-fade-in"
+                className="p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-shadow"
               >
                 <div className="w-14 h-14 gradient-primary rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="w-7 h-7 text-primary-foreground" />
@@ -119,9 +117,7 @@ export default function Index() {
       <section className="py-24">
         <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-              Visualize o Dashboard
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">Visualize o Dashboard</h2>
             <p className="text-muted-foreground text-lg mb-8">
               Veja como o Nzila simplifica o controlo de membros, pagamentos e agendamentos.
             </p>
@@ -158,7 +154,7 @@ export default function Index() {
               Junte-se ao Nzila hoje e eleve a gestão do seu ginásio para o próximo nível.
             </p>
             <Link to="/auth?mode=signup">
-              <Button size="lg" className="gradient-primary text-lg px-8">
+              <Button size="lg" className="gradient-primary text-lg px-8 flex items-center">
                 Iniciar Teste Gratuito
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
