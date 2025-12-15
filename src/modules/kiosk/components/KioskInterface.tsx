@@ -71,15 +71,68 @@ export function KioskInterface() {
     if (!input.trim() || !currentGym?.id || isProcessing) return;
     
     setIsProcessing(true);
+    const sanitizedInput = input.trim();
+    
+    // Input validation - only allow UUID, email-like, or phone-like inputs
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    const PHONE_REGEX = /^[0-9+\-\s()]{7,20}$/;
+    
+    if (sanitizedInput.length > 100) {
+      setResult({
+        status: 'error',
+        title: 'Invalid Input',
+        message: 'Search term is too long',
+      });
+      setIsProcessing(false);
+      return;
+    }
     
     try {
-      // Search by member ID, email, or phone
-      const { data: members, error } = await supabase
-        .from('members')
-        .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
-        .eq('gym_id', currentGym.id)
-        .or(`id.eq.${input},email.ilike.%${input}%,phone.ilike.%${input}%`)
-        .limit(1);
+      let members: any[] | null = null;
+      let error: any = null;
+      
+      // Use separate queries to prevent SQL injection
+      if (UUID_REGEX.test(sanitizedInput)) {
+        // Exact UUID match - safe parameterized query
+        const result = await supabase
+          .from('members')
+          .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
+          .eq('gym_id', currentGym.id)
+          .eq('id', sanitizedInput)
+          .limit(1);
+        members = result.data;
+        error = result.error;
+      } else if (EMAIL_REGEX.test(sanitizedInput)) {
+        // Email search - use parameterized ilike
+        const result = await supabase
+          .from('members')
+          .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
+          .eq('gym_id', currentGym.id)
+          .ilike('email', `%${sanitizedInput.replace(/[%_]/g, '\\$&')}%`)
+          .limit(1);
+        members = result.data;
+        error = result.error;
+      } else if (PHONE_REGEX.test(sanitizedInput)) {
+        // Phone search - use parameterized ilike
+        const result = await supabase
+          .from('members')
+          .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
+          .eq('gym_id', currentGym.id)
+          .ilike('phone', `%${sanitizedInput.replace(/[%_]/g, '\\$&')}%`)
+          .limit(1);
+        members = result.data;
+        error = result.error;
+      } else {
+        // Invalid format - reject
+        setResult({
+          status: 'error',
+          title: 'Invalid Format',
+          message: 'Please enter a valid member ID, email, or phone number',
+        });
+        setIsProcessing(false);
+        return;
+      }
 
       if (error) throw error;
 
