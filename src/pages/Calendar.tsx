@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, setHours } from 'date-fns';
+import { pt } from 'date-fns/locale';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
@@ -112,7 +113,6 @@ export default function Calendar() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch booking counts
       const classIds = (data || []).map(c => c.id);
       if (classIds.length > 0) {
         const { data: bookings } = await supabase
@@ -134,7 +134,7 @@ export default function Calendar() {
         setClasses(data || []);
       }
     } catch (error) {
-      console.error('Error fetching classes:', error);
+      console.error('Erro ao buscar aulas:', error);
     } finally {
       setLoading(false);
     }
@@ -162,7 +162,6 @@ export default function Calendar() {
 
   const fetchCoaches = async () => {
     if (!currentGym?.id) return;
-    // Fetch staff/coaches who have roles for this gym
     const { data } = await supabase
       .from('user_roles')
       .select('user_id, profiles!inner(id, full_name)')
@@ -176,7 +175,6 @@ export default function Calendar() {
         full_name: r.profiles.full_name,
       }));
     
-    // Remove duplicates by user_id
     const uniqueCoaches = coachList.filter((coach, index, self) =>
       index === self.findIndex((c) => c.id === coach.id)
     );
@@ -213,7 +211,7 @@ export default function Calendar() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Please select a gym first.</p>
+          <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
         </div>
       </DashboardLayout>
     );
@@ -225,18 +223,18 @@ export default function Calendar() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Calendar</h1>
-            <p className="text-muted-foreground">Schedule and manage classes with recurring options</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">Calendário</h1>
+            <p className="text-muted-foreground">Agendar e gerir aulas com opções recorrentes</p>
           </div>
 
           <div className="flex items-center gap-2">
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter by type" />
+                <SelectValue placeholder="Filtrar por tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
+                <SelectItem value="all">Todas as Aulas</SelectItem>
                 {classTypes.map(type => (
                   <SelectItem key={type.id} value={type.id}>
                     <div className="flex items-center gap-2">
@@ -253,16 +251,16 @@ export default function Calendar() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Class
+                    Adicionar Aula
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      Schedule Class
+                      Agendar Aula
                       <Badge variant="secondary" className="text-xs">
                         <Repeat className="w-3 h-3 mr-1" />
-                        Recurring Supported
+                        Recorrência Suportada
                       </Badge>
                     </DialogTitle>
                   </DialogHeader>
@@ -288,13 +286,13 @@ export default function Calendar() {
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <h2 className="text-lg font-semibold">
-                  {format(weekStart, 'MMMM d')} - {format(addDays(weekStart, 6), 'MMMM d, yyyy')}
+                  {format(weekStart, 'd MMMM', { locale: pt })} - {format(addDays(weekStart, 6), 'd MMMM yyyy', { locale: pt })}
                 </h2>
                 <Button variant="outline" size="icon" onClick={() => navigateWeek(1)}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>
-                  Today
+                  Hoje
                 </Button>
               </div>
 
@@ -322,7 +320,7 @@ export default function Calendar() {
               <div className="overflow-x-auto">
                 {/* Week Header */}
                 <div className="grid grid-cols-8 border-b">
-                  <div className="p-2 text-xs text-muted-foreground">Time</div>
+                  <div className="p-2 text-xs text-muted-foreground">Hora</div>
                   {weekDays.map((day) => (
                     <div
                       key={day.toISOString()}
@@ -331,7 +329,7 @@ export default function Calendar() {
                         isSameDay(day, new Date()) && 'bg-primary/5'
                       )}
                     >
-                      <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+                      <div className="text-xs text-muted-foreground">{format(day, 'EEE', { locale: pt })}</div>
                       <div className={cn(
                         'text-lg font-semibold',
                         isSameDay(day, new Date()) && 'text-primary'
@@ -347,7 +345,7 @@ export default function Calendar() {
                   {HOURS.map((hour) => (
                     <div key={hour} className="grid grid-cols-8 border-b min-h-[60px]">
                       <div className="p-2 text-xs text-muted-foreground">
-                        {format(setHours(new Date(), hour), 'h a')}
+                        {format(setHours(new Date(), hour), 'HH:mm')}
                       </div>
                       {weekDays.map((day) => {
                         const dayClasses = getClassesForDay(day).filter(c => {
@@ -380,7 +378,7 @@ export default function Calendar() {
                                   )}
                                 </div>
                                 <div className="text-muted-foreground">
-                                  {format(parseISO(classEvent.start_time), 'h:mm a')}
+                                  {format(parseISO(classEvent.start_time), 'HH:mm')}
                                 </div>
                                 <div className="flex items-center gap-2 mt-1">
                                   {classEvent.location && (
@@ -421,9 +419,9 @@ export default function Calendar() {
                         'font-semibold mb-2',
                         isSameDay(day, new Date()) && 'text-primary'
                       )}>
-                        {format(day, 'EEEE, MMMM d')}
+                        {format(day, "EEEE, d 'de' MMMM", { locale: pt })}
                         {isSameDay(day, new Date()) && (
-                          <Badge variant="secondary" className="ml-2">Today</Badge>
+                          <Badge variant="secondary" className="ml-2">Hoje</Badge>
                         )}
                       </h3>
                       <div className="space-y-2">
@@ -447,7 +445,7 @@ export default function Calendar() {
                               <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
-                                  {format(parseISO(classEvent.start_time), 'h:mm a')} - {format(parseISO(classEvent.end_time), 'h:mm a')}
+                                  {format(parseISO(classEvent.start_time), 'HH:mm')} - {format(parseISO(classEvent.end_time), 'HH:mm')}
                                 </span>
                                 {classEvent.location && (
                                   <span className="flex items-center gap-1">
@@ -461,12 +459,12 @@ export default function Calendar() {
                                 )}>
                                   <Users className="w-4 h-4" />
                                   {classEvent.bookings_count || 0}/{classEvent.capacity}
-                                  {classEvent.bookings_count! >= classEvent.capacity && ' (Full)'}
+                                  {classEvent.bookings_count! >= classEvent.capacity && ' (Cheio)'}
                                 </span>
                               </div>
                             </div>
                             <Badge variant={classEvent.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                              {classEvent.status}
+                              {classEvent.status === 'cancelled' ? 'Cancelado' : classEvent.status === 'active' ? 'Ativo' : classEvent.status}
                             </Badge>
                           </div>
                         ))}
@@ -476,7 +474,7 @@ export default function Calendar() {
                 })}
                 {classes.length === 0 && (
                   <div className="text-center py-12 text-muted-foreground">
-                    No classes scheduled this week
+                    Nenhuma aula agendada esta semana
                   </div>
                 )}
               </div>
@@ -488,7 +486,7 @@ export default function Calendar() {
         {classTypes.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Class Types</CardTitle>
+              <CardTitle className="text-sm">Tipos de Aula</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-4">
