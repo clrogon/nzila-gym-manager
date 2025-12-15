@@ -42,7 +42,6 @@ interface DisciplineRank {
   requirements: string | null;
 }
 
-// Generic item for workouts, classes, exercises (stored in workout_templates or custom tables)
 interface TrainingItem {
   id: string;
   name: string;
@@ -75,7 +74,6 @@ export default function Disciplines() {
   const [selectedDiscipline, setSelectedDiscipline] = useState<Discipline | null>(null);
   const [isSeedingRanks, setIsSeedingRanks] = useState(false);
 
-  // CRUD Dialog State
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -112,8 +110,8 @@ export default function Disciplines() {
       if (error) throw error;
       setDisciplines(data || []);
     } catch (error) {
-      console.error('Error fetching disciplines:', error);
-      toast.error('Failed to load disciplines');
+      console.error('Erro ao carregar disciplinas:', error);
+      toast.error('Falha ao carregar disciplinas');
     } finally {
       setLoading(false);
     }
@@ -130,7 +128,7 @@ export default function Disciplines() {
       if (error) throw error;
       setRanks(data || []);
     } catch (error) {
-      console.error('Error fetching ranks:', error);
+      console.error('Erro ao carregar graus:', error);
     }
   };
 
@@ -142,16 +140,16 @@ export default function Disciplines() {
         .eq('id', discipline.id);
 
       if (error) throw error;
-      toast.success(`${discipline.name} ${!discipline.is_active ? 'enabled' : 'disabled'}`);
+      toast.success(`${discipline.name} ${!discipline.is_active ? 'ativada' : 'desativada'}`);
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update discipline');
+      toast.error(error.message || 'Falha ao atualizar disciplina');
     }
   };
 
   const seedRanksForDiscipline = async (discipline: Discipline) => {
     if (!hasBeltSystem(discipline.name)) {
-      toast.error('This discipline does not have a predefined belt system');
+      toast.error('Esta disciplina não tem um sistema de graus predefinido');
       return;
     }
 
@@ -171,16 +169,15 @@ export default function Disciplines() {
         .insert(ranksToInsert);
 
       if (error) throw error;
-      toast.success(`${rankSeeds.length} ranks created for ${discipline.name}`);
+      toast.success(`${rankSeeds.length} graus criados para ${discipline.name}`);
       fetchRanks(discipline.id);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to seed ranks');
+      toast.error(error.message || 'Falha ao criar graus');
     } finally {
       setIsSeedingRanks(false);
     }
   };
 
-  // CRUD Operations
   const handleCreate = async () => {
     if (!currentGym?.id || !formData.name.trim()) return;
     setIsSubmitting(true);
@@ -194,12 +191,12 @@ export default function Disciplines() {
       });
 
       if (error) throw error;
-      toast.success('Discipline created successfully');
+      toast.success('Disciplina criada com sucesso');
       setIsCreateDialogOpen(false);
       setFormData({ name: '', description: '', category: '' });
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create discipline');
+      toast.error(error.message || 'Falha ao criar disciplina');
     } finally {
       setIsSubmitting(false);
     }
@@ -219,7 +216,7 @@ export default function Disciplines() {
         .eq('id', editingItem.id);
 
       if (error) throw error;
-      toast.success('Discipline updated successfully');
+      toast.success('Disciplina atualizada com sucesso');
       setIsEditDialogOpen(false);
       setEditingItem(null);
       setFormData({ name: '', description: '', category: '' });
@@ -228,7 +225,7 @@ export default function Disciplines() {
         setSelectedDiscipline(null);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update discipline');
+      toast.error(error.message || 'Falha ao atualizar disciplina');
     } finally {
       setIsSubmitting(false);
     }
@@ -244,7 +241,7 @@ export default function Disciplines() {
         .eq('id', deletingItem.id);
 
       if (error) throw error;
-      toast.success('Discipline deleted successfully');
+      toast.success('Disciplina eliminada com sucesso');
       setIsDeleteDialogOpen(false);
       setDeletingItem(null);
       if (selectedDiscipline?.id === deletingItem.id) {
@@ -252,7 +249,7 @@ export default function Disciplines() {
       }
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete discipline');
+      toast.error(error.message || 'Falha ao eliminar disciplina');
     } finally {
       setIsSubmitting(false);
     }
@@ -281,13 +278,12 @@ export default function Disciplines() {
   });
 
   const groupedDisciplines = filteredDisciplines.reduce((acc, d) => {
-    const cat = d.category || 'Other';
+    const cat = d.category || 'Outro';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(d);
     return acc;
   }, {} as Record<string, Discipline[]>);
 
-  // Get seed data for current tab
   const getSeedDataForTab = () => {
     const category = filterCategory === 'all' ? null : getCategoryByName(filterCategory);
     
@@ -322,7 +318,7 @@ export default function Disciplines() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Please select a gym first.</p>
+          <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
         </div>
       </DashboardLayout>
     );
@@ -334,13 +330,13 @@ export default function Disciplines() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Training Library</h1>
-            <p className="text-muted-foreground">Manage disciplines, workouts, classes, and exercises</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">Biblioteca de Treino</h1>
+            <p className="text-muted-foreground">Gerir disciplinas, treinos, aulas e exercícios</p>
           </div>
           {activeTab === 'disciplines' && hasPermission('training:create') && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Discipline
+              Adicionar Disciplina
             </Button>
           )}
         </div>
@@ -350,19 +346,19 @@ export default function Disciplines() {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="disciplines" className="flex items-center gap-2">
               <Award className="w-4 h-4" />
-              <span className="hidden sm:inline">Disciplines</span>
+              <span className="hidden sm:inline">Disciplinas</span>
             </TabsTrigger>
             <TabsTrigger value="workouts" className="flex items-center gap-2">
               <Dumbbell className="w-4 h-4" />
-              <span className="hidden sm:inline">Workouts</span>
+              <span className="hidden sm:inline">Treinos</span>
             </TabsTrigger>
             <TabsTrigger value="classes" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">Classes</span>
+              <span className="hidden sm:inline">Aulas</span>
             </TabsTrigger>
             <TabsTrigger value="exercises" className="flex items-center gap-2">
               <ListChecks className="w-4 h-4" />
-              <span className="hidden sm:inline">Exercises</span>
+              <span className="hidden sm:inline">Exercícios</span>
             </TabsTrigger>
           </TabsList>
 
@@ -390,7 +386,7 @@ export default function Disciplines() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.active}</p>
-                      <p className="text-sm text-muted-foreground">Active</p>
+                      <p className="text-sm text-muted-foreground">Ativas</p>
                     </div>
                   </div>
                 </CardContent>
@@ -403,7 +399,7 @@ export default function Disciplines() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.withRanks}</p>
-                      <p className="text-sm text-muted-foreground">With Belts</p>
+                      <p className="text-sm text-muted-foreground">Com Graus</p>
                     </div>
                   </div>
                 </CardContent>
@@ -416,7 +412,7 @@ export default function Disciplines() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.categories}</p>
-                      <p className="text-sm text-muted-foreground">Categories</p>
+                      <p className="text-sm text-muted-foreground">Categorias</p>
                     </div>
                   </div>
                 </CardContent>
@@ -431,7 +427,7 @@ export default function Disciplines() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder={`Search ${activeTab}...`}
+                    placeholder={`Pesquisar ${activeTab === 'disciplines' ? 'disciplinas' : activeTab === 'workouts' ? 'treinos' : activeTab === 'classes' ? 'aulas' : 'exercícios'}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
@@ -439,10 +435,10 @@ export default function Disciplines() {
                 </div>
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
                   <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Category" />
+                    <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="all">Todas as Categorias</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
@@ -467,7 +463,7 @@ export default function Disciplines() {
                   <Card>
                     <CardContent className="py-12 text-center">
                       <Activity className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No disciplines found</p>
+                      <p className="text-muted-foreground">Nenhuma disciplina encontrada</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -478,7 +474,7 @@ export default function Disciplines() {
                           {CATEGORY_ICONS[category] || <Activity className="w-4 h-4" />}
                           {category}
                         </CardTitle>
-                        <CardDescription>{items.length} disciplines</CardDescription>
+                        <CardDescription>{items.length} disciplinas</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
@@ -499,7 +495,7 @@ export default function Disciplines() {
                                   {hasBeltSystem(discipline.name) && (
                                     <Badge variant="outline" className="text-xs mt-1">
                                       <Award className="w-3 h-3 mr-1" />
-                                      Belt System
+                                      Sistema de Graus
                                     </Badge>
                                   )}
                                 </div>
@@ -545,19 +541,19 @@ export default function Disciplines() {
                       <CardTitle className="flex items-center justify-between">
                         {selectedDiscipline.name}
                         <Badge variant={selectedDiscipline.is_active ? 'default' : 'secondary'}>
-                          {selectedDiscipline.is_active ? 'Active' : 'Inactive'}
+                          {selectedDiscipline.is_active ? 'Ativa' : 'Inativa'}
                         </Badge>
                       </CardTitle>
                       <CardDescription>{selectedDiscipline.category}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground mb-4">
-                        {selectedDiscipline.description || 'No description available'}
+                        {selectedDiscipline.description || 'Sem descrição disponível'}
                       </p>
                       {hasBeltSystem(selectedDiscipline.name) && (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium">Belt/Rank System</Label>
+                            <Label className="text-sm font-medium">Sistema de Graus</Label>
                             {ranks.length === 0 && (
                               <Button
                                 size="sm"
@@ -570,7 +566,7 @@ export default function Disciplines() {
                                 ) : (
                                   <Plus className="w-4 h-4 mr-2" />
                                 )}
-                                Seed Default Ranks
+                                Criar Graus Padrão
                               </Button>
                             )}
                           </div>
@@ -590,14 +586,14 @@ export default function Disciplines() {
                                     <p className="text-xs text-muted-foreground">{rank.requirements}</p>
                                   </div>
                                   <Badge variant="outline" className="text-xs">
-                                    Lv. {rank.level}
+                                    Nível {rank.level}
                                   </Badge>
                                 </div>
                               ))}
                             </div>
                           ) : (
                             <p className="text-sm text-muted-foreground text-center py-4">
-                              No ranks configured yet
+                              Ainda sem graus configurados
                             </p>
                           )}
                         </div>
@@ -608,7 +604,7 @@ export default function Disciplines() {
                   <Card>
                     <CardContent className="py-12 text-center">
                       <Settings2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">Select a discipline to view details</p>
+                      <p className="text-muted-foreground">Selecione uma disciplina para ver detalhes</p>
                     </CardContent>
                   </Card>
                 )}
@@ -616,21 +612,26 @@ export default function Disciplines() {
             </div>
           </TabsContent>
 
-          {/* Workouts/Classes/Exercises Tab Content (Read-only seed data display) */}
+          {/* Workouts/Classes/Exercises Tab Content */}
           {['workouts', 'classes', 'exercises'].map((tabKey) => (
             <TabsContent key={tabKey} value={tabKey} className="mt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="capitalize">{tabKey} Library</CardTitle>
+                  <CardTitle className="capitalize">
+                    Biblioteca de {tabKey === 'workouts' ? 'Treinos' : tabKey === 'classes' ? 'Aulas' : 'Exercícios'}
+                  </CardTitle>
                   <CardDescription>
-                    Default {tabKey} from the training library. These serve as templates for creating gym-specific content.
+                    {tabKey === 'workouts' ? 'Treinos' : tabKey === 'classes' ? 'Aulas' : 'Exercícios'} padrão da biblioteca de treino. 
+                    Servem como modelos para criar conteúdo específico do ginásio.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {filteredSeedData.length === 0 ? (
                     <div className="text-center py-12">
                       <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No {tabKey} found</p>
+                      <p className="text-muted-foreground">
+                        Nenhum {tabKey === 'workouts' ? 'treino' : tabKey === 'classes' ? 'aula' : 'exercício'} encontrado
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -673,27 +674,27 @@ export default function Disciplines() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Discipline</DialogTitle>
-            <DialogDescription>Add a new training discipline to your gym.</DialogDescription>
+            <DialogTitle>Criar Disciplina</DialogTitle>
+            <DialogDescription>Adicione uma nova disciplina de treino ao seu ginásio.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Brazilian Jiu-Jitsu"
+                placeholder="ex: Jiu-Jitsu Brasileiro"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData({ ...formData, category: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selecionar categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(cat => (
@@ -703,21 +704,21 @@ export default function Disciplines() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Descrição</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Brief description of this discipline"
+                placeholder="Breve descrição desta disciplina"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleCreate} disabled={isSubmitting || !formData.name.trim()}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create
+              Criar
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -727,12 +728,12 @@ export default function Disciplines() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Discipline</DialogTitle>
-            <DialogDescription>Update the discipline details.</DialogDescription>
+            <DialogTitle>Editar Disciplina</DialogTitle>
+            <DialogDescription>Atualizar os detalhes da disciplina.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
+              <Label htmlFor="edit-name">Nome</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -740,13 +741,13 @@ export default function Disciplines() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-category">Category</Label>
+              <Label htmlFor="edit-category">Categoria</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData({ ...formData, category: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Selecionar categoria" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map(cat => (
@@ -756,7 +757,7 @@ export default function Disciplines() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">Descrição</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -766,10 +767,10 @@ export default function Disciplines() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleUpdate} disabled={isSubmitting || !formData.name.trim()}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
+              Guardar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -779,16 +780,16 @@ export default function Disciplines() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Discipline</DialogTitle>
+            <DialogTitle>Eliminar Disciplina</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{deletingItem?.name}"? This action cannot be undone.
+              Tem a certeza que deseja eliminar "{deletingItem?.name}"? Esta ação não pode ser revertida.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Delete
+              Eliminar
             </Button>
           </DialogFooter>
         </DialogContent>
