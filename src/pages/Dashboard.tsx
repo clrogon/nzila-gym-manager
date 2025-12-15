@@ -8,6 +8,9 @@ import { Users, UserCheck, CreditCard, TrendingUp, Clock, Building2 } from 'luci
 import { Link } from 'react-router-dom';
 import { RequirePermission } from '@/components/common/RequirePermission';
 import { useRBAC } from '@/hooks/useRBAC';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { RecentCheckInItem } from '@/components/dashboard/RecentCheckInItem';
+import { QuickActionCard } from '@/components/dashboard/QuickActionCard';
 
 interface DashboardStats {
   totalMembers: number;
@@ -136,7 +139,7 @@ export default function Dashboard() {
           <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
             <Building2 className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-3xl font-display font-bold mb-2">Welcome to GymFlow!</h2>
+          <h2 className="text-3xl font-display font-bold mb-2">Welcome to Nzila!</h2>
           <p className="text-muted-foreground mb-6 max-w-md">
             Get started by setting up your gym. This will allow you to manage members, track check-ins, and process payments.
           </p>
@@ -152,7 +155,8 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
+        {/* Header */}
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
@@ -160,133 +164,98 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Glofox/PushPress style */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="animate-fade-in">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Members
-              </CardTitle>
-              <Users className="w-4 h-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-display font-bold">{stats.totalMembers}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active Members
-              </CardTitle>
-              <TrendingUp className="w-4 h-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-display font-bold text-success">{stats.activeMembers}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Today's Check-ins
-              </CardTitle>
-              <UserCheck className="w-4 h-4 text-accent" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-display font-bold text-accent">{stats.todayCheckIns}</div>
-            </CardContent>
-          </Card>
-
+          <StatCard
+            title="Total Members"
+            value={stats.totalMembers}
+            icon={Users}
+            variant="primary"
+          />
+          <StatCard
+            title="Active Members"
+            value={stats.activeMembers}
+            icon={TrendingUp}
+            variant="success"
+          />
+          <StatCard
+            title="Today's Check-ins"
+            value={stats.todayCheckIns}
+            icon={UserCheck}
+            variant="default"
+          />
           <RequirePermission permission="payments:read">
-            <Card className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Monthly Revenue
-                </CardTitle>
-                <CreditCard className="w-4 h-4 text-warning" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-display font-bold">{formatCurrency(stats.monthlyRevenue)}</div>
-              </CardContent>
-            </Card>
+            <StatCard
+              title="Monthly Revenue"
+              value={formatCurrency(stats.monthlyRevenue)}
+              icon={CreditCard}
+              variant="warning"
+            />
           </RequirePermission>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity & Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
+          {/* Recent Check-ins with Avatars */}
+          <Card className="shadow-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-display">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                  <Clock className="w-4 h-4 text-primary" />
+                </div>
                 Recent Check-ins
               </CardTitle>
             </CardHeader>
             <CardContent>
               {recentCheckIns.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {recentCheckIns.map((checkIn) => (
-                    <div
+                    <RecentCheckInItem
                       key={checkIn.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                    >
-                      <span className="font-medium">{checkIn.member_name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {formatTime(checkIn.checked_in_at)}
-                      </span>
-                    </div>
+                      memberName={checkIn.member_name}
+                      time={formatTime(checkIn.checked_in_at)}
+                    />
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  No check-ins yet today
-                </p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <UserCheck className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-muted-foreground">No check-ins yet today</p>
+                </div>
               )}
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+          {/* Quick Actions */}
+          <Card className="shadow-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-display">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <a
+              <QuickActionCard
+                title="Add New Member"
+                description="Register a new gym member"
+                icon={Users}
                 href="/members"
-                className="block p-4 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium">Add New Member</p>
-                    <p className="text-sm text-muted-foreground">Register a new gym member</p>
-                  </div>
-                </div>
-              </a>
-              <a
+                variant="primary"
+              />
+              <QuickActionCard
+                title="Quick Check-in"
+                description="Record member attendance"
+                icon={UserCheck}
                 href="/check-ins"
-                className="block p-4 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <UserCheck className="w-5 h-5 text-accent" />
-                  <div>
-                    <p className="font-medium">Quick Check-in</p>
-                    <p className="text-sm text-muted-foreground">Record member attendance</p>
-                  </div>
-                </div>
-              </a>
+                variant="accent"
+              />
               <RequirePermission permission="payments:create">
-                <a
+                <QuickActionCard
+                  title="Record Payment"
+                  description="Add a new payment"
+                  icon={CreditCard}
                   href="/payments"
-                  className="block p-4 rounded-lg bg-success/10 hover:bg-success/20 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-success" />
-                    <div>
-                      <p className="font-medium">Record Payment</p>
-                      <p className="text-sm text-muted-foreground">Add a new payment</p>
-                    </div>
-                  </div>
-                </a>
+                  variant="success"
+                />
               </RequirePermission>
             </CardContent>
           </Card>
