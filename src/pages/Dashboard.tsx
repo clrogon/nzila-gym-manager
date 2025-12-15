@@ -1,3 +1,4 @@
+// src/pages/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +48,7 @@ export default function Dashboard() {
         const today = new Date().toISOString().split('T')[0];
         const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
-        // Fetch member stats
+        // Estatísticas de membros
         const { count: totalMembers } = await supabase
           .from('members')
           .select('*', { count: 'exact', head: true })
@@ -59,14 +60,14 @@ export default function Dashboard() {
           .eq('gym_id', currentGym.id)
           .eq('status', 'active');
 
-        // Fetch today's check-ins
+        // Check-ins de hoje
         const { count: todayCheckIns } = await supabase
           .from('check_ins')
           .select('*', { count: 'exact', head: true })
           .eq('gym_id', currentGym.id)
           .gte('checked_in_at', today);
 
-        // Fetch monthly revenue
+        // Receita mensal
         const { data: payments } = await supabase
           .from('payments')
           .select('amount')
@@ -83,7 +84,7 @@ export default function Dashboard() {
           monthlyRevenue,
         });
 
-        // Fetch recent check-ins
+        // Check-ins recentes
         const { data: checkIns } = await supabase
           .from('check_ins')
           .select('id, checked_in_at, member_id')
@@ -102,13 +103,13 @@ export default function Dashboard() {
           setRecentCheckIns(
             checkIns.map(c => ({
               id: c.id,
-              member_name: memberMap.get(c.member_id) || 'Unknown',
+              member_name: memberMap.get(c.member_id) || 'Desconhecido',
               checked_in_at: c.checked_in_at,
             }))
           );
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Erro ao buscar dados do dashboard:', error);
       } finally {
         setLoading(false);
       }
@@ -131,7 +132,7 @@ export default function Dashboard() {
     });
   };
 
-  // No gym state - show setup prompt
+  // Sem ginásio configurado - prompt de configuração
   if (!currentGym) {
     return (
       <DashboardLayout>
@@ -139,13 +140,13 @@ export default function Dashboard() {
           <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
             <Building2 className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-3xl font-display font-bold mb-2">Welcome to Nzila!</h2>
+          <h2 className="text-3xl font-display font-bold mb-2">Bem-vindo ao Nzila!</h2>
           <p className="text-muted-foreground mb-6 max-w-md">
-            Get started by setting up your gym. This will allow you to manage members, track check-ins, and process payments.
+            Comece configurando o seu espaço. Isto permitirá gerir membros, acompanhar check-ins e processar pagamentos.
           </p>
           <Link to="/onboarding">
             <Button size="lg" className="gradient-primary">
-              Set Up Your Gym
+              Configurar Nzila
             </Button>
           </Link>
         </div>
@@ -156,37 +157,37 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Header */}
+        {/* Cabeçalho */}
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground mt-1">
-            Welcome back! Here's what's happening at {currentGym.name}.
+            Bem-vindo de volta! Aqui está o que se passa no {currentGym.name}.
           </p>
         </div>
 
-        {/* Stats Grid - Glofox/PushPress style */}
+        {/* Grid de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Total Members"
+            title="Total de Membros"
             value={stats.totalMembers}
             icon={Users}
             variant="primary"
           />
           <StatCard
-            title="Active Members"
+            title="Membros Ativos"
             value={stats.activeMembers}
             icon={TrendingUp}
             variant="success"
           />
           <StatCard
-            title="Today's Check-ins"
+            title="Check-ins de Hoje"
             value={stats.todayCheckIns}
             icon={UserCheck}
             variant="default"
           />
           <RequirePermission permission="payments:read">
             <StatCard
-              title="Monthly Revenue"
+              title="Receita Mensal"
               value={formatCurrency(stats.monthlyRevenue)}
               icon={CreditCard}
               variant="warning"
@@ -194,16 +195,16 @@ export default function Dashboard() {
           </RequirePermission>
         </div>
 
-        {/* Recent Activity & Quick Actions */}
+        {/* Atividade Recente e Ações Rápidas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Check-ins with Avatars */}
+          {/* Check-ins recentes */}
           <Card className="shadow-card">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg font-display">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                   <Clock className="w-4 h-4 text-primary" />
                 </div>
-                Recent Check-ins
+                Check-ins Recentes
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -222,36 +223,36 @@ export default function Dashboard() {
                   <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
                     <UserCheck className="w-6 h-6 text-muted-foreground" />
                   </div>
-                  <p className="text-muted-foreground">No check-ins yet today</p>
+                  <p className="text-muted-foreground">Ainda não há check-ins hoje</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Ações rápidas */}
           <Card className="shadow-card">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-display">Quick Actions</CardTitle>
+              <CardTitle className="text-lg font-display">Ações Rápidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <QuickActionCard
-                title="Add New Member"
-                description="Register a new gym member"
+                title="Adicionar Novo Membro"
+                description="Registar um novo membro"
                 icon={Users}
                 href="/members"
                 variant="primary"
               />
               <QuickActionCard
-                title="Quick Check-in"
-                description="Record member attendance"
+                title="Check-in Rápido"
+                description="Registar presença de um membro"
                 icon={UserCheck}
                 href="/check-ins"
                 variant="accent"
               />
               <RequirePermission permission="payments:create">
                 <QuickActionCard
-                  title="Record Payment"
-                  description="Add a new payment"
+                  title="Registar Pagamento"
+                  description="Adicionar um novo pagamento"
                   icon={CreditCard}
                   href="/payments"
                   variant="success"
