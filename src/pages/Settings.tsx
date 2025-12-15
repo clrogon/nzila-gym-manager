@@ -1,4 +1,3 @@
-src/pages/Settings.tsx
 import { useState, useEffect } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
