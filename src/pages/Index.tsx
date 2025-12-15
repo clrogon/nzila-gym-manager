@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, Users, UserCheck, CreditCard, ArrowRight, CheckCircle } from 'lucide-react';
+import { Dumbbell, Users, UserCheck, CreditCard, ArrowRight, CheckCircle, Shield } from 'lucide-react';
+import { Helmet } from 'react-helmet';
 
 const features = [
   {
@@ -31,6 +32,15 @@ const benefits = [
 export default function Index() {
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>Nzila - Gestão de Ginásio para Angola</title>
+        <meta
+          name="description"
+          content="Solução completa de gestão de ginásio desenvolvida para o mercado angolano. Gerir membros, entradas e pagamentos."
+        />
+      </Helmet>
+
       {/* Hero Section */}
       <header className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -38,23 +48,26 @@ export default function Index() {
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
         </div>
 
-        <nav className="relative container mx-auto px-4 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        {/* Navigation */}
+        <nav className="relative container mx-auto px-4 py-6 flex items-center justify-between" aria-label="Principal">
+          <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
               <Dumbbell className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-display font-bold">Nzila</span>
-          </div>
+          </Link>
+
           <div className="flex items-center gap-4">
-            <Link to="/auth">
-              <Button variant="ghost">Entrar</Button>
+            <Link to="/auth?mode=login">
+              <Button variant="ghost" aria-label="Entrar no sistema">Entrar</Button>
             </Link>
-            <Link to="/auth">
-              <Button className="gradient-primary">Começar</Button>
+            <Link to="/auth?mode=signup">
+              <Button className="gradient-primary" aria-label="Iniciar teste gratuito">Começar</Button>
             </Link>
           </div>
         </nav>
 
+        {/* Hero Content */}
         <div className="relative container mx-auto px-4 py-24 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
             <h1 className="text-5xl md:text-6xl font-display font-bold leading-tight">
@@ -66,7 +79,7 @@ export default function Index() {
               Gerir membros, entradas e pagamentos tudo numa única plataforma.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button size="lg" className="gradient-primary text-lg px-8">
                   Iniciar Teste Gratuito
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -94,7 +107,7 @@ export default function Index() {
               <div
                 key={feature.title}
                 className="p-8 rounded-2xl bg-card border border-border hover:shadow-lg transition-shadow animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={{ ['--delay' as any]: `${index * 0.1}s` }}
               >
                 <div className="w-14 h-14 gradient-primary rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="w-7 h-7 text-primary-foreground" />
@@ -129,23 +142,40 @@ export default function Index() {
               </ul>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl p-8 flex items-center justify-center">
-                <div className="w-full max-w-sm space-y-4">
-                  <div className="h-12 bg-card rounded-lg shadow-sm animate-pulse-soft" />
-                  <div className="h-32 bg-card rounded-lg shadow-sm" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="h-20 bg-card rounded-lg shadow-sm" />
-                    <div className="h-20 bg-card rounded-lg shadow-sm" />
-                  </div>
-                </div>
-              </div>
+              {/* Replace this placeholder with actual dashboard screenshot */}
+              <img
+                src="/placeholder-dashboard.png"
+                alt="Exemplo de painel de controlo do ginásio"
+                className="aspect-square rounded-3xl shadow-md"
+              />
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Security & Compliance Section */}
       <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <Shield className="w-12 h-12 mx-auto text-primary" />
+            <h2 className="text-3xl md:text-4xl font-display font-bold">
+              Segurança & Conformidade
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Nzila protege os dados do seu ginásio com padrões de segurança avançados e práticas recomendadas de GDPR.
+            </p>
+            <Link to="/security">
+              <Button size="lg" className="gradient-primary text-lg px-8">
+                Saiba Mais
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-3xl md:text-4xl font-display font-bold">
@@ -154,8 +184,8 @@ export default function Index() {
             <p className="text-muted-foreground text-lg">
               Junte-se ao Nzila hoje e eleve a gestão do seu ginásio para o próximo nível.
             </p>
-            <Link to="/auth">
-              <Button size="lg" className="gradient-primary text-lg px-8">
+            <Link to="/auth?mode=signup">
+              <Button size="lg" className="gradient-primary text-lg px-8" aria-label="Começar agora">
                 Começar Agora
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
@@ -165,10 +195,8 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Nzila. Todos os direitos reservados.</p>
-        </div>
+      <footer className="py-8 border-t border-border text-center text-muted-foreground">
+        <p>&copy; {new Date().getFullYear()} Nzila. Todos os direitos reservados.</p>
       </footer>
     </div>
   );
