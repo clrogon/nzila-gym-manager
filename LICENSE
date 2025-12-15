@@ -1,6 +1,10 @@
-MIT License
+# MIT License | Licença MIT
 
-Copyright (c) 2025 clrogon
+Copyright (c) 2024 Carlos Rogão
+
+---
+
+## English Version
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +23,93 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Versão em Português
+
+A permissão é concedida, gratuitamente, a qualquer pessoa que obtenha uma cópia
+deste software e dos ficheiros de documentação associados (o "Software"), para
+negociar o Software sem restrições, incluindo sem limitação os direitos de
+usar, copiar, modificar, fundir, publicar, distribuir, sublicenciar e/ou vender
+cópias do Software, e permitir que as pessoas a quem o Software é fornecido o
+façam, sujeitas às seguintes condições:
+
+O aviso de copyright acima e este aviso de permissão devem ser incluídos em todas
+as cópias ou porções substanciais do Software.
+
+O SOFTWARE É FORNECIDO "TAL COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU
+IMPLÍCITA, INCLUINDO MAS NÃO LIMITADO ÀS GARANTIAS DE COMERCIALIZAÇÃO,
+ADEQUAÇÃO A UM FIM ESPECÍFICO E NÃO VIOLAÇÃO. EM NENHUM CASO OS AUTORES OU
+TITULARES DE DIREITOS DE AUTOR SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, DANOS OU
+OUTRA RESPONSABILIDADE, SEJA NUMA ACÇÃO CONTRATUAL, DELITUAL OU DE OUTRA FORMA,
+DECORRENTE DE, FORA DE OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES
+NO SOFTWARE.
+
+---
+
+## Additional Information | Informação Adicional
+
+**Project Name | Nome do Projecto**: Nzila Gym Manager
+
+**Project URL**: https://github.com/clrogon/nzila-gym-manager
+
+**Author | Autor**: Carlos Rogão ([@clrogon](https://github.com/clrogon))
+
+**Contact | Contacto**: carlos@nzila.ao
+
+---
+
+## Third-Party Licenses | Licenças de Terceiros
+
+**EN**: This software uses the following third-party libraries, each with their own licenses:
+
+**PT**: Este software usa as seguintes bibliotecas de terceiros, cada uma com suas próprias licenças:
+
+### Core Dependencies | Dependências Principais
+
+| Library | License | Licença |
+|---------|---------|---------|
+| React | MIT | MIT |
+| TypeScript | Apache 2.0 | Apache 2.0 |
+| Vite | MIT | MIT |
+| Tailwind CSS | MIT | MIT |
+| Supabase JS | MIT | MIT |
+| TanStack Query | MIT | MIT |
+| React Router | MIT | MIT |
+| Zod | MIT | MIT |
+| Flowbite React | MIT | MIT |
+| Lucide React | ISC | ISC |
+| date-fns | MIT | MIT |
+
+**EN**: Full license texts for these libraries can be found in their respective repositories or in the `node_modules` directory.
+
+**PT**: Textos completos de licença para estas bibliotecas podem ser encontrados nos seus repositórios respectivos ou no directório `node_modules`.
+
+---
+
+## Contributor License Agreement | Acordo de Licença do Contribuidor
+
+**EN**: By contributing to this project, you agree that your contributions will be licensed under the same MIT License that covers the project.
+
+**PT**: Ao contribuir para este projecto, concorda que as suas contribuições serão licenciadas sob a mesma Licença MIT que cobre o projecto.
+
+---
+
+## Commercial Use | Uso Comercial
+
+**EN**: This MIT License permits commercial use. You are free to use Nzila Gym Manager for commercial purposes, modify it, and distribute it, provided you include the copyright notice and license terms.
+
+**PT**: Esta Licença MIT permite uso comercial. É livre de usar o Nzila Gym Manager para fins comerciais, modificá-lo e distribuí-lo, desde que inclua o aviso de copyright e os termos da licença.
+
+---
+
+## Trademark Notice | Aviso de Marca Registada
+
+**EN**: "Nzila" and "Nzila Gym Manager" are trademarks of Carlos Rogão. Use of these trademarks is subject to separate trademark guidelines. The MIT License does not grant permission to use the trademarks except as required for reasonable and customary use in describing the origin of the software.
+
+**PT**: "Nzila" e "Nzila Gym Manager" são marcas registadas de Carlos Rogão. O uso destas marcas está sujeito a diretrizes de marca registada separadas. A Licença MIT não concede permissão para usar as marcas registadas excepto conforme requerido para uso razoável e habitual ao descrever a origem do software.
+
+---
+
+**Last Updated | Última Actualização**: December 2024 | Dezembro 2024
