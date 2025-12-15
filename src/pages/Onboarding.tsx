@@ -7,7 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, ArrowRight } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,23 +30,25 @@ export default function Onboarding() {
   const [address, setAddress] = useState('');
 
   // ==========================
-  // Funções auxiliares
+  // Helpers
   // ==========================
-  
-  const normalizePhone = (phone: string) => phone.replace(/\s+/g, '');
+  const normalizePhone = (value: string) => value.replace(/\s+/g, '');
 
   const generateSlug = (name: string) => {
-    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    return `${baseSlug}-${uuidv4().slice(0, 8)}`;
+    const base = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    return `${base}-${uuidv4().slice(0, 8)}`;
   };
 
   const createGym = async () => {
-    if (!user) throw new Error('Usuário não autenticado');
+    if (!user) throw new Error('Utilizador não autenticado');
 
-    const { data: gym, error: gymError } = await supabase
+    const { data, error } = await supabase
       .from('gyms')
       .insert({
-        name: gymName,
+        name: gymName.trim(),
         slug: generateSlug(gymName),
         phone: normalizePhone(phone),
         address,
@@ -49,30 +57,32 @@ export default function Onboarding() {
       .select()
       .single();
 
-    if (gymError) throw gymError;
-    return gym;
+    if (error) throw error;
+    return data;
   };
 
   const assignOwnerRole = async (gymId: string) => {
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: user!.id,
-        gym_id: gymId,
-        role: 'gym_owner',
-      });
+    const { error } = await supabase.from('user_roles').insert({
+      user_id: user!.id,
+      gym_id: gymId,
+      role: 'gym_owner',
+    });
 
-    if (roleError) throw roleError;
+    if (error) throw error;
   };
 
   // ==========================
-  // Handler principal
+  // Submit
   // ==========================
-  
   const handleCreateGym = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!gymName.trim()) {
-      toast({ title: 'Erro', description: 'O nome do ginásio é obrigatório', variant: 'destructive' });
+      toast({
+        title: 'Nome obrigatório',
+        description: 'Introduza o nome do ginásio para continuar.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -81,13 +91,19 @@ export default function Onboarding() {
       const gym = await createGym();
       await assignOwnerRole(gym.id);
       await refreshGyms();
-      toast({ title: 'Ginásio criado', description: 'Bem-vindo ao Nzila!' });
+
+      toast({
+        title: 'Ginásio criado com sucesso',
+        description: 'Bem-vindo ao Nzila.',
+      });
+
       navigate('/dashboard');
     } catch (error: any) {
-      console.error('Erro ao criar ginásio:', error);
+      console.error(error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Falha ao criar ginásio. Tente novamente.',
+        title: 'Erro ao criar ginásio',
+        description:
+          error.message || 'Ocorreu um problema. Tente novamente.',
         variant: 'destructive',
       });
     } finally {
@@ -96,43 +112,47 @@ export default function Onboarding() {
   };
 
   // ==========================
-  // JSX
+  // UI
   // ==========================
-  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      {/* Decorative background */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
       </div>
 
-      <Card className="w-full max-w-md relative animate-fade-in glass">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 gradient-accent rounded-2xl flex items-center justify-center">
-            <Building2 className="w-8 h-8 text-accent-foreground" />
+      <Card className="relative w-full max-w-md shadow-lg">
+        <CardHeader className="text-center space-y-3">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <Building2 className="h-7 w-7 text-primary" />
           </div>
-          <div>
-            <CardTitle className="text-2xl font-display">Configure a sua Ginásio</CardTitle>
+
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-display">
+              Configurar o seu ginásio
+            </CardTitle>
             <CardDescription>
-              Vamos preparar o seu ginásio para gerir os membros
+              Este é o primeiro passo para gerir membros, presenças e pagamentos
+              no Nzila.
             </CardDescription>
           </div>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleCreateGym} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="gym-name">Nome do Ginásio *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="gym-name">Nome do ginásio *</Label>
               <Input
                 id="gym-name"
-                placeholder="FitZone Gym"
+                placeholder="Ex: FitZone Luanda"
                 value={gymName}
                 onChange={(e) => setGymName(e.target.value)}
                 required
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
@@ -143,7 +163,7 @@ export default function Onboarding() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="address">Endereço</Label>
               <Input
                 id="address"
@@ -153,18 +173,22 @@ export default function Onboarding() {
               />
             </div>
 
-            <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-              {loading ? 'A criar...' : 'Criar Ginásio'}
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button
+              type="submit"
+              className="w-full gradient-primary"
+              disabled={loading}
+            >
+              {loading ? 'A criar ginásio…' : 'Criar ginásio'}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
 
             <Button
               type="button"
               variant="ghost"
-              className="w-full mt-2"
+              className="w-full text-muted-foreground"
               onClick={() => navigate('/dashboard')}
             >
-              Ignorar por agora
+              Configurar mais tarde
             </Button>
           </form>
         </CardContent>
