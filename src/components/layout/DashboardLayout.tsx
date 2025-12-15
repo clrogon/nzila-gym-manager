@@ -48,36 +48,36 @@ type NavItem = {
   permission?: string;
 };
 
-// Gym-level navigation with role requirements
+/* Navegação ao nível do ginásio */
 const gymNavItems: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: Users, label: 'Members', href: '/members', permission: 'members:read' },
+  { icon: LayoutDashboard, label: 'Visão Geral', href: '/dashboard' },
+  { icon: Users, label: 'Membros', href: '/members', permission: 'members:read' },
   { icon: TrendingUp, label: 'Leads', href: '/leads', permission: 'members:read' },
-  { icon: UserCheck, label: 'Check-ins', href: '/check-ins', permission: 'checkins:read' },
-  { icon: CalendarDays, label: 'Calendar', href: '/calendar', permission: 'classes:read' },
-  { icon: Target, label: 'Training Hub', href: '/training', permission: 'training:read' },
-  { icon: Award, label: 'Training Library', href: '/disciplines', permission: 'training:read' },
-  { icon: CreditCard, label: 'Finance', href: '/payments', permission: 'payments:read' },
-  { icon: FileText, label: 'Invoices', href: '/invoices', permission: 'payments:read' },
-  { icon: Package, label: 'Inventory', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: UserCheck, label: 'Entradas', href: '/check-ins', permission: 'checkins:read' },
+  { icon: CalendarDays, label: 'Agenda', href: '/calendar', permission: 'classes:read' },
+  { icon: Target, label: 'Plano de Treino', href: '/training', permission: 'training:read' },
+  { icon: Award, label: 'Biblioteca de Treinos', href: '/disciplines', permission: 'training:read' },
+  { icon: CreditCard, label: 'Financeiro', href: '/payments', permission: 'payments:read' },
+  { icon: FileText, label: 'Facturas', href: '/invoices', permission: 'payments:read' },
+  { icon: Package, label: 'Inventário', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: ShoppingCart, label: 'POS', href: '/pos', permission: 'payments:read' },
-  { icon: Scan, label: 'Kiosk', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
-  { icon: UserCog, label: 'Trainers', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
-  { icon: Settings, label: 'Settings', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: Scan, label: 'Quiosque', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
+  { icon: UserCog, label: 'Treinadores', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: Settings, label: 'Definições', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
 ];
 
-// Platform-level navigation (Super Admin only)
+/* Navegação da plataforma (apenas Super Admin) */
 const platformNavItems: NavItem[] = [
-  { icon: Building2, label: 'Gyms', href: '/super-admin' },
-  { icon: UserCog, label: 'All Staff', href: '/staff' },
+  { icon: Building2, label: 'Ginásios', href: '/super-admin' },
+  { icon: UserCog, label: 'Equipa Global', href: '/staff' },
 ];
 
 const ROLE_LABELS: Record<AppRole, string> = {
-  super_admin: 'Super Admin',
-  gym_owner: 'Owner',
-  admin: 'Admin',
-  staff: 'Staff',
-  member: 'Member',
+  super_admin: 'Super Administrador',
+  gym_owner: 'Proprietário',
+  admin: 'Administrador',
+  staff: 'Funcionário',
+  member: 'Membro',
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'platform' | 'gym'>(() => 
+  const [viewMode, setViewMode] = useState<'platform' | 'gym'>(() =>
     location.pathname === '/super-admin' ? 'platform' : 'gym'
   );
 
@@ -96,27 +96,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     navigate('/auth');
   };
 
-  // Filter nav items based on permissions
   const baseNavItems = viewMode === 'platform' ? platformNavItems : gymNavItems;
   const navItems = baseNavItems.filter(item => {
-    if (item.requiredRoles) {
-      return hasRole(item.requiredRoles);
-    }
-    if (item.permission) {
-      return hasPermission(item.permission);
-    }
+    if (item.requiredRoles) return hasRole(item.requiredRoles);
+    if (item.permission) return hasPermission(item.permission);
     return true;
   });
 
-  const initials = user?.user_metadata?.full_name
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase() || user?.email?.[0].toUpperCase() || 'U';
+  const initials =
+    user?.user_metadata?.full_name
+      ?.split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase() ||
+    user?.email?.[0].toUpperCase() ||
+    'U';
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-foreground/50 z-40 lg:hidden"
@@ -124,7 +121,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
           'fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:transform-none gradient-sidebar',
@@ -132,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
+          {/* Logótipo */}
           <div className="p-6 border-b border-sidebar-border">
             <Link to="/dashboard" className="flex items-center gap-3">
               <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
@@ -144,27 +140,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </span>
                 {currentGym && (
                   <span className="text-[10px] text-muted-foreground">
-                    powered by <span className="font-medium text-primary">Nzila</span>
+                    gerido por <span className="font-medium text-primary">Nzila</span>
                   </span>
                 )}
               </div>
             </Link>
           </div>
 
-          {/* Gym Selector */}
+          {/* Selector de Ginásio */}
           {gyms.length > 0 && (
             <div className="p-4 border-b border-sidebar-border">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent">
-                    <span className="truncate">{currentGym?.name || 'Select Gym'}</span>
+                    <span className="truncate">{currentGym?.name || 'Selecionar Ginásio'}</span>
                     <ChevronDown className="w-4 h-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>Your Gyms</DropdownMenuLabel>
+                  <DropdownMenuLabel>Os Meus Ginásios</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {gyms.map((gym) => (
+                  {gyms.map(gym => (
                     <DropdownMenuItem
                       key={gym.id}
                       onClick={() => setCurrentGym(gym)}
@@ -178,7 +174,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           )}
 
-          {/* View Mode Toggle (Super Admin only) */}
+          {/* Alternador de Modo (Super Admin) */}
           {isSuperAdmin && (
             <div className="px-4 py-3 border-b border-sidebar-border">
               <div className="flex flex-col gap-3 px-3 py-2 rounded-lg bg-sidebar-accent/30">
@@ -186,27 +182,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-primary" />
                     <Label htmlFor="view-mode" className="text-xs font-medium text-sidebar-foreground cursor-pointer">
-                      Platform Mode
+                      Modo Plataforma
                     </Label>
                   </div>
                   <Switch
                     id="view-mode"
                     checked={viewMode === 'platform'}
-                    onCheckedChange={(checked) => setViewMode(checked ? 'platform' : 'gym')}
+                    onCheckedChange={checked => setViewMode(checked ? 'platform' : 'gym')}
                   />
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  {viewMode === 'platform' 
-                    ? 'Managing all gyms & platform staff' 
-                    : 'Managing selected gym only'}
+                  {viewMode === 'platform'
+                    ? 'Gestão global de ginásios e equipa'
+                    : 'Gestão apenas do ginásio selecionado'}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Navigation */}
+          {/* Navegação */}
           <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => {
+            {navItems.map(item => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
@@ -227,7 +223,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             })}
           </nav>
 
-          {/* User Menu */}
+          {/* Utilizador */}
           <div className="p-4 border-t border-sidebar-border">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -251,11 +247,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>A Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
+                  Terminar Sessão
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -263,9 +259,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Conteúdo Principal */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Top Bar */}
         <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 sticky top-0 z-30">
           <Button
             variant="ghost"
@@ -278,7 +273,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex-1" />
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           {children}
         </main>
