@@ -1,7 +1,3 @@
-more plans to add based on disciplines existent on the app
-I understand that this will create a lot of plas, but  this is the goal , to show how the app can cahnge acordingly
-
-src/pages/Disciplines.tsx
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
