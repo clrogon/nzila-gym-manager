@@ -72,7 +72,7 @@ export default function Onboarding() {
   const handleCreateGym = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!gymName.trim()) {
-      toast({ title: 'Erro', description: 'O nome da ginásio é obrigatório', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'O nome do ginásio é obrigatório', variant: 'destructive' });
       return;
     }
 
