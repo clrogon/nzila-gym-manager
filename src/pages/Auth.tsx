@@ -168,7 +168,7 @@ export default function Auth() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-                  {loading ? 'Entrando...' : 'Entrar'}
+                  {loading ? 'A entrar...' : 'Entrar'}
                 </Button>
               </form>
 
@@ -255,7 +255,7 @@ export default function Auth() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-                  {loading ? 'Criando conta...' : 'Criar Conta'}
+                  {loading ? 'A criar conta...' : 'Criar Conta'}
                 </Button>
               </form>
             </TabsContent>
