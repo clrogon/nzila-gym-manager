@@ -60,7 +60,6 @@ interface Exercise {
   notes?: string;
 }
 
-// Use categories from seed data
 const CATEGORIES = getCategoryNames();
 const DIFFICULTIES = ['beginner', 'intermediate', 'advanced'];
 
@@ -68,6 +67,12 @@ const DIFFICULTY_COLORS = {
   beginner: 'bg-green-500/10 text-green-600 border-green-500/20',
   intermediate: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
   advanced: 'bg-red-500/10 text-red-600 border-red-500/20',
+};
+
+const DIFFICULTY_LABELS = {
+  beginner: 'Iniciante',
+  intermediate: 'Intermediário',
+  advanced: 'Avançado',
 };
 
 export default function Training() {
@@ -83,7 +88,6 @@ export default function Training() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
 
-  // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -111,14 +115,13 @@ export default function Training() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Cast exercises from Json to array
       const typedData = (data || []).map(item => ({
         ...item,
         exercises: Array.isArray(item.exercises) ? item.exercises : [],
       })) as WorkoutTemplate[];
       setTemplates(typedData);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      console.error('Erro ao carregar modelos:', error);
     } finally {
       setLoading(false);
     }
@@ -126,7 +129,7 @@ export default function Training() {
 
   const handleCreateTemplate = async () => {
     if (!currentGym?.id || !formData.name) {
-      toast.error('Please enter a workout name');
+      toast.error('Por favor insira um nome para o treino');
       return;
     }
 
@@ -144,12 +147,12 @@ export default function Training() {
       const { error } = await supabase.from('workout_templates').insert(insertData);
 
       if (error) throw error;
-      toast.success('Workout template created');
+      toast.success('Modelo de treino criado');
       setIsCreateOpen(false);
       fetchTemplates();
       resetForm();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create template');
+      toast.error(error.message || 'Falha ao criar modelo');
     }
   };
 
@@ -157,10 +160,10 @@ export default function Training() {
     try {
       const { error } = await supabase.from('workout_templates').delete().eq('id', id);
       if (error) throw error;
-      toast.success('Template deleted');
+      toast.success('Modelo eliminado');
       fetchTemplates();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete template');
+      toast.error(error.message || 'Falha ao eliminar modelo');
     }
   };
 
@@ -171,7 +174,7 @@ export default function Training() {
       const { data: userData } = await supabase.auth.getUser();
       const insertData = {
         gym_id: currentGym.id,
-        name: `${template.name} (Copy)`,
+        name: `${template.name} (Cópia)`,
         description: template.description,
         category: template.category,
         difficulty: template.difficulty as 'beginner' | 'intermediate' | 'advanced' | null,
@@ -183,16 +186,16 @@ export default function Training() {
       const { error } = await supabase.from('workout_templates').insert(insertData);
 
       if (error) throw error;
-      toast.success('Template duplicated successfully');
+      toast.success('Modelo duplicado com sucesso');
       fetchTemplates();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to duplicate template');
+      toast.error(error.message || 'Falha ao duplicar modelo');
     }
   };
 
   const handleUpdateTemplate = async () => {
     if (!editingTemplate?.id || !formData.name) {
-      toast.error('Please enter a workout name');
+      toast.error('Por favor insira um nome para o treino');
       return;
     }
 
@@ -209,13 +212,13 @@ export default function Training() {
       const { error } = await supabase.from('workout_templates').update(updateData).eq('id', editingTemplate.id);
 
       if (error) throw error;
-      toast.success('Workout template updated');
+      toast.success('Modelo de treino atualizado');
       setIsEditOpen(false);
       setEditingTemplate(null);
       fetchTemplates();
       resetForm();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update template');
+      toast.error(error.message || 'Falha ao atualizar modelo');
     }
   };
 
@@ -228,7 +231,7 @@ export default function Training() {
       difficulty: template.difficulty || 'intermediate',
       estimated_duration: template.estimated_duration || 60,
       is_public: template.is_public || false,
-      exercises: (template.exercises || []).map((ex: any, i: number) => ({
+      exercises: (template.exercises || []).map((ex: any) => ({
         name: ex.name || ex.exercise || '',
         sets: ex.sets || 3,
         reps: ex.reps || '10',
@@ -251,27 +254,6 @@ export default function Training() {
     });
   };
 
-  const addExercise = () => {
-    setFormData(prev => ({
-      ...prev,
-      exercises: [...prev.exercises, { name: '', sets: 3, reps: '10', rest: '60s', notes: '' }],
-    }));
-  };
-
-  const updateExercise = (index: number, field: keyof Exercise, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      exercises: prev.exercises.map((ex, i) => i === index ? { ...ex, [field]: value } : ex),
-    }));
-  };
-
-  const removeExercise = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      exercises: prev.exercises.filter((_, i) => i !== index),
-    }));
-  };
-
   const filteredTemplates = templates.filter(t => {
     const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -284,7 +266,7 @@ export default function Training() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Please select a gym first.</p>
+          <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
         </div>
       </DashboardLayout>
     );
@@ -296,8 +278,8 @@ export default function Training() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Training Hub</h1>
-            <p className="text-muted-foreground">Manage workouts, assignments, and promotions</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">Centro de Treino</h1>
+            <p className="text-muted-foreground">Gerir treinos, atribuições e promoções</p>
           </div>
         </div>
 
@@ -306,27 +288,27 @@ export default function Training() {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="library" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Library</span>
+              <span className="hidden sm:inline">Biblioteca</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <Dumbbell className="w-4 h-4" />
-              <span className="hidden sm:inline">Templates</span>
+              <span className="hidden sm:inline">Modelos</span>
             </TabsTrigger>
             <TabsTrigger value="assignments" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">Assignments</span>
+              <span className="hidden sm:inline">Atribuições</span>
             </TabsTrigger>
             <TabsTrigger value="progress" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Progress</span>
+              <span className="hidden sm:inline">Progresso</span>
             </TabsTrigger>
             <TabsTrigger value="promotions" className="flex items-center gap-2">
               <Award className="w-4 h-4" />
-              <span className="hidden sm:inline">Promotions</span>
+              <span className="hidden sm:inline">Promoções</span>
             </TabsTrigger>
             <TabsTrigger value="custom" className="flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Custom</span>
+              <span className="hidden sm:inline">Personalizado</span>
             </TabsTrigger>
           </TabsList>
 
@@ -341,25 +323,25 @@ export default function Training() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Workout
+                      Criar Treino
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Create Workout Template</DialogTitle>
+                      <DialogTitle>Criar Modelo de Treino</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-6 pt-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-2 space-y-2">
-                          <Label>Workout Name</Label>
+                          <Label>Nome do Treino</Label>
                           <Input
                             value={formData.name}
                             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="e.g., Full Body Strength"
+                            placeholder="ex: Treino de Força Completo"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Category</Label>
+                          <Label>Categoria</Label>
                           <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -368,51 +350,54 @@ export default function Training() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Difficulty</Label>
+                          <Label>Dificuldade</Label>
                           <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {DIFFICULTIES.map(diff => (<SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>))}
+                              {DIFFICULTIES.map(diff => (
+                                <SelectItem key={diff} value={diff}>
+                                  {DIFFICULTY_LABELS[diff as keyof typeof DIFFICULTY_LABELS]}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Duration (minutes)</Label>
+                          <Label>Duração (minutos)</Label>
                           <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
                         </div>
                         <div className="col-span-2 space-y-2">
-                          <Label>Description</Label>
-                          <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe the workout..." rows={2} />
+                          <Label>Descrição</Label>
+                          <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Descreva o treino..." rows={2} />
                         </div>
                       </div>
                       <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
                       <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                        <Button onClick={handleCreateTemplate}>Create Template</Button>
+                        <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleCreateTemplate}>Criar Modelo</Button>
                       </div>
                     </div>
                   </DialogContent>
                 </Dialog>
               )}
 
-              {/* Edit Template Dialog */}
               <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingTemplate(null); resetForm(); } }}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Edit Workout Template</DialogTitle>
+                    <DialogTitle>Editar Modelo de Treino</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-6 pt-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2 space-y-2">
-                        <Label>Workout Name</Label>
+                        <Label>Nome do Treino</Label>
                         <Input
                           value={formData.name}
                           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="e.g., Full Body Strength"
+                          placeholder="ex: Treino de Força Completo"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Category</Label>
+                        <Label>Categoria</Label>
                         <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -421,27 +406,31 @@ export default function Training() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Difficulty</Label>
+                        <Label>Dificuldade</Label>
                         <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            {DIFFICULTIES.map(diff => (<SelectItem key={diff} value={diff} className="capitalize">{diff}</SelectItem>))}
+                            {DIFFICULTIES.map(diff => (
+                              <SelectItem key={diff} value={diff}>
+                                {DIFFICULTY_LABELS[diff as keyof typeof DIFFICULTY_LABELS]}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Duration (minutes)</Label>
+                        <Label>Duração (minutos)</Label>
                         <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
                       </div>
                       <div className="col-span-2 space-y-2">
-                        <Label>Description</Label>
-                        <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Describe the workout..." rows={2} />
+                        <Label>Descrição</Label>
+                        <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Descreva o treino..." rows={2} />
                       </div>
                     </div>
                     <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
                     <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => { setIsEditOpen(false); setEditingTemplate(null); resetForm(); }}>Cancel</Button>
-                      <Button onClick={handleUpdateTemplate}>Save Changes</Button>
+                      <Button variant="outline" onClick={() => { setIsEditOpen(false); setEditingTemplate(null); resetForm(); }}>Cancelar</Button>
+                      <Button onClick={handleUpdateTemplate}>Guardar Alterações</Button>
                     </div>
                   </div>
                 </DialogContent>
@@ -457,18 +446,20 @@ export default function Training() {
                         <CardTitle className="text-lg">{template.name}</CardTitle>
                         <CardDescription className="capitalize">{template.category}</CardDescription>
                       </div>
-                      <Badge className={DIFFICULTY_COLORS[template.difficulty as keyof typeof DIFFICULTY_COLORS]}>{template.difficulty}</Badge>
+                      <Badge className={DIFFICULTY_COLORS[template.difficulty as keyof typeof DIFFICULTY_COLORS]}>
+                        {DIFFICULTY_LABELS[template.difficulty as keyof typeof DIFFICULTY_LABELS] || template.difficulty}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
                     {template.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{template.description}</p>}
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                       <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{template.estimated_duration} min</span>
-                      <span className="flex items-center gap-1"><Dumbbell className="w-4 h-4" />{template.exercises?.length || 0} exercises</span>
+                      <span className="flex items-center gap-1"><Dumbbell className="w-4 h-4" />{template.exercises?.length || 0} exercícios</span>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Assign</Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateTemplate(template)} title="Duplicate"><Copy className="w-4 h-4" /></Button>
+                      <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Atribuir</Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateTemplate(template)} title="Duplicar"><Copy className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => openEditDialog(template)}><Edit className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTemplate(template.id)}><Trash2 className="w-4 h-4" /></Button>
                     </div>
@@ -481,9 +472,9 @@ export default function Training() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No workout templates found</h3>
-                  <p className="text-muted-foreground mb-4">Create your first workout template to get started</p>
-                  <Button onClick={() => setIsCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Create Workout</Button>
+                  <h3 className="text-lg font-semibold mb-2">Nenhum modelo de treino encontrado</h3>
+                  <p className="text-muted-foreground mb-4">Crie o seu primeiro modelo de treino para começar</p>
+                  <Button onClick={() => setIsCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Criar Treino</Button>
                 </CardContent>
               </Card>
             )}
