@@ -1,3 +1,4 @@
+// src/pages/CheckIns.tsx
 import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,14 +95,14 @@ export default function CheckIns() {
         setCheckIns(
           checkInsData.map(c => ({
             ...c,
-            member_name: memberMap.get(c.member_id) || 'Unknown',
+            member_name: memberMap.get(c.member_id) || 'Desconhecido',
           }))
         );
       } else {
         setCheckIns([]);
       }
     } catch (error) {
-      console.error('Error fetching check-ins:', error);
+      console.error('Erro ao buscar check-ins:', error);
     } finally {
       setLoading(false);
     }
@@ -119,16 +120,16 @@ export default function CheckIns() {
       if (error) throw error;
 
       toast({
-        title: 'Checked In',
-        description: `${selectedMember.full_name} has been checked in.`,
+        title: 'Check-in efetuado',
+        description: `${selectedMember.full_name} registado(a) no Nzila.`,
       });
 
       setSelectedMember(null);
       setSearchQuery('');
       fetchTodayCheckIns();
     } catch (error) {
-      console.error('Error checking in:', error);
-      toast({ title: 'Error', description: 'Failed to check in.', variant: 'destructive' });
+      console.error('Erro ao efetuar check-in:', error);
+      toast({ title: 'Erro', description: 'Falha ao registar check-in.', variant: 'destructive' });
     }
   };
 
@@ -142,14 +143,14 @@ export default function CheckIns() {
       if (error) throw error;
 
       toast({
-        title: 'Checked Out',
-        description: `${memberName} has been checked out.`,
+        title: 'Check-out efetuado',
+        description: `${memberName} saiu do Nzila.`,
       });
 
       fetchTodayCheckIns();
     } catch (error) {
-      console.error('Error checking out:', error);
-      toast({ title: 'Error', description: 'Failed to check out.', variant: 'destructive' });
+      console.error('Erro ao efetuar check-out:', error);
+      toast({ title: 'Erro', description: 'Falha ao registar check-out.', variant: 'destructive' });
     }
   };
 
@@ -171,7 +172,7 @@ export default function CheckIns() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-display font-bold">Check-ins</h1>
-          <p className="text-muted-foreground">Record member attendance</p>
+          <p className="text-muted-foreground">Registe a presença dos membros</p>
         </div>
 
         {/* Quick Check-in */}
@@ -180,7 +181,7 @@ export default function CheckIns() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-primary" />
-                Quick Check-in
+                Check-in Rápido
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -188,12 +189,12 @@ export default function CheckIns() {
                 <div className="flex-1">
                   <Command className="border rounded-lg">
                     <CommandInput
-                      placeholder="Search member..."
+                      placeholder="Pesquisar membro..."
                       value={searchQuery}
                       onValueChange={setSearchQuery}
                     />
                     <CommandList>
-                      <CommandEmpty>No member found.</CommandEmpty>
+                      <CommandEmpty>Nenhum membro encontrado.</CommandEmpty>
                       <CommandGroup>
                         {filteredMembers.slice(0, 5).map((member) => (
                           <CommandItem
@@ -229,16 +230,16 @@ export default function CheckIns() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-accent" />
-              Currently in Gym ({activeCheckIns.length})
+              Presentes no Nzila ({activeCheckIns.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Checked In</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead>Membro</TableHead>
+                  <TableHead>Entrada</TableHead>
+                  <TableHead className="text-right">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -264,7 +265,7 @@ export default function CheckIns() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                      No one is currently checked in
+                      Nenhum membro presente no momento
                     </TableCell>
                   </TableRow>
                 )}
@@ -276,15 +277,15 @@ export default function CheckIns() {
         {/* Today's History */}
         <Card>
           <CardHeader>
-            <CardTitle>Today's Check-in History</CardTitle>
+            <CardTitle>Histórico de Check-ins de Hoje</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead>In</TableHead>
-                  <TableHead>Out</TableHead>
+                  <TableHead>Membro</TableHead>
+                  <TableHead>Entrada</TableHead>
+                  <TableHead>Saída</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -301,7 +302,7 @@ export default function CheckIns() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                      {loading ? 'Loading...' : 'No check-ins today'}
+                      {loading ? 'A carregar...' : 'Nenhum check-in hoje'}
                     </TableCell>
                   </TableRow>
                 )}
