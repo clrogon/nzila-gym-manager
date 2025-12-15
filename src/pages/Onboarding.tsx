@@ -1,3 +1,4 @@
+// src/pages/Onboarding.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, ArrowRight } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -21,56 +23,82 @@ export default function Onboarding() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
+  // ==========================
+  // Funções auxiliares
+  // ==========================
+  
+  const normalizePhone = (phone: string) => phone.replace(/\s+/g, '');
+
   const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') + '-' + Date.now().toString(36);
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return `${baseSlug}-${uuidv4().slice(0, 8)}`;
   };
 
+  const createGym = async () => {
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const { data: gym, error: gymError } = await supabase
+      .from('gyms')
+      .insert({
+        name: gymName,
+        slug: generateSlug(gymName),
+        phone: normalizePhone(phone),
+        address,
+        email: user.email,
+      })
+      .select()
+      .single();
+
+    if (gymError) throw gymError;
+    return gym;
+  };
+
+  const assignOwnerRole = async (gymId: string) => {
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: user!.id,
+        gym_id: gymId,
+        role: 'gym_owner',
+      });
+
+    if (roleError) throw roleError;
+  };
+
+  // ==========================
+  // Handler principal
+  // ==========================
+  
   const handleCreateGym = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!gymName.trim()) {
+      toast({ title: 'Erro', description: 'O nome da ginásio é obrigatório', variant: 'destructive' });
+      return;
+    }
 
     setLoading(true);
     try {
-      // Create the gym
-      const { data: gym, error: gymError } = await supabase
-        .from('gyms')
-        .insert({
-          name: gymName,
-          slug: generateSlug(gymName),
-          phone,
-          address,
-          email: user.email,
-        })
-        .select()
-        .single();
-
-      if (gymError) throw gymError;
-
-      // Assign user as gym owner
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          gym_id: gym.id,
-          role: 'gym_owner',
-        });
-
-      if (roleError) throw roleError;
-
+      const gym = await createGym();
+      await assignOwnerRole(gym.id);
       await refreshGyms();
-      toast({ title: 'Gym Created', description: 'Welcome to GymFlow!' });
+      toast({ title: 'Ginásio criado', description: 'Bem-vindo ao Nzila!' });
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Error creating gym:', error);
-      toast({ title: 'Error', description: 'Failed to create gym. Please try again.', variant: 'destructive' });
+    } catch (error: any) {
+      console.error('Erro ao criar ginásio:', error);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Falha ao criar ginásio. Tente novamente.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  // ==========================
+  // JSX
+  // ==========================
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="absolute inset-0 overflow-hidden">
@@ -84,9 +112,9 @@ export default function Onboarding() {
             <Building2 className="w-8 h-8 text-accent-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-display">Set Up Your Gym</CardTitle>
+            <CardTitle className="text-2xl font-display">Configure a sua Ginásio</CardTitle>
             <CardDescription>
-              Let's get your gym ready to manage members
+              Vamos preparar o seu ginásio para gerir os membros
             </CardDescription>
           </div>
         </CardHeader>
@@ -94,7 +122,7 @@ export default function Onboarding() {
         <CardContent>
           <form onSubmit={handleCreateGym} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="gym-name">Gym Name *</Label>
+              <Label htmlFor="gym-name">Nome do Ginásio *</Label>
               <Input
                 id="gym-name"
                 placeholder="FitZone Gym"
@@ -105,7 +133,7 @@ export default function Onboarding() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -116,7 +144,7 @@ export default function Onboarding() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Endereço</Label>
               <Input
                 id="address"
                 placeholder="Rua da Samba, Luanda"
@@ -126,16 +154,17 @@ export default function Onboarding() {
             </div>
 
             <Button type="submit" className="w-full gradient-primary" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Gym'}
+              {loading ? 'A criar...' : 'Criar Ginásio'}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-            <Button 
-              type="button" 
-              variant="ghost" 
-              className="w-full" 
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full mt-2"
               onClick={() => navigate('/dashboard')}
             >
-              Skip for now
+              Ignorar por agora
             </Button>
           </form>
         </CardContent>
