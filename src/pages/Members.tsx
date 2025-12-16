@@ -112,7 +112,6 @@ export default function Members() {
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Permission checks
   const canViewMembers = hasPermission('members:read');
   const canCreateMembers = hasPermission('members:create');
   const canUpdateMembers = hasPermission('members:update');
@@ -140,7 +139,7 @@ export default function Members() {
       if (error) throw error;
       setMembers(data || []);
     } catch (error) {
-      console.error('Error fetching members:', error);
+      console.error('Erro ao carregar membros:', error);
     } finally {
       setLoading(false);
     }
@@ -162,11 +161,10 @@ export default function Members() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGym) {
-      toast({ title: 'Error', description: 'Please create a gym first.', variant: 'destructive' });
+      toast({ title: 'Erro', description: 'Por favor crie um ginásio primeiro.', variant: 'destructive' });
       return;
     }
 
-    // Calculate membership end date based on plan
     let endDate = null;
     if (membershipPlanId && membershipStartDate) {
       const plan = plans.find(p => p.id === membershipPlanId);
@@ -201,22 +199,22 @@ export default function Members() {
           .eq('id', editingMember.id);
 
         if (error) throw error;
-        toast({ title: 'Member Updated', description: 'Member details have been updated.' });
+        toast({ title: 'Membro Atualizado', description: 'Os detalhes do membro foram atualizados.' });
       } else {
         const { error } = await supabase
           .from('members')
           .insert([{ ...memberData, gym_id: currentGym.id }]);
 
         if (error) throw error;
-        toast({ title: 'Member Added', description: 'New member has been registered.' });
+        toast({ title: 'Membro Adicionado', description: 'Novo membro foi registado.' });
       }
 
       resetForm();
       setDialogOpen(false);
       fetchMembers();
     } catch (error) {
-      console.error('Error saving member:', error);
-      toast({ title: 'Error', description: 'Failed to save member.', variant: 'destructive' });
+      console.error('Erro ao guardar membro:', error);
+      toast({ title: 'Erro', description: 'Falha ao guardar membro.', variant: 'destructive' });
     }
   };
 
@@ -243,16 +241,16 @@ export default function Members() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this member? This action cannot be undone.')) return;
+    if (!confirm('Tem a certeza que deseja eliminar este membro? Esta ação não pode ser revertida.')) return;
 
     try {
       const { error } = await supabase.from('members').delete().eq('id', id);
       if (error) throw error;
-      toast({ title: 'Member Deleted' });
+      toast({ title: 'Membro Eliminado' });
       fetchMembers();
     } catch (error) {
-      console.error('Error deleting member:', error);
-      toast({ title: 'Error', description: 'Failed to delete member.', variant: 'destructive' });
+      console.error('Erro ao eliminar membro:', error);
+      toast({ title: 'Erro', description: 'Falha ao eliminar membro.', variant: 'destructive' });
     }
   };
 
@@ -302,7 +300,13 @@ export default function Members() {
       suspended: 'destructive',
       pending: 'outline',
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    const labels: Record<string, string> = {
+      active: 'Ativo',
+      inactive: 'Inativo',
+      suspended: 'Suspenso',
+      pending: 'Pendente',
+    };
+    return <Badge variant={variants[status] || 'outline'}>{labels[status] || status}</Badge>;
   };
 
   const formatDate = (dateString: string | null) => {
@@ -329,30 +333,28 @@ export default function Members() {
     return { status: 'active', days: daysUntilExpiry, color: 'text-green-600' };
   };
 
-  // No gym state
   if (!currentGym) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <Users className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-display font-bold mb-2">No Gym Selected</h2>
-          <p className="text-muted-foreground mb-4">Create or select a gym to manage members.</p>
+          <h2 className="text-2xl font-display font-bold mb-2">Nenhum Ginásio Selecionado</h2>
+          <p className="text-muted-foreground mb-4">Crie ou selecione um ginásio para gerir membros.</p>
           <Button onClick={() => window.location.href = '/onboarding'}>
-            Create Your Gym
+            Criar o Seu Ginásio
           </Button>
         </div>
       </DashboardLayout>
     );
   }
 
-  // No permission state
   if (!rbacLoading && !canViewMembers) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <ShieldAlert className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-display font-bold mb-2">Access Denied</h2>
-          <p className="text-muted-foreground">You don't have permission to view members.</p>
+          <h2 className="text-2xl font-display font-bold mb-2">Acesso Negado</h2>
+          <p className="text-muted-foreground">Não tem permissão para ver membros.</p>
         </div>
       </DashboardLayout>
     );
@@ -363,8 +365,8 @@ export default function Members() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold">Members</h1>
-            <p className="text-muted-foreground">Manage your gym members</p>
+            <h1 className="text-3xl font-display font-bold">Membros</h1>
+            <p className="text-muted-foreground">Gerir os membros do ginásio</p>
           </div>
 
           {canCreateMembers && (
@@ -372,30 +374,30 @@ export default function Members() {
               <DialogTrigger asChild>
                 <Button className="gradient-primary">
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Member
+                  Adicionar Membro
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{editingMember ? 'Edit Member' : 'Register New Member'}</DialogTitle>
+                  <DialogTitle>{editingMember ? 'Editar Membro' : 'Registar Novo Membro'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <Tabs defaultValue="basic" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                      <TabsTrigger value="emergency">Emergency</TabsTrigger>
-                      <TabsTrigger value="membership">Membership</TabsTrigger>
+                      <TabsTrigger value="basic">Informação Básica</TabsTrigger>
+                      <TabsTrigger value="emergency">Emergência</TabsTrigger>
+                      <TabsTrigger value="membership">Subscrição</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="basic" className="space-y-4 mt-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="fullName">Full Name *</Label>
+                          <Label htmlFor="fullName">Nome Completo *</Label>
                           <Input
                             id="fullName"
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
-                            placeholder="John Doe"
+                            placeholder="João Silva"
                             required
                           />
                         </div>
@@ -406,11 +408,11 @@ export default function Members() {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="john@example.com"
+                            placeholder="joao@exemplo.com"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Phone</Label>
+                          <Label htmlFor="phone">Telefone</Label>
                           <Input
                             id="phone"
                             value={phone}
@@ -419,7 +421,7 @@ export default function Members() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                          <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
                           <Input
                             id="dateOfBirth"
                             type="date"
@@ -429,21 +431,21 @@ export default function Members() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="address">Address</Label>
+                        <Label htmlFor="address">Morada</Label>
                         <Input
                           id="address"
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
-                          placeholder="Street, City, Province"
+                          placeholder="Rua, Cidade, Província"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="photoUrl">Photo URL</Label>
+                        <Label htmlFor="photoUrl">URL da Foto</Label>
                         <Input
                           id="photoUrl"
                           value={photoUrl}
                           onChange={(e) => setPhotoUrl(e.target.value)}
-                          placeholder="https://example.com/photo.jpg"
+                          placeholder="https://exemplo.com/foto.jpg"
                         />
                       </div>
                     </TabsContent>
@@ -451,16 +453,16 @@ export default function Members() {
                     <TabsContent value="emergency" className="space-y-4 mt-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
+                          <Label htmlFor="emergencyContact">Nome do Contacto de Emergência</Label>
                           <Input
                             id="emergencyContact"
                             value={emergencyContact}
                             onChange={(e) => setEmergencyContact(e.target.value)}
-                            placeholder="Contact name"
+                            placeholder="Nome do contacto"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="emergencyPhone">Emergency Phone</Label>
+                          <Label htmlFor="emergencyPhone">Telefone de Emergência</Label>
                           <Input
                             id="emergencyPhone"
                             value={emergencyPhone}
@@ -474,36 +476,36 @@ export default function Members() {
                     <TabsContent value="membership" className="space-y-4 mt-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="status">Status</Label>
+                          <Label htmlFor="status">Estado</Label>
                           <Select value={status} onValueChange={setStatus}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="suspended">Suspended</SelectItem>
+                              <SelectItem value="active">Ativo</SelectItem>
+                              <SelectItem value="inactive">Inativo</SelectItem>
+                              <SelectItem value="pending">Pendente</SelectItem>
+                              <SelectItem value="suspended">Suspenso</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="plan">Membership Plan</Label>
+                          <Label htmlFor="plan">Plano de Subscrição</Label>
                           <Select value={membershipPlanId} onValueChange={setMembershipPlanId}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a plan" />
+                              <SelectValue placeholder="Selecionar um plano" />
                             </SelectTrigger>
                             <SelectContent>
                               {plans.map((plan) => (
                                 <SelectItem key={plan.id} value={plan.id}>
-                                  {plan.name} - {plan.duration_days} days
+                                  {plan.name} - {plan.duration_days} dias
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="startDate">Membership Start Date</Label>
+                          <Label htmlFor="startDate">Data de Início da Subscrição</Label>
                           <Input
                             id="startDate"
                             type="date"
@@ -513,12 +515,12 @@ export default function Members() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="notes">Notas</Label>
                         <Textarea
                           id="notes"
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Any additional notes about this member..."
+                          placeholder="Notas adicionais sobre este membro..."
                           rows={3}
                         />
                       </div>
@@ -526,7 +528,7 @@ export default function Members() {
                   </Tabs>
 
                   <Button type="submit" className="w-full">
-                    {editingMember ? 'Update Member' : 'Register Member'}
+                    {editingMember ? 'Atualizar Membro' : 'Registar Membro'}
                   </Button>
                 </form>
               </DialogContent>
@@ -557,7 +559,7 @@ export default function Members() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.active}</p>
-                  <p className="text-xs text-muted-foreground">Active</p>
+                  <p className="text-xs text-muted-foreground">Ativos</p>
                 </div>
               </div>
             </CardContent>
@@ -570,7 +572,7 @@ export default function Members() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.inactive}</p>
-                  <p className="text-xs text-muted-foreground">Inactive</p>
+                  <p className="text-xs text-muted-foreground">Inativos</p>
                 </div>
               </div>
             </CardContent>
@@ -583,7 +585,7 @@ export default function Members() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-xs text-muted-foreground">Pending</p>
+                  <p className="text-xs text-muted-foreground">Pendentes</p>
                 </div>
               </div>
             </CardContent>
@@ -596,7 +598,7 @@ export default function Members() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.expiringSoon}</p>
-                  <p className="text-xs text-muted-foreground">Expiring</p>
+                  <p className="text-xs text-muted-foreground">A Expirar</p>
                 </div>
               </div>
             </CardContent>
@@ -610,7 +612,7 @@ export default function Members() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, email, or phone..."
+                  placeholder="Pesquisar por nome, email ou telefone..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -618,14 +620,14 @@ export default function Members() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Filter status" />
+                  <SelectValue placeholder="Filtrar estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="all">Todos os Estados</SelectItem>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="inactive">Inativo</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="suspended">Suspenso</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -638,11 +640,11 @@ export default function Members() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Member</TableHead>
-                  <TableHead className="hidden md:table-cell">Contact</TableHead>
-                  <TableHead className="hidden lg:table-cell">Membership</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Membro</TableHead>
+                  <TableHead className="hidden md:table-cell">Contacto</TableHead>
+                  <TableHead className="hidden lg:table-cell">Subscrição</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -687,14 +689,14 @@ export default function Members() {
                             <div className={membershipStatus.color}>
                               <p className="text-sm font-medium">
                                 {membershipStatus.status === 'expired' 
-                                  ? `Expired ${membershipStatus.days}d ago`
+                                  ? `Expirou há ${membershipStatus.days} dias`
                                   : membershipStatus.status === 'expiring'
-                                  ? `Expires in ${membershipStatus.days}d`
-                                  : `${membershipStatus.days}d remaining`
+                                  ? `Expira em ${membershipStatus.days} dias`
+                                  : `${membershipStatus.days} dias restantes`
                                 }
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                Until {formatDate(member.membership_end_date)}
+                                Até {formatDate(member.membership_end_date)}
                               </p>
                             </div>
                           ) : (
@@ -712,12 +714,12 @@ export default function Members() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleViewDetails(member)}>
                                 <Eye className="w-4 h-4 mr-2" />
-                                View Details
+                                Ver Detalhes
                               </DropdownMenuItem>
                               {canUpdateMembers && (
                                 <DropdownMenuItem onClick={() => handleEdit(member)}>
                                   <Edit className="w-4 h-4 mr-2" />
-                                  Edit
+                                  Editar
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
@@ -727,7 +729,7 @@ export default function Members() {
                                   onClick={() => handleDelete(member.id)}
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
-                                  Delete
+                                  Eliminar
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
@@ -739,7 +741,7 @@ export default function Members() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {loading ? 'Loading...' : 'No members found. Add your first member!'}
+                      {loading ? 'A carregar...' : 'Nenhum membro encontrado. Adicione o seu primeiro membro!'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -768,7 +770,7 @@ export default function Members() {
                 
                 <div className="mt-6 space-y-6">
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Contact Information</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Informação de Contacto</h4>
                     <div className="space-y-3">
                       {viewingMember.email && (
                         <div className="flex items-center gap-3">
@@ -800,27 +802,27 @@ export default function Members() {
                   <Separator />
 
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Membership</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Subscrição</h4>
                     <div className="space-y-3">
                       <div className="flex items-center gap-3">
                         <CreditCard className="w-4 h-4 text-muted-foreground" />
                         <span>
                           {viewingMember.membership_plan_id 
-                            ? plans.find(p => p.id === viewingMember.membership_plan_id)?.name || 'Unknown Plan'
-                            : 'No plan assigned'
+                            ? plans.find(p => p.id === viewingMember.membership_plan_id)?.name || 'Plano Desconhecido'
+                            : 'Sem plano atribuído'
                           }
                         </span>
                       </div>
                       {viewingMember.membership_start_date && (
                         <div className="flex items-center gap-3">
                           <Activity className="w-4 h-4 text-muted-foreground" />
-                          <span>Started: {formatDate(viewingMember.membership_start_date)}</span>
+                          <span>Início: {formatDate(viewingMember.membership_start_date)}</span>
                         </div>
                       )}
                       {viewingMember.membership_end_date && (
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>Expires: {formatDate(viewingMember.membership_end_date)}</span>
+                          <span>Expira: {formatDate(viewingMember.membership_end_date)}</span>
                         </div>
                       )}
                     </div>
@@ -830,7 +832,7 @@ export default function Members() {
                     <>
                       <Separator />
                       <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Emergency Contact</h4>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Contacto de Emergência</h4>
                         <div className="space-y-2">
                           {viewingMember.emergency_contact && (
                             <p>{viewingMember.emergency_contact}</p>
@@ -850,7 +852,7 @@ export default function Members() {
                     <>
                       <Separator />
                       <div>
-                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Notes</h4>
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">Notas</h4>
                         <p className="text-sm">{viewingMember.notes}</p>
                       </div>
                     </>
@@ -868,11 +870,11 @@ export default function Members() {
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        Edit Member
+                        Editar Membro
                       </Button>
                     )}
                     <Button variant="outline" onClick={() => setDetailsOpen(false)}>
-                      Close
+                      Fechar
                     </Button>
                   </div>
                 </div>
