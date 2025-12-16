@@ -120,10 +120,10 @@ export default function Settings() {
       if (error) throw error;
 
       await refreshGyms();
-      toast({ title: 'Settings Saved', description: 'Gym settings have been updated.' });
+      toast({ title: 'Definições Guardadas', description: 'Definições do ginásio foram atualizadas.' });
     } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({ title: 'Error', description: 'Failed to save settings.', variant: 'destructive' });
+      console.error('Erro ao guardar definições:', error);
+      toast({ title: 'Erro', description: 'Falha ao guardar definições.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -146,7 +146,7 @@ export default function Settings() {
           .eq('id', editingPlanId);
 
         if (error) throw error;
-        toast({ title: 'Plan Updated', description: 'Membership plan has been updated.' });
+        toast({ title: 'Plano Atualizado', description: 'Plano de subscrição foi atualizado.' });
       } else {
         const { error } = await supabase.from('membership_plans').insert({
           gym_id: currentGym.id,
@@ -157,14 +157,14 @@ export default function Settings() {
         });
 
         if (error) throw error;
-        toast({ title: 'Plan Added', description: 'New membership plan has been created.' });
+        toast({ title: 'Plano Adicionado', description: 'Novo plano de subscrição foi criado.' });
       }
 
       resetPlanForm();
       fetchPlans();
     } catch (error) {
-      console.error('Error saving plan:', error);
-      toast({ title: 'Error', description: 'Failed to save plan.', variant: 'destructive' });
+      console.error('Erro ao guardar plano:', error);
+      toast({ title: 'Erro', description: 'Falha ao guardar plano.', variant: 'destructive' });
     }
   };
 
@@ -177,17 +177,17 @@ export default function Settings() {
   };
 
   const handleDeletePlan = async (planId: string) => {
-    if (!confirm('Are you sure you want to delete this plan?')) return;
+    if (!confirm('Tem a certeza que deseja eliminar este plano?')) return;
 
     try {
       const { error } = await supabase.from('membership_plans').delete().eq('id', planId);
       if (error) throw error;
 
-      toast({ title: 'Plan Deleted' });
+      toast({ title: 'Plano Eliminado' });
       fetchPlans();
     } catch (error) {
-      console.error('Error deleting plan:', error);
-      toast({ title: 'Error', description: 'Failed to delete plan.', variant: 'destructive' });
+      console.error('Erro ao eliminar plano:', error);
+      toast({ title: 'Erro', description: 'Falha ao eliminar plano.', variant: 'destructive' });
     }
   };
 
@@ -199,11 +199,11 @@ export default function Settings() {
         .eq('id', planId);
 
       if (error) throw error;
-      toast({ title: currentStatus ? 'Plan Deactivated' : 'Plan Activated' });
+      toast({ title: currentStatus ? 'Plano Desativado' : 'Plano Ativado' });
       fetchPlans();
     } catch (error) {
-      console.error('Error toggling plan status:', error);
-      toast({ title: 'Error', description: 'Failed to update plan status.', variant: 'destructive' });
+      console.error('Erro ao atualizar estado do plano:', error);
+      toast({ title: 'Erro', description: 'Falha ao atualizar estado do plano.', variant: 'destructive' });
     }
   };
 
@@ -223,34 +223,34 @@ export default function Settings() {
   };
 
   const handleSaveNotifications = () => {
-    toast({ title: 'Notification Settings Saved', description: 'Your preferences have been updated.' });
+    toast({ title: 'Definições de Notificação Guardadas', description: 'As suas preferências foram atualizadas.' });
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage your gym configuration</p>
+          <h1 className="text-3xl font-display font-bold">Definições</h1>
+          <p className="text-muted-foreground">Gerir a configuração do seu ginásio</p>
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
             <TabsTrigger value="general">
               <Building2 className="w-4 h-4 mr-2" />
-              General
+              Geral
             </TabsTrigger>
             <TabsTrigger value="plans">
               <CreditCard className="w-4 h-4 mr-2" />
-              Plans
+              Planos
             </TabsTrigger>
             <TabsTrigger value="notifications">
               <Bell className="w-4 h-4 mr-2" />
-              Notifications
+              Notificações
             </TabsTrigger>
             <TabsTrigger value="integrations">
               <Link2 className="w-4 h-4 mr-2" />
-              Integrations
+              Integrações
             </TabsTrigger>
           </TabsList>
 
@@ -258,29 +258,29 @@ export default function Settings() {
           <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gym Information</CardTitle>
-                <CardDescription>Update your gym's basic information and branding</CardDescription>
+                <CardTitle>Informação do Ginásio</CardTitle>
+                <CardDescription>Atualize a informação básica e marca do seu ginásio</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Logo Upload */}
                 <div className="space-y-2">
-                  <Label>Logo</Label>
+                  <Label>Logótipo</Label>
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-muted/50">
                       {logoUrl ? (
-                        <img src={logoUrl} alt="Gym logo" className="w-full h-full object-cover rounded-lg" />
+                        <img src={logoUrl} alt="Logótipo do ginásio" className="w-full h-full object-cover rounded-lg" />
                       ) : (
                         <Upload className="w-6 h-6 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex-1">
                       <Input
-                        placeholder="Logo URL"
+                        placeholder="URL do Logótipo"
                         value={logoUrl}
                         onChange={(e) => setLogoUrl(e.target.value)}
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Enter a URL for your gym logo or upload an image
+                        Insira um URL para o logótipo do ginásio ou carregue uma imagem
                       </p>
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function Settings() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="gymName">Gym Name *</Label>
+                    <Label htmlFor="gymName">Nome do Ginásio *</Label>
                     <Input
                       id="gymName"
                       value={gymName}
@@ -307,7 +307,7 @@ export default function Settings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">Telefone</Label>
                     <Input
                       id="phone"
                       value={phone}
@@ -315,7 +315,7 @@ export default function Settings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">Morada</Label>
                     <Input
                       id="address"
                       value={address}
@@ -328,7 +328,7 @@ export default function Settings() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
+                    <Label htmlFor="timezone">Fuso Horário</Label>
                     <Select value={timezone} onValueChange={setTimezone}>
                       <SelectTrigger>
                         <SelectValue />
@@ -342,16 +342,16 @@ export default function Settings() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="currency">Currency</Label>
+                    <Label htmlFor="currency">Moeda</Label>
                     <Select value={currency} onValueChange={setCurrency}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="AOA">AOA - Angolan Kwanza</SelectItem>
-                        <SelectItem value="USD">USD - US Dollar</SelectItem>
+                        <SelectItem value="AOA">AOA - Kwanza Angolano</SelectItem>
+                        <SelectItem value="USD">USD - Dólar Americano</SelectItem>
                         <SelectItem value="EUR">EUR - Euro</SelectItem>
-                        <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+                        <SelectItem value="ZAR">ZAR - Rand Sul-Africano</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -360,7 +360,7 @@ export default function Settings() {
                 <RequirePermission permission="settings:update">
                   <Button onClick={handleSaveGymSettings} disabled={loading}>
                     <Save className="w-4 h-4 mr-2" />
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading ? 'A guardar...' : 'Guardar Alterações'}
                   </Button>
                 </RequirePermission>
               </CardContent>
@@ -374,42 +374,42 @@ export default function Settings() {
               fallback={
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Read Only</AlertTitle>
+                  <AlertTitle>Apenas Leitura</AlertTitle>
                   <AlertDescription>
-                    You can view membership plans but need admin access to modify them.
+                    Pode ver os planos de subscrição mas precisa de acesso de administrador para modificá-los.
                   </AlertDescription>
                 </Alert>
               }
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>{editingPlanId ? 'Edit Plan' : 'Add Membership Plan'}</CardTitle>
+                  <CardTitle>{editingPlanId ? 'Editar Plano' : 'Adicionar Plano de Subscrição'}</CardTitle>
                   <CardDescription>
-                    {editingPlanId ? 'Update the membership plan details' : 'Create a new membership plan for your gym'}
+                    {editingPlanId ? 'Atualize os detalhes do plano de subscrição' : 'Crie um novo plano de subscrição para o seu ginásio'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleAddOrUpdatePlan} className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label>Plan Name *</Label>
+                        <Label>Nome do Plano *</Label>
                         <Input
-                          placeholder="e.g., Monthly Basic"
+                          placeholder="ex: Mensal Básico"
                           value={planName}
                           onChange={(e) => setPlanName(e.target.value)}
                           required
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Description</Label>
+                        <Label>Descrição</Label>
                         <Input
-                          placeholder="Brief description"
+                          placeholder="Breve descrição"
                           value={planDescription}
                           onChange={(e) => setPlanDescription(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Price (AOA) *</Label>
+                        <Label>Preço (AOA) *</Label>
                         <Input
                           type="number"
                           placeholder="15000"
@@ -419,29 +419,29 @@ export default function Settings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Duration (Days) *</Label>
+                        <Label>Duração (Dias) *</Label>
                         <Select value={planDuration} onValueChange={setPlanDuration}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="7">7 days (Weekly)</SelectItem>
-                            <SelectItem value="14">14 days (Bi-weekly)</SelectItem>
-                            <SelectItem value="30">30 days (Monthly)</SelectItem>
-                            <SelectItem value="90">90 days (Quarterly)</SelectItem>
-                            <SelectItem value="180">180 days (Semi-annual)</SelectItem>
-                            <SelectItem value="365">365 days (Annual)</SelectItem>
+                            <SelectItem value="7">7 dias (Semanal)</SelectItem>
+                            <SelectItem value="14">14 dias (Quinzenal)</SelectItem>
+                            <SelectItem value="30">30 dias (Mensal)</SelectItem>
+                            <SelectItem value="90">90 dias (Trimestral)</SelectItem>
+                            <SelectItem value="180">180 dias (Semestral)</SelectItem>
+                            <SelectItem value="365">365 dias (Anual)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit">
-                        {editingPlanId ? 'Update Plan' : 'Add Plan'}
+                        {editingPlanId ? 'Atualizar Plano' : 'Adicionar Plano'}
                       </Button>
                       {editingPlanId && (
                         <Button type="button" variant="outline" onClick={resetPlanForm}>
-                          Cancel
+                          Cancelar
                         </Button>
                       )}
                     </div>
@@ -452,8 +452,8 @@ export default function Settings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Current Plans</CardTitle>
-                <CardDescription>Manage your existing membership plans</CardDescription>
+                <CardTitle>Planos Atuais</CardTitle>
+                <CardDescription>Gerir os seus planos de subscrição existentes</CardDescription>
               </CardHeader>
               <CardContent>
                 {plans.length > 0 ? (
@@ -469,11 +469,11 @@ export default function Settings() {
                             <div className="flex items-center gap-2">
                               <p className="font-medium">{plan.name}</p>
                               {!plan.is_active && (
-                                <Badge variant="secondary">Inactive</Badge>
+                                <Badge variant="secondary">Inativo</Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {formatCurrency(plan.price)} / {plan.duration_days} days
+                              {formatCurrency(plan.price)} / {plan.duration_days} dias
                             </p>
                             {plan.description && (
                               <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
@@ -487,14 +487,14 @@ export default function Settings() {
                               size="sm"
                               onClick={() => handleTogglePlanStatus(plan.id, plan.is_active)}
                             >
-                              {plan.is_active ? 'Deactivate' : 'Activate'}
+                              {plan.is_active ? 'Desativar' : 'Ativar'}
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleEditPlan(plan)}
                             >
-                              Edit
+                              Editar
                             </Button>
                             <Button
                               variant="ghost"
@@ -513,7 +513,7 @@ export default function Settings() {
                   <div className="text-center py-8">
                     <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">
-                      No membership plans yet. Add your first plan above.
+                      Ainda sem planos de subscrição. Adicione o seu primeiro plano acima.
                     </p>
                   </div>
                 )}
@@ -525,8 +525,8 @@ export default function Settings() {
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Notification Channels</CardTitle>
-                <CardDescription>Configure how you want to reach your members</CardDescription>
+                <CardTitle>Canais de Notificação</CardTitle>
+                <CardDescription>Configure como deseja contactar os seus membros</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -535,8 +535,8 @@ export default function Settings() {
                       <Mail className="w-5 h-5 text-blue-500" />
                     </div>
                     <div>
-                      <p className="font-medium">Email Notifications</p>
-                      <p className="text-sm text-muted-foreground">Send notifications via email</p>
+                      <p className="font-medium">Notificações por Email</p>
+                      <p className="text-sm text-muted-foreground">Enviar notificações por email</p>
                     </div>
                   </div>
                   <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
@@ -550,8 +550,8 @@ export default function Settings() {
                       <MessageSquare className="w-5 h-5 text-green-500" />
                     </div>
                     <div>
-                      <p className="font-medium">SMS Notifications</p>
-                      <p className="text-sm text-muted-foreground">Send text messages to members</p>
+                      <p className="font-medium">Notificações por SMS</p>
+                      <p className="text-sm text-muted-foreground">Enviar mensagens de texto aos membros</p>
                     </div>
                   </div>
                   <Switch checked={smsNotifications} onCheckedChange={setSmsNotifications} />
@@ -561,14 +561,14 @@ export default function Settings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Automated Messages</CardTitle>
-                <CardDescription>Set up automatic notifications for your members</CardDescription>
+                <CardTitle>Mensagens Automáticas</CardTitle>
+                <CardDescription>Configure notificações automáticas para os seus membros</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Welcome Messages</p>
-                    <p className="text-sm text-muted-foreground">Send welcome email to new members</p>
+                    <p className="font-medium">Mensagens de Boas-vindas</p>
+                    <p className="text-sm text-muted-foreground">Enviar email de boas-vindas a novos membros</p>
                   </div>
                   <Switch checked={welcomeEmails} onCheckedChange={setWelcomeEmails} />
                 </div>
@@ -577,24 +577,24 @@ export default function Settings() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Membership Expiry Reminders</p>
-                    <p className="text-sm text-muted-foreground">Notify members before their membership expires</p>
+                    <p className="font-medium">Lembretes de Expiração de Subscrição</p>
+                    <p className="text-sm text-muted-foreground">Notificar membros antes da expiração da subscrição</p>
                   </div>
                   <Switch checked={membershipReminders} onCheckedChange={setMembershipReminders} />
                 </div>
 
                 {membershipReminders && (
                   <div className="ml-6 space-y-2">
-                    <Label>Days before expiry</Label>
+                    <Label>Dias antes da expiração</Label>
                     <Select value={reminderDays} onValueChange={setReminderDays}>
                       <SelectTrigger className="w-40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="3">3 days</SelectItem>
-                        <SelectItem value="5">5 days</SelectItem>
-                        <SelectItem value="7">7 days</SelectItem>
-                        <SelectItem value="14">14 days</SelectItem>
+                        <SelectItem value="3">3 dias</SelectItem>
+                        <SelectItem value="5">5 dias</SelectItem>
+                        <SelectItem value="7">7 dias</SelectItem>
+                        <SelectItem value="14">14 dias</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -604,8 +604,8 @@ export default function Settings() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Payment Reminders</p>
-                    <p className="text-sm text-muted-foreground">Send reminders for pending payments</p>
+                    <p className="font-medium">Lembretes de Pagamento</p>
+                    <p className="text-sm text-muted-foreground">Enviar lembretes para pagamentos pendentes</p>
                   </div>
                   <Switch checked={paymentReminders} onCheckedChange={setPaymentReminders} />
                 </div>
@@ -613,7 +613,7 @@ export default function Settings() {
                 <RequirePermission permission="settings:update">
                   <Button onClick={handleSaveNotifications}>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Notification Settings
+                    Guardar Definições de Notificação
                   </Button>
                 </RequirePermission>
               </CardContent>
@@ -624,8 +624,8 @@ export default function Settings() {
           <TabsContent value="integrations" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Payment Integrations</CardTitle>
-                <CardDescription>Connect payment providers to accept online payments</CardDescription>
+                <CardTitle>Integrações de Pagamento</CardTitle>
+                <CardDescription>Conecte fornecedores de pagamento para aceitar pagamentos online</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border">
@@ -635,14 +635,14 @@ export default function Settings() {
                     </div>
                     <div>
                       <p className="font-medium">Multicaixa Express</p>
-                      <p className="text-sm text-muted-foreground">Accept mobile payments in Angola</p>
+                      <p className="text-sm text-muted-foreground">Aceitar pagamentos móveis em Angola</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {multicaixaEnabled && (
                       <Badge variant="default" className="gap-1">
                         <Check className="w-3 h-3" />
-                        Connected
+                        Conectado
                       </Badge>
                     )}
                     <Button 
@@ -650,7 +650,7 @@ export default function Settings() {
                       size="sm"
                       onClick={() => setMulticaixaEnabled(!multicaixaEnabled)}
                     >
-                      {multicaixaEnabled ? 'Configure' : 'Connect'}
+                      {multicaixaEnabled ? 'Configurar' : 'Conectar'}
                     </Button>
                   </div>
                 </div>
@@ -659,8 +659,8 @@ export default function Settings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Other Integrations</CardTitle>
-                <CardDescription>Connect third-party services to enhance your gym</CardDescription>
+                <CardTitle>Outras Integrações</CardTitle>
+                <CardDescription>Conecte serviços de terceiros para melhorar o seu ginásio</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg border">
@@ -670,11 +670,11 @@ export default function Settings() {
                     </div>
                     <div>
                       <p className="font-medium">Google Calendar</p>
-                      <p className="text-sm text-muted-foreground">Sync classes and appointments</p>
+                      <p className="text-sm text-muted-foreground">Sincronizar aulas e compromissos</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" disabled>
-                    Coming Soon
+                    Em Breve
                   </Button>
                 </div>
 
@@ -685,11 +685,11 @@ export default function Settings() {
                     </div>
                     <div>
                       <p className="font-medium">WhatsApp Business</p>
-                      <p className="text-sm text-muted-foreground">Send notifications via WhatsApp</p>
+                      <p className="text-sm text-muted-foreground">Enviar notificações via WhatsApp</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" disabled>
-                    Coming Soon
+                    Em Breve
                   </Button>
                 </div>
               </CardContent>
