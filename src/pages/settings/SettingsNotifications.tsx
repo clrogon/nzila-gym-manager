@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { RequirePermission } from '@/components/common/RequirePermission';
-import { Save, Mail, MessageSquare } from 'lucide-react';
+import { Save, Mail, MessageSquare, Clock } from 'lucide-react';
 
 interface NotificationState {
   emailNotifications: boolean;
@@ -15,6 +15,8 @@ interface NotificationState {
   paymentReminders: boolean;
   welcomeEmails: boolean;
   reminderDays: string;
+  timezone: string;
+  locale: string;
 }
 
 interface NotificationOnChange {
@@ -24,6 +26,8 @@ interface NotificationOnChange {
   setPaymentReminders: (value: boolean) => void;
   setWelcomeEmails: (value: boolean) => void;
   setReminderDays: (value: string) => void;
+  setTimezone: (value: string) => void;
+  setLocale: (value: string) => void;
 }
 
 interface SettingsNotificationsProps {
@@ -43,6 +47,7 @@ export default function SettingsNotifications({ state, onChange }: SettingsNotif
 
   return (
     <div className="space-y-6">
+      {/* Notification Channels */}
       <Card>
         <CardHeader>
           <CardTitle>Canais de Notificação</CardTitle>
@@ -85,6 +90,7 @@ export default function SettingsNotifications({ state, onChange }: SettingsNotif
         </CardContent>
       </Card>
 
+      {/* Automatic Messages */}
       <Card>
         <CardHeader>
           <CardTitle>Mensagens Automáticas</CardTitle>
@@ -147,6 +153,41 @@ export default function SettingsNotifications({ state, onChange }: SettingsNotif
               onCheckedChange={onChange.setPaymentReminders} 
             />
           </div>
+
+          <Separator />
+
+          {/* Regional Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações Regionais</CardTitle>
+              <CardDescription>Defina fuso horário e formato de data/hora</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Fuso Horário</Label>
+                <Select value={state.timezone} onValueChange={onChange.setTimezone}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Africa/Luanda">Africa/Luanda (WAT)</SelectItem>
+                    <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (SAST)</SelectItem>
+                    <SelectItem value="Europe/Lisbon">Europe/Lisbon (WET)</SelectItem>
+                    <SelectItem value="UTC">UTC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Locale</Label>
+                <Select value={state.locale} onValueChange={onChange.setLocale}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt-PT">pt-PT</SelectItem>
+                    <SelectItem value="en-US">en-US</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
           <RequirePermission permission="settings:update">
             <Button onClick={handleSave}>
