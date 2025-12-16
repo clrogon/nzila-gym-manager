@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, ArrowRight } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+// Use native crypto for UUID generation
 
 export default function Onboarding() {
   const { user } = useAuth();
@@ -39,7 +39,7 @@ export default function Onboarding() {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
-    return `${base}-${uuidv4().slice(0, 8)}`;
+    return `${base}-${crypto.randomUUID().slice(0, 8)}`;
   };
 
   const createGym = async () => {
