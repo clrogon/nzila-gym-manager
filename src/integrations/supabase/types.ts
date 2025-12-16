@@ -298,6 +298,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string
+          workout_template_id: string | null
         }
         Insert: {
           capacity?: number | null
@@ -315,6 +316,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string
+          workout_template_id?: string | null
         }
         Update: {
           capacity?: number | null
@@ -332,6 +334,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          workout_template_id?: string | null
         }
         Relationships: [
           {
@@ -355,12 +358,20 @@ export type Database = {
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "classes_workout_template_id_fkey"
+            columns: ["workout_template_id"]
+            isOneToOne: false
+            referencedRelation: "workout_templates"
+            referencedColumns: ["id"]
+          },
         ]
       }
       discipline_ranks: {
         Row: {
           color: string | null
           created_at: string
+          criteria: Json | null
           discipline_id: string
           id: string
           level: number
@@ -370,6 +381,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          criteria?: Json | null
           discipline_id: string
           id?: string
           level?: number
@@ -379,6 +391,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          criteria?: Json | null
           discipline_id?: string
           id?: string
           level?: number

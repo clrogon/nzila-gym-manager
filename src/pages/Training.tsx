@@ -3,264 +3,69 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
-import { getCategoryNames } from '@/lib/seedData';
-import { PolymorphicWodBuilder } from '@/components/training/PolymorphicWodBuilder';
+import { ExerciseLibrary } from '@/components/training/ExerciseLibrary';
+import { WorkoutTemplateBuilder } from '@/components/training/WorkoutTemplateBuilder';
 import { WorkoutAssignment } from '@/components/training/WorkoutAssignment';
 import { RankPromotion } from '@/components/training/RankPromotion';
-import { GymContentCrud } from '@/components/training/GymContentCrud';
+import { PromotionCriteria } from '@/components/training/PromotionCriteria';
 import { MemberProgressDashboard } from '@/components/training/MemberProgressDashboard';
 import { TrainingLibraryView } from '@/components/training/TrainingLibraryView';
+import { GymContentCrud } from '@/components/training/GymContentCrud';
 import {
-  Plus,
   Dumbbell,
-  Clock,
-  Target,
-  Users,
-  Trash2,
-  Edit,
-  Copy,
-  Play,
-  BarChart3,
-  Trophy,
-  Search,
-  Award,
   ClipboardList,
+  TrendingUp,
+  Award,
   Settings2,
   BookOpen,
-  TrendingUp,
+  Target,
+  ListChecks,
 } from 'lucide-react';
-
-interface WorkoutTemplate {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string | null;
-  difficulty: string | null;
-  estimated_duration: number;
-  exercises: any[] | null;
-  is_public: boolean | null;
-  created_at: string;
-}
-
-interface Exercise {
-  name: string;
-  sets: number;
-  reps: string;
-  rest: string;
-  notes?: string;
-}
-
-const CATEGORIES = getCategoryNames();
-const DIFFICULTIES = ['beginner', 'intermediate', 'advanced'];
-
-const DIFFICULTY_COLORS = {
-  beginner: 'bg-green-500/10 text-green-600 border-green-500/20',
-  intermediate: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  advanced: 'bg-red-500/10 text-red-600 border-red-500/20',
-};
-
-const DIFFICULTY_LABELS = {
-  beginner: 'Iniciante',
-  intermediate: 'Intermediário',
-  advanced: 'Avançado',
-};
 
 export default function Training() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-  const [activeTab, setActiveTab] = useState('library');
-  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<WorkoutTemplate | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
-
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: CATEGORIES[0] || 'Strength & Conditioning',
-    difficulty: 'intermediate',
-    estimated_duration: 60,
-    is_public: false,
-    exercises: [{ name: '', sets: 3, reps: '10', rest: '60s', notes: '' }] as Exercise[],
+  const [activeTab, setActiveTab] = useState('exercises');
+  const [stats, setStats] = useState({
+    exercises: 0,
+    templates: 0,
+    assignments: 0,
   });
 
   useEffect(() => {
     if (currentGym?.id) {
-      fetchTemplates();
+      fetchStats();
     }
   }, [currentGym?.id]);
 
-  const fetchTemplates = async () => {
+  const fetchStats = async () => {
     if (!currentGym?.id) return;
-    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('workout_templates')
-        .select('*')
-        .eq('gym_id', currentGym.id)
-        .order('created_at', { ascending: false });
+      const [exercisesRes, templatesRes, assignmentsRes] = await Promise.all([
+        supabase
+          .from('gym_exercises')
+          .select('id', { count: 'exact', head: true })
+          .eq('gym_id', currentGym.id),
+        supabase
+          .from('workout_templates')
+          .select('id', { count: 'exact', head: true })
+          .eq('gym_id', currentGym.id),
+        supabase
+          .from('member_workouts')
+          .select('id', { count: 'exact', head: true }),
+      ]);
 
-      if (error) throw error;
-      const typedData = (data || []).map(item => ({
-        ...item,
-        exercises: Array.isArray(item.exercises) ? item.exercises : [],
-      })) as WorkoutTemplate[];
-      setTemplates(typedData);
+      setStats({
+        exercises: exercisesRes.count || 0,
+        templates: templatesRes.count || 0,
+        assignments: assignmentsRes.count || 0,
+      });
     } catch (error) {
-      console.error('Erro ao carregar modelos:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching stats:', error);
     }
   };
-
-  const handleCreateTemplate = async () => {
-    if (!currentGym?.id || !formData.name) {
-      toast.error('Por favor insira um nome para o treino');
-      return;
-    }
-
-    try {
-      const insertData = {
-        gym_id: currentGym.id,
-        name: formData.name,
-        description: formData.description || null,
-        category: formData.category,
-        difficulty: formData.difficulty as 'beginner' | 'intermediate' | 'advanced',
-        estimated_duration: formData.estimated_duration,
-        is_public: formData.is_public,
-        exercises: formData.exercises.filter(e => e.name) as unknown as any,
-      };
-      const { error } = await supabase.from('workout_templates').insert(insertData);
-
-      if (error) throw error;
-      toast.success('Modelo de treino criado');
-      setIsCreateOpen(false);
-      fetchTemplates();
-      resetForm();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao criar modelo');
-    }
-  };
-
-  const handleDeleteTemplate = async (id: string) => {
-    try {
-      const { error } = await supabase.from('workout_templates').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Modelo eliminado');
-      fetchTemplates();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao eliminar modelo');
-    }
-  };
-
-  const handleDuplicateTemplate = async (template: WorkoutTemplate) => {
-    if (!currentGym?.id) return;
-    
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      const insertData = {
-        gym_id: currentGym.id,
-        name: `${template.name} (Cópia)`,
-        description: template.description,
-        category: template.category,
-        difficulty: template.difficulty as 'beginner' | 'intermediate' | 'advanced' | null,
-        estimated_duration: template.estimated_duration,
-        is_public: false,
-        exercises: template.exercises as unknown as any,
-        created_by: userData?.user?.id || null,
-      };
-      const { error } = await supabase.from('workout_templates').insert(insertData);
-
-      if (error) throw error;
-      toast.success('Modelo duplicado com sucesso');
-      fetchTemplates();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao duplicar modelo');
-    }
-  };
-
-  const handleUpdateTemplate = async () => {
-    if (!editingTemplate?.id || !formData.name) {
-      toast.error('Por favor insira um nome para o treino');
-      return;
-    }
-
-    try {
-      const updateData = {
-        name: formData.name,
-        description: formData.description || null,
-        category: formData.category,
-        difficulty: formData.difficulty as 'beginner' | 'intermediate' | 'advanced',
-        estimated_duration: formData.estimated_duration,
-        is_public: formData.is_public,
-        exercises: formData.exercises.filter(e => e.name) as unknown as any,
-      };
-      const { error } = await supabase.from('workout_templates').update(updateData).eq('id', editingTemplate.id);
-
-      if (error) throw error;
-      toast.success('Modelo de treino atualizado');
-      setIsEditOpen(false);
-      setEditingTemplate(null);
-      fetchTemplates();
-      resetForm();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao atualizar modelo');
-    }
-  };
-
-  const openEditDialog = (template: WorkoutTemplate) => {
-    setEditingTemplate(template);
-    setFormData({
-      name: template.name,
-      description: template.description || '',
-      category: template.category || CATEGORIES[0] || 'Strength & Conditioning',
-      difficulty: template.difficulty || 'intermediate',
-      estimated_duration: template.estimated_duration || 60,
-      is_public: template.is_public || false,
-      exercises: (template.exercises || []).map((ex: any) => ({
-        name: ex.name || ex.exercise || '',
-        sets: ex.sets || 3,
-        reps: ex.reps || '10',
-        rest: ex.rest || '60s',
-        notes: ex.notes || '',
-      })),
-    });
-    setIsEditOpen(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      category: CATEGORIES[0] || 'Strength & Conditioning',
-      difficulty: 'intermediate',
-      estimated_duration: 60,
-      is_public: false,
-      exercises: [{ name: '', sets: 3, reps: '10', rest: '60s', notes: '' }],
-    });
-  };
-
-  const filteredTemplates = templates.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || t.category === filterCategory;
-    const matchesDifficulty = filterDifficulty === 'all' || t.difficulty === filterDifficulty;
-    return matchesSearch && matchesCategory && matchesDifficulty;
-  });
 
   if (!currentGym) {
     return (
@@ -279,16 +84,59 @@ export default function Training() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Centro de Treino</h1>
-            <p className="text-muted-foreground">Gerir treinos, atribuições e promoções</p>
+            <p className="text-muted-foreground">Gerir exercícios, treinos, atribuições e promoções</p>
           </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-primary/10">
+                  <ListChecks className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.exercises}</p>
+                  <p className="text-sm text-muted-foreground">Exercícios</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-green-500/10">
+                  <Dumbbell className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.templates}</p>
+                  <p className="text-sm text-muted-foreground">Modelos de Treino</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-yellow-500/10">
+                  <ClipboardList className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.assignments}</p>
+                  <p className="text-sm text-muted-foreground">Atribuições</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Biblioteca</span>
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="exercises" className="flex items-center gap-2">
+              <ListChecks className="w-4 h-4" />
+              <span className="hidden sm:inline">Exercícios</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-2">
               <Dumbbell className="w-4 h-4" />
@@ -306,178 +154,26 @@ export default function Training() {
               <Award className="w-4 h-4" />
               <span className="hidden sm:inline">Promoções</span>
             </TabsTrigger>
+            <TabsTrigger value="criteria" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span className="hidden sm:inline">Critérios</span>
+            </TabsTrigger>
+            <TabsTrigger value="library" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Biblioteca</span>
+            </TabsTrigger>
             <TabsTrigger value="custom" className="flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
               <span className="hidden sm:inline">Personalizado</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="library" className="mt-6">
-            <TrainingLibraryView />
+          <TabsContent value="exercises" className="mt-6">
+            <ExerciseLibrary />
           </TabsContent>
 
           <TabsContent value="templates" className="mt-6">
-            <div className="flex justify-end mb-4">
-              {hasPermission('training:create') && (
-                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Criar Treino
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Criar Modelo de Treino</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-6 pt-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2 space-y-2">
-                          <Label>Nome do Treino</Label>
-                          <Input
-                            value={formData.name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                            placeholder="ex: Treino de Força Completo"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Categoria</Label>
-                          <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {CATEGORIES.map(cat => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Dificuldade</Label>
-                          <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {DIFFICULTIES.map(diff => (
-                                <SelectItem key={diff} value={diff}>
-                                  {DIFFICULTY_LABELS[diff as keyof typeof DIFFICULTY_LABELS]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Duração (minutos)</Label>
-                          <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
-                        </div>
-                        <div className="col-span-2 space-y-2">
-                          <Label>Descrição</Label>
-                          <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Descreva o treino..." rows={2} />
-                        </div>
-                      </div>
-                      <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
-                      <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleCreateTemplate}>Criar Modelo</Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-
-              <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if (!open) { setEditingTemplate(null); resetForm(); } }}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Editar Modelo de Treino</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-6 pt-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2 space-y-2">
-                        <Label>Nome do Treino</Label>
-                        <Input
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="ex: Treino de Força Completo"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Categoria</Label>
-                        <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {CATEGORIES.map(cat => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Dificuldade</Label>
-                        <Select value={formData.difficulty} onValueChange={(v) => setFormData(prev => ({ ...prev, difficulty: v }))}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {DIFFICULTIES.map(diff => (
-                              <SelectItem key={diff} value={diff}>
-                                {DIFFICULTY_LABELS[diff as keyof typeof DIFFICULTY_LABELS]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Duração (minutos)</Label>
-                        <Input type="number" value={formData.estimated_duration} onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) || 60 }))} />
-                      </div>
-                      <div className="col-span-2 space-y-2">
-                        <Label>Descrição</Label>
-                        <Textarea value={formData.description} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Descreva o treino..." rows={2} />
-                      </div>
-                    </div>
-                    <PolymorphicWodBuilder category={formData.category} exercises={formData.exercises.map((ex, i) => ({ id: String(i), ...ex }))} onChange={(exercises) => setFormData(prev => ({ ...prev, exercises: exercises as any }))} />
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => { setIsEditOpen(false); setEditingTemplate(null); resetForm(); }}>Cancelar</Button>
-                      <Button onClick={handleUpdateTemplate}>Guardar Alterações</Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTemplates.map((template) => (
-                <Card key={template.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                        <CardDescription className="capitalize">{template.category}</CardDescription>
-                      </div>
-                      <Badge className={DIFFICULTY_COLORS[template.difficulty as keyof typeof DIFFICULTY_COLORS]}>
-                        {DIFFICULTY_LABELS[template.difficulty as keyof typeof DIFFICULTY_LABELS] || template.difficulty}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {template.description && <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{template.description}</p>}
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                      <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{template.estimated_duration} min</span>
-                      <span className="flex items-center gap-1"><Dumbbell className="w-4 h-4" />{template.exercises?.length || 0} exercícios</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1"><Play className="w-4 h-4 mr-1" />Atribuir</Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDuplicateTemplate(template)} title="Duplicar"><Copy className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(template)}><Edit className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteTemplate(template.id)}><Trash2 className="w-4 h-4" /></Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredTemplates.length === 0 && !loading && (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Nenhum modelo de treino encontrado</h3>
-                  <p className="text-muted-foreground mb-4">Crie o seu primeiro modelo de treino para começar</p>
-                  <Button onClick={() => setIsCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Criar Treino</Button>
-                </CardContent>
-              </Card>
-            )}
+            <WorkoutTemplateBuilder />
           </TabsContent>
 
           <TabsContent value="assignments" className="mt-6">
@@ -490,6 +186,14 @@ export default function Training() {
 
           <TabsContent value="promotions" className="mt-6">
             <RankPromotion />
+          </TabsContent>
+
+          <TabsContent value="criteria" className="mt-6">
+            <PromotionCriteria />
+          </TabsContent>
+
+          <TabsContent value="library" className="mt-6">
+            <TrainingLibraryView />
           </TabsContent>
 
           <TabsContent value="custom" className="mt-6">
