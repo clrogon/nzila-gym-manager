@@ -1,204 +1,171 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { RequirePermission } from '@/components/common/RequirePermission';
-import { Save, Upload } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 
-interface Gym {
-  id: string;
-  name: string;
-  phone: string | null;
-  address: string | null;
-  email: string | null;
-  timezone: string | null;
-  currency: string | null;
-  logo_url: string | null;
+interface Props {
+  gym: any;
+  refreshGyms: () => void;
 }
 
-interface SettingsGeneralProps {
-  gym: Gym;
-  refreshGyms: () => Promise<void>;
-}
-
-export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralProps) {
-  const { toast } = useToast();
+export default function SettingsGeneral({ gym, refreshGyms }: Props) {
   const [loading, setLoading] = useState(false);
-  
-  const [gymName, setGymName] = useState(gym.name);
-  const [phone, setPhone] = useState(gym.phone || '');
-  const [address, setAddress] = useState(gym.address || '');
-  const [email, setEmail] = useState(gym.email || '');
-  const [timezone, setTimezone] = useState(gym.timezone || 'Africa/Luanda');
-  const [currency, setCurrency] = useState(gym.currency || 'AOA');
-  const [logoUrl, setLogoUrl] = useState(gym.logo_url || '');
 
-  useEffect(() => {
-    setGymName(gym.name);
-    setPhone(gym.phone || '');
-    setAddress(gym.address || '');
-    setEmail(gym.email || '');
-    setTimezone(gym.timezone || 'Africa/Luanda');
-    setCurrency(gym.currency || 'AOA');
-    setLogoUrl(gym.logo_url || '');
-  }, [gym]);
+  const [form, setForm] = useState({
+    name: gym.name || '',
+    timezone: gym.timezone || 'Africa/Luanda',
+    locale: gym.locale || 'pt-PT',
+    currency: gym.currency || 'AOA',
+    vatNumber: gym.vat_number || '',
+    defaultMembershipDuration: gym.default_membership_duration || 30,
+    gracePeriodDays: gym.grace_period_days || 5,
+    autoSuspendUnpaid: gym.auto_suspend_unpaid ?? true,
+    brandColor: gym.brand_color || '#111827',
+    invoiceFooter: gym.invoice_footer || '',
+  });
 
-  const handleSave = async () => {
+  const update = (key: string, value: any) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  const save = async () => {
     setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('gyms')
-        .update({
-          name: gymName,
-          phone,
-          address,
-          email,
-          timezone,
-          currency,
-          logo_url: logoUrl || null,
-        })
-        .eq('id', gym.id);
+    const { error } = await supabase
+      .from('gyms')
+      .update({
+        name: form.name,
+        timezone: form.timezone,
+        locale: form.locale,
+        currency: form.currency,
+        vat_number: form.vatNumber,
+        default_membership_duration: form.defaultMembershipDuration,
+        grace_period_days: form.gracePeriodDays,
+        auto_suspend_unpaid: form.autoSuspendUnpaid,
+        brand_color: form.brandColor,
+        invoice_footer: form.invoiceFooter,
+      })
+      .eq('id', gym.id);
 
-      if (error) throw error;
-
-      await refreshGyms();
-      toast({ 
-        title: 'Definições Guardadas', 
-        description: 'As definições do ginásio foram atualizadas.' 
-      });
-    } catch (error) {
-      console.error('Erro ao guardar definições:', error);
-      toast({ 
-        title: 'Erro', 
-        description: 'Falha ao guardar definições.', 
-        variant: 'destructive' 
-      });
-    } finally {
-      setLoading(false);
-    }
+    if (!error) refreshGyms();
+    setLoading(false);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informação do Ginásio</CardTitle>
-        <CardDescription>Atualize a informação básica e marca do seu ginásio</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Logo Upload */}
+    <div className="space-y-8 max-w-3xl">
+
+      {/* Identity & Localisation */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Identidade & Localização</h2>
+
         <div className="space-y-2">
-          <Label>Logótipo</Label>
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center bg-muted/50">
-              {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt="Logótipo do ginásio" 
-                  className="w-full h-full object-cover rounded-lg" 
-                />
-              ) : (
-                <Upload className="w-6 h-6 text-muted-foreground" />
-              )}
-            </div>
-            <div className="flex-1">
-              <Input
-                placeholder="URL do Logótipo"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Insira um URL para o logótipo do ginásio ou carregue uma imagem
-              </p>
-            </div>
-          </div>
+          <Label>Nome do Ginásio</Label>
+          <Input value={form.name} onChange={(e) => update('name', e.target.value)} />
         </div>
 
-        <Separator />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Timezone</Label>
+            <Input
+              placeholder="Africa/Luanda"
+              value={form.timezone}
+              onChange={(e) => update('timezone', e.target.value)}
+            />
+          </div>
 
-        {/* Basic Information */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="gymName">Nome do Ginásio *</Label>
+          <div>
+            <Label>Locale</Label>
             <Input
-              id="gymName"
-              value={gymName}
-              onChange={(e) => setGymName(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+244 923 456 789"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Morada</Label>
-            <Input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              placeholder="pt-PT"
+              value={form.locale}
+              onChange={(e) => update('locale', e.target.value)}
             />
           </div>
         </div>
 
-        <Separator />
-
-        {/* Regional Settings */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Fuso Horário</Label>
-            <Select value={timezone} onValueChange={setTimezone}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Africa/Luanda">Africa/Luanda (WAT)</SelectItem>
-                <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (SAST)</SelectItem>
-                <SelectItem value="Europe/Lisbon">Europe/Lisbon (WET)</SelectItem>
-                <SelectItem value="UTC">UTC</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Moeda</Label>
+            <Input value={form.currency} disabled />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="currency">Moeda</Label>
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="AOA">AOA - Kwanza Angolano</SelectItem>
-                <SelectItem value="USD">USD - Dólar Americano</SelectItem>
-                <SelectItem value="EUR">EUR - Euro</SelectItem>
-                <SelectItem value="ZAR">ZAR - Rand Sul-Africano</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div>
+            <Label>NIF / VAT</Label>
+            <Input
+              placeholder="0000000000"
+              value={form.vatNumber}
+              onChange={(e) => update('vatNumber', e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Operational Rules */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Regras Operacionais</h2>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Duração padrão do plano (dias)</Label>
+            <Input
+              type="number"
+              value={form.defaultMembershipDuration}
+              onChange={(e) => update('defaultMembershipDuration', Number(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <Label>Período de tolerância (dias)</Label>
+            <Input
+              type="number"
+              value={form.gracePeriodDays}
+              onChange={(e) => update('gracePeriodDays', Number(e.target.value))}
+            />
           </div>
         </div>
 
-        <RequirePermission permission="settings:update">
-          <Button onClick={handleSave} disabled={loading}>
-            <Save className="w-4 h-4 mr-2" />
-            {loading ? 'A guardar...' : 'Guardar Alterações'}
-          </Button>
-        </RequirePermission>
-      </CardContent>
-    </Card>
+        <div className="flex items-center justify-between border rounded-lg p-4">
+          <div>
+            <p className="font-medium">Suspensão automática por falta de pagamento</p>
+            <p className="text-sm text-muted-foreground">
+              Bloqueia acesso após o período de tolerância
+            </p>
+          </div>
+          <Switch
+            checked={form.autoSuspendUnpaid}
+            onCheckedChange={(v) => update('autoSuspendUnpaid', v)}
+          />
+        </div>
+      </section>
+
+      {/* Branding */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Branding & Comunicação</h2>
+
+        <div>
+          <Label>Cor principal</Label>
+          <Input
+            type="color"
+            value={form.brandColor}
+            onChange={(e) => update('brandColor', e.target.value)}
+            className="h-10 w-24 p-1"
+          />
+        </div>
+
+        <div>
+          <Label>Rodapé de faturas / recibos</Label>
+          <Textarea
+            placeholder="Obrigado pela sua preferência."
+            value={form.invoiceFooter}
+            onChange={(e) => update('invoiceFooter', e.target.value)}
+          />
+        </div>
+      </section>
+
+      <Button onClick={save} disabled={loading}>
+        Guardar alterações
+      </Button>
+    </div>
   );
 }
