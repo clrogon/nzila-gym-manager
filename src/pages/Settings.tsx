@@ -3,11 +3,13 @@ import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, CreditCard, Bell, Link2 } from 'lucide-react';
+import { Building2, CreditCard, Bell, Link2, Shield } from 'lucide-react';
+
 import SettingsGeneral from './settings/SettingsGeneral';
 import SettingsPlans from './settings/SettingsPlans';
 import SettingsNotifications from './settings/SettingsNotifications';
 import SettingsIntegrations from './settings/SettingsIntegrations';
+import SettingsSecurity from './settings/SettingsSecurity';
 
 interface MembershipPlan {
   id: string;
@@ -23,7 +25,6 @@ export default function Settings() {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Notification state
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [membershipReminders, setMembershipReminders] = useState(true);
@@ -32,34 +33,29 @@ export default function Settings() {
   const [reminderDays, setReminderDays] = useState('7');
 
   useEffect(() => {
-    if (currentGym) {
-      fetchPlans();
-    }
+    if (currentGym) fetchPlans();
   }, [currentGym]);
 
   const fetchPlans = async () => {
     if (!currentGym) return;
     setLoading(true);
-    try {
-      const { data } = await supabase
-        .from('membership_plans')
-        .select('*')
-        .eq('gym_id', currentGym.id)
-        .order('price');
+    const { data } = await supabase
+      .from('membership_plans')
+      .select('*')
+      .eq('gym_id', currentGym.id)
+      .order('price');
 
-      setPlans(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar planos:', error);
-    } finally {
-      setLoading(false);
-    }
+    setPlans(data || []);
+    setLoading(false);
   };
 
   if (!currentGym) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
+          <p className="text-muted-foreground">
+            Por favor, selecione um ginásio primeiro.
+          </p>
         </div>
       </DashboardLayout>
     );
@@ -69,12 +65,14 @@ export default function Settings() {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold">Definições</h1>
-          <p className="text-muted-foreground">Gerir a configuração do seu ginásio</p>
+          <h1 className="text-3xl font-bold">Definições</h1>
+          <p className="text-muted-foreground">
+            Gerir a configuração do ginásio
+          </p>
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="general">
               <Building2 className="w-4 h-4 mr-2" />
               Geral
@@ -91,6 +89,10 @@ export default function Settings() {
               <Link2 className="w-4 h-4 mr-2" />
               Integrações
             </TabsTrigger>
+            <TabsTrigger value="security">
+              <Shield className="w-4 h-4 mr-2" />
+              Segurança
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -98,9 +100,9 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="plans">
-            <SettingsPlans 
-              plans={plans} 
-              refresh={fetchPlans} 
+            <SettingsPlans
+              plans={plans}
+              refresh={fetchPlans}
               currency={currentGym.currency || 'AOA'}
               gymId={currentGym.id}
             />
@@ -129,6 +131,10 @@ export default function Settings() {
 
           <TabsContent value="integrations">
             <SettingsIntegrations />
+          </TabsContent>
+
+          <TabsContent value="security">
+            <SettingsSecurity />
           </TabsContent>
         </Tabs>
       </div>
