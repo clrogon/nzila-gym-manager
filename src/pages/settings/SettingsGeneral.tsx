@@ -13,19 +13,19 @@ import { Save, Upload } from 'lucide-react';
 interface Gym {
   id: string;
   name: string;
-  phone: string | null;
-  address: string | null;
-  email: string | null;
-  timezone: string | null;
-  locale: string | null;
-  currency: string | null;
-  vat_number: string | null;
-  logo_url: string | null;
-  default_membership_days: number | null;
-  grace_period_days: number | null;
-  auto_suspend_unpaid: boolean | null;
-  primary_color: string | null;
-  invoice_footer: string | null;
+  phone?: string | null;
+  address?: string | null;
+  email?: string | null;
+  timezone?: string | null;
+  locale?: string | null;
+  currency?: string | null;
+  vat_number?: string | null;
+  logo_url?: string | null;
+  default_membership_days?: number | null;
+  grace_period_days?: number | null;
+  auto_suspend_unpaid?: boolean | null;
+  primary_color?: string | null;
+  invoice_footer?: string | null;
 }
 
 interface SettingsGeneralProps {

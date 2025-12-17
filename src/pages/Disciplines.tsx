@@ -9,19 +9,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { 
-  getCategoryNames, hasBeltSystem, getDisciplineRanks, 
-  DEFAULT_WORKOUT_CATEGORIES, getCategoryByName 
-} from '@/lib/seedData';
+import { getCategoryNames, hasBeltSystem, getDisciplineRanks } from '@/lib/seedData';
 import {
   Search, Plus, Award, Users, Settings2, ChevronRight,
-  GraduationCap, Shield, Swords, Activity, Loader2, 
-  Dumbbell, Calendar, ListChecks, Edit2, Trash2
+  GraduationCap, Shield, Swords, Activity, Loader2, Edit2, Trash2
 } from 'lucide-react';
 
 interface Discipline {
@@ -42,30 +37,18 @@ interface DisciplineRank {
   requirements: string | null;
 }
 
-interface TrainingItem {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string | null;
-  type: 'workout' | 'class' | 'exercise';
-  is_active?: boolean;
-}
-
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   "Combat Sports / Martial Arts": <Swords className="w-4 h-4" />,
-  "Strength & Conditioning": <Dumbbell className="w-4 h-4" />,
+  "Strength & Conditioning": <Activity className="w-4 h-4" />,
   "Mind-Body Practices": <GraduationCap className="w-4 h-4" />,
   "Cardiovascular Training": <Activity className="w-4 h-4" />,
   "Group Fitness Classes": <Users className="w-4 h-4" />,
   "Aquatic Activities": <Activity className="w-4 h-4" />,
 };
 
-type TabType = 'disciplines' | 'workouts' | 'classes' | 'exercises';
-
 export default function Disciplines() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-  const [activeTab, setActiveTab] = useState<TabType>('disciplines');
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [ranks, setRanks] = useState<DisciplineRank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -284,29 +267,6 @@ export default function Disciplines() {
     return acc;
   }, {} as Record<string, Discipline[]>);
 
-  const getSeedDataForTab = () => {
-    const category = filterCategory === 'all' ? null : getCategoryByName(filterCategory);
-    
-    if (activeTab === 'workouts') {
-      if (category) return category.workouts.map(w => ({ name: w, category: filterCategory }));
-      return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.workouts.map(w => ({ name: w, category: c.name })));
-    }
-    if (activeTab === 'classes') {
-      if (category) return category.classes.map(c => ({ name: c, category: filterCategory }));
-      return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.classes.map(cl => ({ name: cl, category: c.name })));
-    }
-    if (activeTab === 'exercises') {
-      if (category) return category.exercises.map(e => ({ name: e, category: filterCategory }));
-      return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.exercises.map(e => ({ name: e, category: c.name })));
-    }
-    return [];
-  };
-
-  const seedData = getSeedDataForTab();
-  const filteredSeedData = seedData.filter(item => 
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const stats = {
     total: disciplines.length,
     active: disciplines.filter(d => d.is_active).length,
@@ -330,10 +290,10 @@ export default function Disciplines() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Biblioteca de Treino</h1>
-            <p className="text-muted-foreground">Gerir disciplinas, treinos, aulas e exercícios</p>
+            <h1 className="text-2xl font-display font-bold text-foreground">Disciplinas</h1>
+            <p className="text-muted-foreground">Gerir modalidades e sistema de graus</p>
           </div>
-          {activeTab === 'disciplines' && hasPermission('training:create') && (
+          {hasPermission('training:create') && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Disciplina
@@ -341,333 +301,251 @@ export default function Disciplines() {
           )}
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabType)}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="disciplines" className="flex items-center gap-2">
-              <Award className="w-4 h-4" />
-              <span className="hidden sm:inline">Disciplinas</span>
-            </TabsTrigger>
-            <TabsTrigger value="workouts" className="flex items-center gap-2">
-              <Dumbbell className="w-4 h-4" />
-              <span className="hidden sm:inline">Treinos</span>
-            </TabsTrigger>
-            <TabsTrigger value="classes" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">Aulas</span>
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />
-              <span className="hidden sm:inline">Exercícios</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Stats - Only show for disciplines tab */}
-          {activeTab === 'disciplines' && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Activity className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.total}</p>
-                      <p className="text-sm text-muted-foreground">Total</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-green-500/10">
-                      <Shield className="w-6 h-6 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.active}</p>
-                      <p className="text-sm text-muted-foreground">Ativas</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-yellow-500/10">
-                      <Award className="w-6 h-6 text-yellow-500" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.withRanks}</p>
-                      <p className="text-sm text-muted-foreground">Com Graus</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-purple-500/10">
-                      <Users className="w-6 h-6 text-purple-500" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.categories}</p>
-                      <p className="text-sm text-muted-foreground">Categorias</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Filters */}
-          <Card className="mt-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder={`Pesquisar ${activeTab === 'disciplines' ? 'disciplinas' : activeTab === 'workouts' ? 'treinos' : activeTab === 'classes' ? 'aulas' : 'exercícios'}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-primary/10">
+                  <Activity className="w-6 h-6 text-primary" />
                 </div>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as Categorias</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-sm text-muted-foreground">Total</p>
+                </div>
               </div>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-green-500/10">
+                  <Shield className="w-6 h-6 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-sm text-muted-foreground">Ativas</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-yellow-500/10">
+                  <Award className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.withRanks}</p>
+                  <p className="text-sm text-muted-foreground">Com Graus</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-purple-500/10">
+                  <Users className="w-6 h-6 text-purple-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.categories}</p>
+                  <p className="text-sm text-muted-foreground">Categorias</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Disciplines Tab Content */}
-          <TabsContent value="disciplines" className="mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Disciplines List */}
-              <div className="lg:col-span-2 space-y-4">
-                {loading ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                ) : Object.keys(groupedDisciplines).length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Activity className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">Nenhuma disciplina encontrada</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  Object.entries(groupedDisciplines).map(([category, items]) => (
-                    <Card key={category}>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          {CATEGORY_ICONS[category] || <Activity className="w-4 h-4" />}
-                          {category}
-                        </CardTitle>
-                        <CardDescription>{items.length} disciplinas</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {items.map(discipline => (
-                            <div
-                              key={discipline.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
-                                selectedDiscipline?.id === discipline.id
-                                  ? 'border-primary bg-primary/5'
-                                  : 'hover:bg-muted/50'
-                              }`}
-                              onClick={() => setSelectedDiscipline(discipline)}
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar disciplinas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Disciplines List */}
+          <div className="lg:col-span-2 space-y-4">
+            {loading ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-muted-foreground" />
+                </CardContent>
+              </Card>
+            ) : Object.keys(groupedDisciplines).length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Activity className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Nenhuma disciplina encontrada</p>
+                </CardContent>
+              </Card>
+            ) : (
+              Object.entries(groupedDisciplines).map(([category, items]) => (
+                <Card key={category}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {CATEGORY_ICONS[category] || <Activity className="w-4 h-4" />}
+                      {category}
+                    </CardTitle>
+                    <CardDescription>{items.length} disciplinas</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {items.map(discipline => (
+                        <div
+                          key={discipline.id}
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors cursor-pointer ${
+                            selectedDiscipline?.id === discipline.id
+                              ? 'border-primary bg-primary/5'
+                              : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => setSelectedDiscipline(discipline)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${discipline.is_active ? 'bg-green-500' : 'bg-muted'}`} />
+                            <div>
+                              <p className="font-medium">{discipline.name}</p>
+                              {hasBeltSystem(discipline.name) && (
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  <Award className="w-3 h-3 mr-1" />
+                                  Sistema de Graus
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => { e.stopPropagation(); openEditDialog(discipline); }}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${discipline.is_active ? 'bg-green-500' : 'bg-muted'}`} />
-                                <div>
-                                  <p className="font-medium">{discipline.name}</p>
-                                  {hasBeltSystem(discipline.name) && (
-                                    <Badge variant="outline" className="text-xs mt-1">
-                                      <Award className="w-3 h-3 mr-1" />
-                                      Sistema de Graus
-                                    </Badge>
-                                  )}
-                                </div>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={(e) => { e.stopPropagation(); openDeleteDialog(discipline); }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <Switch
+                              checked={discipline.is_active}
+                              onCheckedChange={() => toggleDisciplineActive(discipline)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+
+          {/* Detail Panel - Ranks */}
+          <div className="space-y-4">
+            {selectedDiscipline ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    {selectedDiscipline.name}
+                    <Badge variant={selectedDiscipline.is_active ? 'default' : 'secondary'}>
+                      {selectedDiscipline.is_active ? 'Ativa' : 'Inativa'}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>{selectedDiscipline.category}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {selectedDiscipline.description || 'Sem descrição disponível'}
+                  </p>
+                  {hasBeltSystem(selectedDiscipline.name) && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Sistema de Graus</Label>
+                        {ranks.length === 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => seedRanksForDiscipline(selectedDiscipline)}
+                            disabled={isSeedingRanks}
+                          >
+                            {isSeedingRanks ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Plus className="w-4 h-4 mr-2" />
+                            )}
+                            Criar Graus Padrão
+                          </Button>
+                        )}
+                      </div>
+                      {ranks.length > 0 ? (
+                        <div className="space-y-2">
+                          {ranks.map(rank => (
+                            <div
+                              key={rank.id}
+                              className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
+                            >
+                              <div
+                                className="w-4 h-4 rounded-full border"
+                                style={{ backgroundColor: rank.color || '#ccc' }}
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{rank.name}</p>
+                                <p className="text-xs text-muted-foreground">{rank.requirements}</p>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => { e.stopPropagation(); openEditDialog(discipline); }}
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive hover:text-destructive"
-                                  onClick={(e) => { e.stopPropagation(); openDeleteDialog(discipline); }}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                                <Switch
-                                  checked={discipline.is_active}
-                                  onCheckedChange={() => toggleDisciplineActive(discipline)}
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                Nível {rank.level}
+                              </Badge>
                             </div>
                           ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-
-              {/* Detail Panel */}
-              <div className="space-y-4">
-                {selectedDiscipline ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        {selectedDiscipline.name}
-                        <Badge variant={selectedDiscipline.is_active ? 'default' : 'secondary'}>
-                          {selectedDiscipline.is_active ? 'Ativa' : 'Inativa'}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>{selectedDiscipline.category}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {selectedDiscipline.description || 'Sem descrição disponível'}
-                      </p>
-                      {hasBeltSystem(selectedDiscipline.name) && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium">Sistema de Graus</Label>
-                            {ranks.length === 0 && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => seedRanksForDiscipline(selectedDiscipline)}
-                                disabled={isSeedingRanks}
-                              >
-                                {isSeedingRanks ? (
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                ) : (
-                                  <Plus className="w-4 h-4 mr-2" />
-                                )}
-                                Criar Graus Padrão
-                              </Button>
-                            )}
-                          </div>
-                          {ranks.length > 0 ? (
-                            <div className="space-y-2">
-                              {ranks.map(rank => (
-                                <div
-                                  key={rank.id}
-                                  className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
-                                >
-                                  <div
-                                    className="w-4 h-4 rounded-full border"
-                                    style={{ backgroundColor: rank.color || '#ccc' }}
-                                  />
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium">{rank.name}</p>
-                                    <p className="text-xs text-muted-foreground">{rank.requirements}</p>
-                                  </div>
-                                  <Badge variant="outline" className="text-xs">
-                                    Nível {rank.level}
-                                  </Badge>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              Ainda sem graus configurados
-                            </p>
-                          )}
-                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Ainda sem graus configurados
+                        </p>
                       )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardContent className="py-12 text-center">
-                      <Settings2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">Selecione uma disciplina para ver detalhes</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Workouts/Classes/Exercises Tab Content */}
-          {['workouts', 'classes', 'exercises'].map((tabKey) => (
-            <TabsContent key={tabKey} value={tabKey} className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="capitalize">
-                    Biblioteca de {tabKey === 'workouts' ? 'Treinos' : tabKey === 'classes' ? 'Aulas' : 'Exercícios'}
-                  </CardTitle>
-                  <CardDescription>
-                    {tabKey === 'workouts' ? 'Treinos' : tabKey === 'classes' ? 'Aulas' : 'Exercícios'} padrão da biblioteca de treino. 
-                    Servem como modelos para criar conteúdo específico do ginásio.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {filteredSeedData.length === 0 ? (
-                    <div className="text-center py-12">
-                      <ListChecks className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">
-                        Nenhum {tabKey === 'workouts' ? 'treino' : tabKey === 'classes' ? 'aula' : 'exercício'} encontrado
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {Object.entries(
-                        filteredSeedData.reduce((acc, item) => {
-                          if (!acc[item.category]) acc[item.category] = [];
-                          acc[item.category].push(item.name);
-                          return acc;
-                        }, {} as Record<string, string[]>)
-                      ).map(([category, items]) => (
-                        <Card key={category} className="border">
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              {CATEGORY_ICONS[category] || <Activity className="w-4 h-4" />}
-                              {category}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <ul className="space-y-1">
-                              {items.map((item, idx) => (
-                                <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                                  {item}
-                                </li>
-                              ))}
-                            </ul>
-                          </CardContent>
-                        </Card>
-                      ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-          ))}
-        </Tabs>
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Settings2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Selecione uma disciplina para ver detalhes</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Create Dialog */}

@@ -31,6 +31,8 @@ export default function Settings() {
   const [paymentReminders, setPaymentReminders] = useState(true);
   const [welcomeEmails, setWelcomeEmails] = useState(true);
   const [reminderDays, setReminderDays] = useState('7');
+  const [timezone, setTimezone] = useState('Africa/Luanda');
+  const [locale, setLocale] = useState('pt-PT');
 
   useEffect(() => {
     if (currentGym) fetchPlans();
@@ -117,6 +119,8 @@ export default function Settings() {
                 paymentReminders,
                 welcomeEmails,
                 reminderDays,
+                timezone,
+                locale,
               }}
               onChange={{
                 setEmailNotifications,
@@ -125,6 +129,8 @@ export default function Settings() {
                 setPaymentReminders,
                 setWelcomeEmails,
                 setReminderDays,
+                setTimezone,
+                setLocale,
               }}
             />
           </TabsContent>
