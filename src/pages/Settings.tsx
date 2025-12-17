@@ -25,6 +25,7 @@ export default function Settings() {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Notification state
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
   const [membershipReminders, setMembershipReminders] = useState(true);
@@ -35,7 +36,11 @@ export default function Settings() {
   const [locale, setLocale] = useState('pt-PT');
 
   useEffect(() => {
-    if (currentGym) fetchPlans();
+    if (!currentGym) return;
+    fetchPlans();
+    loadNotificationSettings();
+    setTimezone(currentGym.timezone || 'Africa/Luanda');
+    setLocale(currentGym.locale || 'pt-PT');
   }, [currentGym]);
 
   const fetchPlans = async () => {
@@ -50,6 +55,59 @@ export default function Settings() {
     setPlans(data || []);
     setLoading(false);
   };
+
+  const loadNotificationSettings = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('gym_notification_settings')
+      .select('*')
+      .eq('gym_id', currentGym.id)
+      .single();
+
+    if (!data) return;
+
+    setEmailNotifications(data.email_notifications);
+    setSmsNotifications(data.sms_notifications);
+    setMembershipReminders(data.membership_reminders);
+    setPaymentReminders(data.payment_reminders);
+    setWelcomeEmails(data.welcome_emails);
+    setReminderDays(String(data.reminder_days));
+    setTimezone(data.timezone || currentGym.timezone || 'Africa/Luanda');
+    setLocale(data.locale || currentGym.locale || 'pt-PT');
+  };
+
+  const persistNotifications = async () => {
+    if (!currentGym) return;
+
+    await supabase
+      .from('gym_notification_settings')
+      .upsert({
+        gym_id: currentGym.id,
+        email_notifications: emailNotifications,
+        sms_notifications: smsNotifications,
+        membership_reminders: membershipReminders,
+        payment_reminders: paymentReminders,
+        welcome_emails: welcomeEmails,
+        reminder_days: parseInt(reminderDays),
+        timezone,
+        locale,
+      });
+  };
+
+  useEffect(() => {
+    if (!currentGym) return;
+    persistNotifications();
+  }, [
+    emailNotifications,
+    smsNotifications,
+    membershipReminders,
+    paymentReminders,
+    welcomeEmails,
+    reminderDays,
+    timezone,
+    locale,
+  ]);
 
   if (!currentGym) {
     return (
@@ -75,26 +133,11 @@ export default function Settings() {
 
         <Tabs defaultValue="general" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-            <TabsTrigger value="general">
-              <Building2 className="w-4 h-4 mr-2" />
-              Geral
-            </TabsTrigger>
-            <TabsTrigger value="plans">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Planos
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="w-4 h-4 mr-2" />
-              Notificações
-            </TabsTrigger>
-            <TabsTrigger value="integrations">
-              <Link2 className="w-4 h-4 mr-2" />
-              Integrações
-            </TabsTrigger>
-            <TabsTrigger value="security">
-              <Shield className="w-4 h-4 mr-2" />
-              Segurança
-            </TabsTrigger>
+            <TabsTrigger value="general"><Building2 className="w-4 h-4 mr-2" />Geral</TabsTrigger>
+            <TabsTrigger value="plans"><CreditCard className="w-4 h-4 mr-2" />Planos</TabsTrigger>
+            <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notificações</TabsTrigger>
+            <TabsTrigger value="integrations"><Link2 className="w-4 h-4 mr-2" />Integrações</TabsTrigger>
+            <TabsTrigger value="security"><Shield className="w-4 h-4 mr-2" />Segurança</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -135,13 +178,8 @@ export default function Settings() {
             />
           </TabsContent>
 
-          <TabsContent value="integrations">
-            <SettingsIntegrations />
-          </TabsContent>
-
-          <TabsContent value="security">
-            <SettingsSecurity />
-          </TabsContent>
+          <TabsContent value="integrations"><SettingsIntegrations /></TabsContent>
+          <TabsContent value="security"><SettingsSecurity /></TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
