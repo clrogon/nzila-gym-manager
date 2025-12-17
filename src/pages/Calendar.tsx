@@ -1,512 +1,171 @@
-import { useState, useEffect } from 'react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, setHours } from 'date-fns';
-import { pt } from 'date-fns/locale';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useGym } from '@/contexts/GymContext';
-import { useRBAC } from '@/hooks/useRBAC';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
-import { RecurringClassForm } from '@/components/calendar/RecurringClassForm';
-import { ClassDetailDialog } from '@/components/calendar/ClassDetailDialog';
-import {
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Users,
-  MapPin,
-  Filter,
-  LayoutGrid,
-  List,
-  Repeat,
-  AlertCircle,
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { addDays, format, isSameDay, parseISO, setHours } from "date-fns";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
-interface ClassEvent {
+interface ClassItem {
   id: string;
-  title: string;
-  description: string | null;
   start_time: string;
   end_time: string;
+  discipline_id: string;
+  class_type: string;
   capacity: number;
-  status: string;
-  is_recurring?: boolean;
-  recurrence_rule?: string;
-  class_type?: { name: string; color: string } | null;
-  location?: { name: string } | null;
-  bookings_count?: number;
 }
 
-interface Discipline {
-  id: string;
-  name: string;
-  category: string | null;
-  is_active: boolean;
+interface BookingCount {
+  class_id: string;
+  count: number;
 }
 
-interface Location {
-  id: string;
-  name: string;
-  capacity?: number;
+interface CalendarProps {
+  weekStart: Date;
+  disciplines: { id: string; name: string; color: string }[];
+  filterDisciplineId?: string | null;
 }
 
-interface Coach {
-  id: string;
-  full_name: string;
-}
+const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 07:00 → 21:00
 
-const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
-
-export default function Calendar() {
-  const { currentGym } = useGym();
-  const { hasPermission } = useRBAC();
-  const [viewMode, setViewMode] = useState<'week' | 'list'>('week');
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [classes, setClasses] = useState<ClassEvent[]>([]);
-  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [coaches, setCoaches] = useState<Coach[]>([]);
+export function Calendar({
+  weekStart,
+  disciplines,
+  filterDisciplineId,
+}: CalendarProps) {
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [filterType, setFilterType] = useState<string>('all');
-  const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
 
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+    [weekStart]
+  );
 
   useEffect(() => {
-    if (currentGym?.id) {
-      fetchClasses();
-      fetchDisciplines();
-      fetchLocations();
-      fetchCoaches();
-    }
-  }, [currentGym?.id, currentDate, filterType]);
+    let cancelled = false;
 
-  const fetchClasses = async () => {
-    if (!currentGym?.id) return;
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('classes')
-        .select(`
-          *,
-          class_type:class_types(name, color),
-          location:locations(name)
-        `)
-        .eq('gym_id', currentGym.id)
-        .gte('start_time', weekStart.toISOString())
-        .lte('start_time', addDays(weekStart, 7).toISOString())
-        .order('start_time');
+    async function load() {
+      setLoading(true);
 
-      if (filterType !== 'all') {
-        query = query.eq('class_type_id', filterType);
+      const { data: classData, error } = await supabase
+        .from("classes")
+        .select("*")
+        .gte("start_time", weekStart.toISOString())
+        .lt("start_time", addDays(weekStart, 7).toISOString());
+
+      if (error) {
+        console.error(error);
+        setLoading(false);
+        return;
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const classIds = classData.map((c) => c.id);
 
-      const classIds = (data || []).map(c => c.id);
-      if (classIds.length > 0) {
-        const { data: bookings } = await supabase
-          .from('class_bookings')
-          .select('class_id')
-          .in('class_id', classIds)
-          .in('status', ['booked', 'confirmed']);
+      const { data: bookings } = await supabase
+        .from("class_bookings")
+        .select("class_id")
+        .in("class_id", classIds)
+        .in("status", ["booked", "confirmed"]);
 
-        const bookingCounts = (bookings || []).reduce((acc, b) => {
-          acc[b.class_id] = (acc[b.class_id] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
+      if (cancelled) return;
 
-        setClasses((data || []).map(c => ({
-          ...c,
-          bookings_count: bookingCounts[c.id] || 0,
-        })));
-      } else {
-        setClasses(data || []);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar aulas:', error);
-    } finally {
+      const counts: Record<string, number> = {};
+      bookings?.forEach((b) => {
+        counts[b.class_id] = (counts[b.class_id] || 0) + 1;
+      });
+
+      setClasses(classData);
+      setBookingCounts(counts);
       setLoading(false);
     }
-  };
 
-  const fetchDisciplines = async () => {
-    if (!currentGym?.id) return;
-    const { data } = await supabase
-      .from('disciplines')
-      .select('*')
-      .eq('gym_id', currentGym.id)
-      .eq('is_active', true);
-    setDisciplines(data || []);
-  };
-
-  const fetchLocations = async () => {
-    if (!currentGym?.id) return;
-    const { data } = await supabase
-      .from('locations')
-      .select('*')
-      .eq('gym_id', currentGym.id)
-      .eq('is_active', true);
-    setLocations(data || []);
-  };
-
-  const fetchCoaches = async () => {
-    if (!currentGym?.id) return;
-    const { data } = await supabase
-      .from('user_roles')
-      .select('user_id, profiles!inner(id, full_name)')
-      .eq('gym_id', currentGym.id)
-      .in('role', ['staff', 'admin', 'gym_owner']);
-    
-    const coachList = (data || [])
-      .filter((r: any) => r.profiles?.full_name)
-      .map((r: any) => ({
-        id: r.user_id,
-        full_name: r.profiles.full_name,
-      }));
-    
-    const uniqueCoaches = coachList.filter((coach, index, self) =>
-      index === self.findIndex((c) => c.id === coach.id)
-    );
-    setCoaches(uniqueCoaches);
-  };
-
-  const getClassesForDay = (day: Date) => {
-    return classes.filter(c => isSameDay(parseISO(c.start_time), day));
-  };
-
-  const getClassStyle = (classEvent: ClassEvent) => {
-    const color = classEvent.class_type?.color || '#3B82F6';
-    return {
-      backgroundColor: `${color}20`,
-      borderLeft: `3px solid ${color}`,
+    load();
+    return () => {
+      cancelled = true;
     };
-  };
+  }, [weekStart]);
 
-  const navigateWeek = (direction: number) => {
-    setCurrentDate(prev => addDays(prev, direction * 7));
-  };
+  function classIntersectsHour(
+    cls: ClassItem,
+    day: Date,
+    hour: number
+  ): boolean {
+    const start = parseISO(cls.start_time);
+    const end = parseISO(cls.end_time);
 
-  const handleClassClick = (classEvent: ClassEvent) => {
-    setSelectedClass(classEvent);
-    setDetailOpen(true);
-  };
+    if (!isSameDay(start, day)) return false;
 
-  const handleCreateSuccess = () => {
-    setIsCreateOpen(false);
-    fetchClasses();
-  };
+    const hourStart = setHours(day, hour);
+    const hourEnd = setHours(day, hour + 1);
 
-  if (!currentGym) {
+    return start < hourEnd && end > hourStart;
+  }
+
+  if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
-        </div>
-      </DashboardLayout>
+      <div className="py-12 text-center text-muted-foreground">
+        Loading classes…
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Calendário</h1>
-            <p className="text-muted-foreground">Agendar e gerir aulas com opções recorrentes</p>
+    <div className="grid grid-cols-8 border rounded-lg overflow-hidden">
+      {/* Time column */}
+      <div className="border-r bg-muted/30">
+        {HOURS.map((h) => (
+          <div
+            key={h}
+            className="h-24 border-b px-2 text-sm text-muted-foreground flex items-start pt-1"
+          >
+            {String(h).padStart(2, "0")}:00
+          </div>
+        ))}
+      </div>
+
+      {weekDays.map((day) => (
+        <div key={day.toISOString()} className="border-r">
+          <div className="text-center py-2 border-b font-medium bg-muted/20">
+            {format(day, "EEE dd")}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filtrar por disciplina" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Aulas</SelectItem>
-                {disciplines.map(discipline => (
-                  <SelectItem key={discipline.id} value={discipline.id}>
-                    <div className="flex items-center gap-2">
-                      {discipline.name}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {HOURS.map((hour) => {
+            const hourClasses = classes.filter((c) => {
+              if (filterDisciplineId && c.discipline_id !== filterDisciplineId)
+                return false;
+              return classIntersectsHour(c, day, hour);
+            });
 
-            {hasPermission('classes:create') && (
-              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Aula
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      Agendar Aula
-                      <Badge variant="secondary" className="text-xs">
-                        <Repeat className="w-3 h-3 mr-1" />
-                        Recorrência Suportada
-                      </Badge>
-                    </DialogTitle>
-                  </DialogHeader>
-                  <RecurringClassForm
-                    disciplines={disciplines}
-                    locations={locations}
-                    coaches={coaches}
-                    onSuccess={handleCreateSuccess}
-                    onCancel={() => setIsCreateOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </div>
-
-        {/* Calendar Navigation */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" onClick={() => navigateWeek(-1)}>
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <h2 className="text-lg font-semibold">
-                  {format(weekStart, 'd MMMM', { locale: pt })} - {format(addDays(weekStart, 6), 'd MMMM yyyy', { locale: pt })}
-                </h2>
-                <Button variant="outline" size="icon" onClick={() => navigateWeek(1)}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>
-                  Hoje
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'week' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('week')}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {viewMode === 'week' ? (
-              <div className="overflow-x-auto">
-                {/* Week Header */}
-                <div className="grid grid-cols-8 border-b">
-                  <div className="p-2 text-xs text-muted-foreground">Hora</div>
-                  {weekDays.map((day) => (
-                    <div
-                      key={day.toISOString()}
-                      className={cn(
-                        'p-2 text-center border-l',
-                        isSameDay(day, new Date()) && 'bg-primary/5'
-                      )}
-                    >
-                      <div className="text-xs text-muted-foreground">{format(day, 'EEE', { locale: pt })}</div>
-                      <div className={cn(
-                        'text-lg font-semibold',
-                        isSameDay(day, new Date()) && 'text-primary'
-                      )}>
-                        {format(day, 'd')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Time Grid */}
-                <div className="relative">
-                  {HOURS.map((hour) => (
-                    <div key={hour} className="grid grid-cols-8 border-b min-h-[60px]">
-                      <div className="p-2 text-xs text-muted-foreground">
-                        {format(setHours(new Date(), hour), 'HH:mm')}
-                      </div>
-                      {weekDays.map((day) => {
-                        const dayClasses = getClassesForDay(day).filter(c => {
-                          const classHour = parseISO(c.start_time).getHours();
-                          return classHour === hour;
-                        });
-
-                        return (
-                          <div
-                            key={`${day.toISOString()}-${hour}`}
-                            className={cn(
-                              'border-l p-1 relative',
-                              isSameDay(day, new Date()) && 'bg-primary/5'
-                            )}
-                          >
-                            {dayClasses.map((classEvent) => (
-                              <div
-                                key={classEvent.id}
-                                className={cn(
-                                  'p-2 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity relative',
-                                  classEvent.status === 'cancelled' && 'opacity-50'
-                                )}
-                                style={getClassStyle(classEvent)}
-                                onClick={() => handleClassClick(classEvent)}
-                              >
-                                <div className="flex items-center gap-1">
-                                  <span className="font-medium truncate">{classEvent.title}</span>
-                                  {classEvent.is_recurring && (
-                                    <Repeat className="w-3 h-3 flex-shrink-0" />
-                                  )}
-                                </div>
-                                <div className="text-muted-foreground">
-                                  {format(parseISO(classEvent.start_time), 'HH:mm')}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {classEvent.location && (
-                                    <span className="flex items-center gap-1 text-muted-foreground">
-                                      <MapPin className="w-3 h-3" />
-                                      {classEvent.location.name}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1 mt-1">
-                                  <Users className="w-3 h-3" />
-                                  <span className={classEvent.bookings_count! >= classEvent.capacity ? 'text-destructive font-medium' : ''}>
-                                    {classEvent.bookings_count || 0}/{classEvent.capacity}
-                                  </span>
-                                  {classEvent.bookings_count! >= classEvent.capacity && (
-                                    <AlertCircle className="w-3 h-3 text-destructive" />
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* List View */
-              <div className="space-y-4">
-                {weekDays.map((day) => {
-                  const dayClasses = getClassesForDay(day);
-                  if (dayClasses.length === 0) return null;
+            return (
+              <div key={hour} className="h-24 border-b relative">
+                {hourClasses.map((c) => {
+                  const discipline = disciplines.find(
+                    (d) => d.id === c.discipline_id
+                  );
+                  const bookings = bookingCounts[c.id] || 0;
 
                   return (
-                    <div key={day.toISOString()}>
-                      <h3 className={cn(
-                        'font-semibold mb-2',
-                        isSameDay(day, new Date()) && 'text-primary'
-                      )}>
-                        {format(day, "EEEE, d 'de' MMMM", { locale: pt })}
-                        {isSameDay(day, new Date()) && (
-                          <Badge variant="secondary" className="ml-2">Hoje</Badge>
-                        )}
-                      </h3>
-                      <div className="space-y-2">
-                        {dayClasses.map((classEvent) => (
-                          <div
-                            key={classEvent.id}
-                            className={cn(
-                              'flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer',
-                              classEvent.status === 'cancelled' && 'opacity-50'
-                            )}
-                            style={{ borderLeftColor: classEvent.class_type?.color || '#3B82F6', borderLeftWidth: 4 }}
-                            onClick={() => handleClassClick(classEvent)}
-                          >
-                            <div className="flex-1">
-                              <div className="font-medium flex items-center gap-2">
-                                {classEvent.title}
-                                {classEvent.is_recurring && (
-                                  <Repeat className="w-4 h-4 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
-                                  {format(parseISO(classEvent.start_time), 'HH:mm')} - {format(parseISO(classEvent.end_time), 'HH:mm')}
-                                </span>
-                                {classEvent.location && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-4 h-4" />
-                                    {classEvent.location.name}
-                                  </span>
-                                )}
-                                <span className={cn(
-                                  'flex items-center gap-1',
-                                  classEvent.bookings_count! >= classEvent.capacity && 'text-destructive'
-                                )}>
-                                  <Users className="w-4 h-4" />
-                                  {classEvent.bookings_count || 0}/{classEvent.capacity}
-                                  {classEvent.bookings_count! >= classEvent.capacity && ' (Cheio)'}
-                                </span>
-                              </div>
-                            </div>
-                            <Badge variant={classEvent.status === 'cancelled' ? 'destructive' : 'secondary'}>
-                              {classEvent.status === 'cancelled' ? 'Cancelado' : classEvent.status === 'active' ? 'Ativo' : classEvent.status}
-                            </Badge>
-                          </div>
-                        ))}
+                    <div
+                      key={c.id}
+                      className={cn(
+                        "absolute inset-1 rounded-md p-2 text-xs text-white shadow",
+                        discipline?.color ?? "bg-gray-500"
+                      )}
+                    >
+                      <div className="font-semibold truncate">
+                        {discipline?.name ?? "Class"}
+                      </div>
+                      <div>
+                        {bookings}/{c.capacity}
                       </div>
                     </div>
                   );
                 })}
-                {classes.length === 0 && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    Nenhuma aula agendada esta semana
-                  </div>
-                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Disciplines Legend */}
-        {disciplines.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Disciplinas</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-4">
-                {disciplines.map((discipline) => (
-                  <div key={discipline.id} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded bg-primary/20" />
-                    <span className="text-sm">{discipline.name}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Class Detail Dialog */}
-      <ClassDetailDialog
-        classEvent={selectedClass}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        onRefresh={fetchClasses}
-      />
-    </DashboardLayout>
+            );
+          })}
+        </div>
+      ))}
+    </div>
   );
 }
