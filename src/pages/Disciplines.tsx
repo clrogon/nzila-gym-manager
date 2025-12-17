@@ -675,5 +675,3 @@ export default function Disciplines() {
     </DashboardLayout>
   );
 }
-there are tabs with no function or duplicated, like exercises, workout, since tey already exits umder library
-
