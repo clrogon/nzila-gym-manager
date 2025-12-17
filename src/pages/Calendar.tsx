@@ -65,14 +65,6 @@ const HOURS = Array.from({ length: 16 }, (_, i) => i + 6);
 export default function Calendar() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-
-  const timezone = currentGym?.timezone || 'Africa/Luanda';
-
-  const toGymDate = (date: string | Date) => {
-    const d = typeof date === 'string' ? parseISO(date) : date;
-    return new Date(d.toLocaleString('en-US', { timeZone: timezone }));
-  };
-
   const [viewMode, setViewMode] = useState<'week' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [classes, setClasses] = useState<ClassEvent[]>([]);
@@ -85,7 +77,7 @@ export default function Calendar() {
   const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const weekStart = startOfWeek(toGymDate(currentDate), { weekStartsOn: 1 });
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   useEffect(() => {
@@ -140,6 +132,8 @@ export default function Calendar() {
       } else {
         setClasses(data || []);
       }
+    } catch (error) {
+      console.error('Erro ao buscar aulas:', error);
     } finally {
       setLoading(false);
     }
@@ -172,21 +166,35 @@ export default function Calendar() {
       .select('user_id, profiles!inner(id, full_name)')
       .eq('gym_id', currentGym.id)
       .in('role', ['staff', 'admin', 'gym_owner']);
-
-    const unique = new Map<string, Coach>();
-    (data || []).forEach((r: any) => {
-      if (r.profiles?.full_name) {
-        unique.set(r.user_id, { id: r.user_id, full_name: r.profiles.full_name });
-      }
-    });
-    setCoaches(Array.from(unique.values()));
+    
+    const coachList = (data || [])
+      .filter((r: any) => r.profiles?.full_name)
+      .map((r: any) => ({
+        id: r.user_id,
+        full_name: r.profiles.full_name,
+      }));
+    
+    const uniqueCoaches = coachList.filter((coach, index, self) =>
+      index === self.findIndex((c) => c.id === coach.id)
+    );
+    setCoaches(uniqueCoaches);
   };
 
-  const getClassesForDay = (day: Date) =>
-    classes.filter(c => isSameDay(toGymDate(c.start_time), day));
+  const getClassesForDay = (day: Date) => {
+    return classes.filter(c => isSameDay(parseISO(c.start_time), day));
+  };
 
-  const navigateWeek = (direction: number) =>
+  const getClassStyle = (classEvent: ClassEvent) => {
+    const color = classEvent.class_type?.color || '#3B82F6';
+    return {
+      backgroundColor: `${color}20`,
+      borderLeft: `3px solid ${color}`,
+    };
+  };
+
+  const navigateWeek = (direction: number) => {
     setCurrentDate(prev => addDays(prev, direction * 7));
+  };
 
   const handleClassClick = (classEvent: ClassEvent) => {
     setSelectedClass(classEvent);
@@ -210,8 +218,289 @@ export default function Calendar() {
 
   return (
     <DashboardLayout>
-      {/* resto do JSX permanece IDENTICO ao teu original,
-          apenas usando toGymDate(...) nos format/compare */}
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Calendário</h1>
+            <p className="text-muted-foreground">Agendar e gerir aulas com opções recorrentes</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-[180px]">
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filtrar por disciplina" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Aulas</SelectItem>
+                {disciplines.map(discipline => (
+                  <SelectItem key={discipline.id} value={discipline.id}>
+                    <div className="flex items-center gap-2">
+                      {discipline.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasPermission('classes:create') && (
+              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Aula
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      Agendar Aula
+                      <Badge variant="secondary" className="text-xs">
+                        <Repeat className="w-3 h-3 mr-1" />
+                        Recorrência Suportada
+                      </Badge>
+                    </DialogTitle>
+                  </DialogHeader>
+                  <RecurringClassForm
+                    disciplines={disciplines}
+                    locations={locations}
+                    coaches={coaches}
+                    onSuccess={handleCreateSuccess}
+                    onCancel={() => setIsCreateOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        </div>
+
+        {/* Calendar Navigation */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" onClick={() => navigateWeek(-1)}>
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-lg font-semibold">
+                  {format(weekStart, 'd MMMM', { locale: pt })} - {format(addDays(weekStart, 6), 'd MMMM yyyy', { locale: pt })}
+                </h2>
+                <Button variant="outline" size="icon" onClick={() => navigateWeek(1)}>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>
+                  Hoje
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('week')}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            {viewMode === 'week' ? (
+              <div className="overflow-x-auto">
+                {/* Week Header */}
+                <div className="grid grid-cols-8 border-b">
+                  <div className="p-2 text-xs text-muted-foreground">Hora</div>
+                  {weekDays.map((day) => (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        'p-2 text-center border-l',
+                        isSameDay(day, new Date()) && 'bg-primary/5'
+                      )}
+                    >
+                      <div className="text-xs text-muted-foreground">{format(day, 'EEE', { locale: pt })}</div>
+                      <div className={cn(
+                        'text-lg font-semibold',
+                        isSameDay(day, new Date()) && 'text-primary'
+                      )}>
+                        {format(day, 'd')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Time Grid */}
+                <div className="relative">
+                  {HOURS.map((hour) => (
+                    <div key={hour} className="grid grid-cols-8 border-b min-h-[60px]">
+                      <div className="p-2 text-xs text-muted-foreground">
+                        {format(setHours(new Date(), hour), 'HH:mm')}
+                      </div>
+                      {weekDays.map((day) => {
+                        const dayClasses = getClassesForDay(day).filter(c => {
+                          const classHour = parseISO(c.start_time).getHours();
+                          return classHour === hour;
+                        });
+
+                        return (
+                          <div
+                            key={`${day.toISOString()}-${hour}`}
+                            className={cn(
+                              'border-l p-1 relative',
+                              isSameDay(day, new Date()) && 'bg-primary/5'
+                            )}
+                          >
+                            {dayClasses.map((classEvent) => (
+                              <div
+                                key={classEvent.id}
+                                className={cn(
+                                  'p-2 rounded text-xs mb-1 cursor-pointer hover:opacity-80 transition-opacity relative',
+                                  classEvent.status === 'cancelled' && 'opacity-50'
+                                )}
+                                style={getClassStyle(classEvent)}
+                                onClick={() => handleClassClick(classEvent)}
+                              >
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium truncate">{classEvent.title}</span>
+                                  {classEvent.is_recurring && (
+                                    <Repeat className="w-3 h-3 flex-shrink-0" />
+                                  )}
+                                </div>
+                                <div className="text-muted-foreground">
+                                  {format(parseISO(classEvent.start_time), 'HH:mm')}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {classEvent.location && (
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <MapPin className="w-3 h-3" />
+                                      {classEvent.location.name}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Users className="w-3 h-3" />
+                                  <span className={classEvent.bookings_count! >= classEvent.capacity ? 'text-destructive font-medium' : ''}>
+                                    {classEvent.bookings_count || 0}/{classEvent.capacity}
+                                  </span>
+                                  {classEvent.bookings_count! >= classEvent.capacity && (
+                                    <AlertCircle className="w-3 h-3 text-destructive" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* List View */
+              <div className="space-y-4">
+                {weekDays.map((day) => {
+                  const dayClasses = getClassesForDay(day);
+                  if (dayClasses.length === 0) return null;
+
+                  return (
+                    <div key={day.toISOString()}>
+                      <h3 className={cn(
+                        'font-semibold mb-2',
+                        isSameDay(day, new Date()) && 'text-primary'
+                      )}>
+                        {format(day, "EEEE, d 'de' MMMM", { locale: pt })}
+                        {isSameDay(day, new Date()) && (
+                          <Badge variant="secondary" className="ml-2">Hoje</Badge>
+                        )}
+                      </h3>
+                      <div className="space-y-2">
+                        {dayClasses.map((classEvent) => (
+                          <div
+                            key={classEvent.id}
+                            className={cn(
+                              'flex items-center gap-4 p-4 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer',
+                              classEvent.status === 'cancelled' && 'opacity-50'
+                            )}
+                            style={{ borderLeftColor: classEvent.class_type?.color || '#3B82F6', borderLeftWidth: 4 }}
+                            onClick={() => handleClassClick(classEvent)}
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium flex items-center gap-2">
+                                {classEvent.title}
+                                {classEvent.is_recurring && (
+                                  <Repeat className="w-4 h-4 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {format(parseISO(classEvent.start_time), 'HH:mm')} - {format(parseISO(classEvent.end_time), 'HH:mm')}
+                                </span>
+                                {classEvent.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-4 h-4" />
+                                    {classEvent.location.name}
+                                  </span>
+                                )}
+                                <span className={cn(
+                                  'flex items-center gap-1',
+                                  classEvent.bookings_count! >= classEvent.capacity && 'text-destructive'
+                                )}>
+                                  <Users className="w-4 h-4" />
+                                  {classEvent.bookings_count || 0}/{classEvent.capacity}
+                                  {classEvent.bookings_count! >= classEvent.capacity && ' (Cheio)'}
+                                </span>
+                              </div>
+                            </div>
+                            <Badge variant={classEvent.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                              {classEvent.status === 'cancelled' ? 'Cancelado' : classEvent.status === 'active' ? 'Ativo' : classEvent.status}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                {classes.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Nenhuma aula agendada esta semana
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Disciplines Legend */}
+        {disciplines.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Disciplinas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-4">
+                {disciplines.map((discipline) => (
+                  <div key={discipline.id} className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-primary/20" />
+                    <span className="text-sm">{discipline.name}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Class Detail Dialog */}
       <ClassDetailDialog
         classEvent={selectedClass}
         open={detailOpen}
