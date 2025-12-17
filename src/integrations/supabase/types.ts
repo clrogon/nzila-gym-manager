@@ -288,6 +288,7 @@ export type Database = {
           coach_id: string | null
           created_at: string
           description: string | null
+          discipline_id: string | null
           end_time: string
           gym_id: string
           id: string
@@ -306,6 +307,7 @@ export type Database = {
           coach_id?: string | null
           created_at?: string
           description?: string | null
+          discipline_id?: string | null
           end_time: string
           gym_id: string
           id?: string
@@ -324,6 +326,7 @@ export type Database = {
           coach_id?: string | null
           created_at?: string
           description?: string | null
+          discipline_id?: string | null
           end_time?: string
           gym_id?: string
           id?: string
@@ -342,6 +345,13 @@ export type Database = {
             columns: ["class_type_id"]
             isOneToOne: false
             referencedRelation: "class_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
             referencedColumns: ["id"]
           },
           {
