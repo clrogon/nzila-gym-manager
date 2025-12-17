@@ -42,12 +42,11 @@ interface ClassEvent {
   bookings_count?: number;
 }
 
-interface ClassType {
+interface Discipline {
   id: string;
   name: string;
-  color: string;
-  duration_minutes: number;
-  capacity: number;
+  category: string | null;
+  is_active: boolean;
 }
 
 interface Location {
@@ -69,7 +68,7 @@ export default function Calendar() {
   const [viewMode, setViewMode] = useState<'week' | 'list'>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [classes, setClasses] = useState<ClassEvent[]>([]);
-  const [classTypes, setClassTypes] = useState<ClassType[]>([]);
+  const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +83,7 @@ export default function Calendar() {
   useEffect(() => {
     if (currentGym?.id) {
       fetchClasses();
-      fetchClassTypes();
+      fetchDisciplines();
       fetchLocations();
       fetchCoaches();
     }
@@ -140,14 +139,14 @@ export default function Calendar() {
     }
   };
 
-  const fetchClassTypes = async () => {
+  const fetchDisciplines = async () => {
     if (!currentGym?.id) return;
     const { data } = await supabase
-      .from('class_types')
+      .from('disciplines')
       .select('*')
       .eq('gym_id', currentGym.id)
       .eq('is_active', true);
-    setClassTypes(data || []);
+    setDisciplines(data || []);
   };
 
   const fetchLocations = async () => {
@@ -231,15 +230,14 @@ export default function Calendar() {
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filtrar por tipo" />
+                <SelectValue placeholder="Filtrar por disciplina" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as Aulas</SelectItem>
-                {classTypes.map(type => (
-                  <SelectItem key={type.id} value={type.id}>
+                {disciplines.map(discipline => (
+                  <SelectItem key={discipline.id} value={discipline.id}>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: type.color }} />
-                      {type.name}
+                      {discipline.name}
                     </div>
                   </SelectItem>
                 ))}
@@ -265,7 +263,7 @@ export default function Calendar() {
                     </DialogTitle>
                   </DialogHeader>
                   <RecurringClassForm
-                    classTypes={classTypes}
+                    disciplines={disciplines}
                     locations={locations}
                     coaches={coaches}
                     onSuccess={handleCreateSuccess}
@@ -482,22 +480,18 @@ export default function Calendar() {
           </CardContent>
         </Card>
 
-        {/* Class Types Legend */}
-        {classTypes.length > 0 && (
+        {/* Disciplines Legend */}
+        {disciplines.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Tipos de Aula</CardTitle>
+              <CardTitle className="text-sm">Disciplinas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-4">
-                {classTypes.map((type) => (
-                  <div key={type.id} className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded"
-                      style={{ backgroundColor: type.color }}
-                    />
-                    <span className="text-sm">{type.name}</span>
-                    <span className="text-xs text-muted-foreground">({type.duration_minutes} min)</span>
+                {disciplines.map((discipline) => (
+                  <div key={discipline.id} className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded bg-primary/20" />
+                    <span className="text-sm">{discipline.name}</span>
                   </div>
                 ))}
               </div>

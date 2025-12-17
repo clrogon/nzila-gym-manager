@@ -16,12 +16,11 @@ import { CalendarIcon, AlertTriangle, Repeat } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-interface ClassType {
+interface Discipline {
   id: string;
   name: string;
-  color: string;
-  duration_minutes: number;
-  capacity: number;
+  category: string | null;
+  is_active: boolean;
 }
 
 interface Location {
@@ -36,7 +35,7 @@ interface Coach {
 }
 
 interface Props {
-  classTypes: ClassType[];
+  disciplines: Discipline[];
   locations: Location[];
   coaches: Coach[];
   onSuccess: () => void;
@@ -51,7 +50,7 @@ interface ConflictInfo {
   coachName?: string;
 }
 
-export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, onCancel }: Props) {
+export function RecurringClassForm({ disciplines, locations, coaches, onSuccess, onCancel }: Props) {
   const { currentGym } = useGym();
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
@@ -59,7 +58,7 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    class_type_id: '',
+    discipline_id: '',
     location_id: '',
     coach_id: '',
     start_date: new Date(),
@@ -126,8 +125,8 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
   };
 
   const generateClassInstances = () => {
-    const selectedType = classTypes.find(t => t.id === formData.class_type_id);
-    const durationMinutes = selectedType?.duration_minutes || 60;
+    const selectedDiscipline = disciplines.find(d => d.id === formData.discipline_id);
+    const durationMinutes = 60; // Default duration
     const [hours, minutes] = formData.start_time.split(':').map(Number);
     
     const instances: { start_time: Date; end_time: Date; location_id: string }[] = [];
@@ -159,7 +158,7 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
   const handleSubmit = async () => {
     if (!currentGym?.id) return;
     
-    const selectedType = classTypes.find(t => t.id === formData.class_type_id);
+    const selectedDiscipline = disciplines.find(d => d.id === formData.discipline_id);
     const instances = generateClassInstances();
     
     if (instances.length === 0) {
@@ -188,9 +187,9 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
       
       const classesToInsert = instances.map((inst, idx) => ({
         gym_id: currentGym.id,
-        title: formData.title || selectedType?.name || 'Class',
+        title: formData.title || selectedDiscipline?.name || 'Class',
         description: formData.description || null,
-        class_type_id: formData.class_type_id || null,
+        discipline_id: formData.discipline_id || null,
         location_id: formData.location_id || null,
         coach_id: formData.coach_id || null,
         start_time: inst.start_time.toISOString(),
@@ -227,30 +226,26 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Class Type</Label>
+        <Label>Disciplina</Label>
         <Select
-          value={formData.class_type_id}
+          value={formData.discipline_id}
           onValueChange={(v) => {
-            const type = classTypes.find(t => t.id === v);
+            const discipline = disciplines.find(d => d.id === v);
             setFormData(prev => ({
               ...prev,
-              class_type_id: v,
-              title: type?.name || prev.title,
-              capacity: type?.capacity || prev.capacity,
+              discipline_id: v,
+              title: discipline?.name || prev.title,
             }));
             setConflicts([]);
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder="Selecionar disciplina" />
           </SelectTrigger>
           <SelectContent>
-            {classTypes.map(type => (
-              <SelectItem key={type.id} value={type.id}>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: type.color }} />
-                  {type.name} ({type.duration_minutes} min)
-                </div>
+            {disciplines.map(discipline => (
+              <SelectItem key={discipline.id} value={discipline.id}>
+                {discipline.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -450,10 +445,10 @@ export function RecurringClassForm({ classTypes, locations, coaches, onSuccess, 
 
       <div className="flex justify-end gap-2 pt-4">
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          Cancelar
         </Button>
-        <Button onClick={handleSubmit} disabled={loading || !formData.class_type_id}>
-          {loading ? 'Creating...' : `Create ${instanceCount > 1 ? `${instanceCount} Classes` : 'Class'}`}
+        <Button onClick={handleSubmit} disabled={loading || !formData.discipline_id}>
+          {loading ? 'A criar...' : `Criar ${instanceCount > 1 ? `${instanceCount} Aulas` : 'Aula'}`}
         </Button>
       </div>
     </div>
