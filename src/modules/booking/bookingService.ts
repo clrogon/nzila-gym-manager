@@ -1,5 +1,28 @@
 import { Booking, BookingStatus } from "./types";
 import { db } from "@/lib/db"; // your DB abstraction
+import { eventBus } from "@/modules/events/eventBus";
+import { BookingPromotedEvent } from "./events";
+
+// ...
+
+if (next) {
+  await tx.booking.update({
+    where: { id: next.id },
+    data: {
+      status: "confirmed",
+      promotedAt: new Date(),
+    },
+  });
+
+  await eventBus.emit<BookingPromotedEvent>(
+    "booking.promoted",
+    {
+      bookingId: next.id,
+      memberId: next.memberId,
+      classId: next.classId,
+    }
+  );
+}
 
 export class BookingService {
   /**
