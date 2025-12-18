@@ -20,6 +20,16 @@ interface MembershipPlan {
   is_active: boolean;
 }
 
+interface NotificationSettings {
+  email_notifications?: boolean;
+  sms_notifications?: boolean;
+  membership_reminders?: boolean;
+  payment_reminders?: boolean;
+  welcome_emails?: boolean;
+  reminder_days?: number;
+  locale?: string;
+}
+
 export default function Settings() {
   const { currentGym, refreshGyms } = useGym();
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
@@ -40,7 +50,6 @@ export default function Settings() {
     fetchPlans();
     loadNotificationSettings();
     setTimezone(currentGym.timezone || 'Africa/Luanda');
-    setLocale(currentGym.locale || 'pt-PT');
   }, [currentGym]);
 
   const fetchPlans = async () => {
@@ -59,45 +68,46 @@ export default function Settings() {
   const loadNotificationSettings = async () => {
     if (!currentGym) return;
 
-    const { data } = await supabase
-      .from('gym_notification_settings')
-      .select('*')
-      .eq('gym_id', currentGym.id)
-      .single();
+    // Load from gym's settings JSON field
+    const settings = currentGym.settings as NotificationSettings | null;
+    if (!settings) return;
 
-    if (!data) return;
-
-    setEmailNotifications(data.email_notifications);
-    setSmsNotifications(data.sms_notifications);
-    setMembershipReminders(data.membership_reminders);
-    setPaymentReminders(data.payment_reminders);
-    setWelcomeEmails(data.welcome_emails);
-    setReminderDays(String(data.reminder_days));
-    setTimezone(data.timezone || currentGym.timezone || 'Africa/Luanda');
-    setLocale(data.locale || currentGym.locale || 'pt-PT');
+    if (settings.email_notifications !== undefined) setEmailNotifications(settings.email_notifications);
+    if (settings.sms_notifications !== undefined) setSmsNotifications(settings.sms_notifications);
+    if (settings.membership_reminders !== undefined) setMembershipReminders(settings.membership_reminders);
+    if (settings.payment_reminders !== undefined) setPaymentReminders(settings.payment_reminders);
+    if (settings.welcome_emails !== undefined) setWelcomeEmails(settings.welcome_emails);
+    if (settings.reminder_days !== undefined) setReminderDays(String(settings.reminder_days));
+    if (settings.locale !== undefined) setLocale(settings.locale);
   };
 
   const persistNotifications = async () => {
     if (!currentGym) return;
 
+    const currentSettings = (currentGym.settings as NotificationSettings) || {};
+    const newSettings = {
+      ...currentSettings,
+      email_notifications: emailNotifications,
+      sms_notifications: smsNotifications,
+      membership_reminders: membershipReminders,
+      payment_reminders: paymentReminders,
+      welcome_emails: welcomeEmails,
+      reminder_days: parseInt(reminderDays),
+      locale,
+    };
+
     await supabase
-      .from('gym_notification_settings')
-      .upsert({
-        gym_id: currentGym.id,
-        email_notifications: emailNotifications,
-        sms_notifications: smsNotifications,
-        membership_reminders: membershipReminders,
-        payment_reminders: paymentReminders,
-        welcome_emails: welcomeEmails,
-        reminder_days: parseInt(reminderDays),
-        timezone,
-        locale,
-      });
+      .from('gyms')
+      .update({ settings: newSettings, timezone })
+      .eq('id', currentGym.id);
   };
 
   useEffect(() => {
     if (!currentGym) return;
-    persistNotifications();
+    const timeout = setTimeout(() => {
+      persistNotifications();
+    }, 500); // Debounce to avoid too many updates
+    return () => clearTimeout(timeout);
   }, [
     emailNotifications,
     smsNotifications,
