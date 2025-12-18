@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { format, addDays, addWeeks, setHours, setMinutes, parseISO } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { format, addDays, setHours, setMinutes } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useGym } from '@/contexts/GymContext';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { CalendarIcon, AlertTriangle, Repeat } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, Repeat, Dumbbell } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -32,6 +32,13 @@ interface Location {
 interface Coach {
   id: string;
   full_name: string;
+}
+
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  category: string | null;
+  difficulty: string | null;
 }
 
 interface Props {
@@ -54,6 +61,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
   const { currentGym } = useGym();
   const [loading, setLoading] = useState(false);
   const [conflicts, setConflicts] = useState<ConflictInfo[]>([]);
+  const [workoutTemplates, setWorkoutTemplates] = useState<WorkoutTemplate[]>([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -61,14 +69,31 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
     discipline_id: '',
     location_id: '',
     coach_id: '',
+    workout_template_id: '',
     start_date: new Date(),
     start_time: '09:00',
     capacity: 20,
     is_recurring: false,
-    recurrence_type: 'weekly', // daily, weekly
-    selected_days: [] as number[], // 0=Mon, 6=Sun
+    recurrence_type: 'weekly',
+    selected_days: [] as number[],
     duration_weeks: 4,
   });
+
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchWorkoutTemplates();
+    }
+  }, [currentGym?.id]);
+
+  const fetchWorkoutTemplates = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('id, name, category, difficulty')
+      .eq('gym_id', currentGym.id)
+      .order('name');
+    setWorkoutTemplates(data || []);
+  };
 
   const checkConflicts = async (classesToCreate: { start_time: Date; end_time: Date; location_id: string }[]) => {
     if (!currentGym?.id) return [];
@@ -76,7 +101,6 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
     const foundConflicts: ConflictInfo[] = [];
     
     for (const cls of classesToCreate) {
-      // Check location conflicts
       if (formData.location_id) {
         const { data: locationConflicts } = await supabase
           .from('classes')
@@ -97,7 +121,6 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
         }
       }
       
-      // Check coach conflicts
       if (formData.coach_id) {
         const { data: coachConflicts } = await supabase
           .from('classes')
@@ -126,7 +149,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
 
   const generateClassInstances = () => {
     const selectedDiscipline = disciplines.find(d => d.id === formData.discipline_id);
-    const durationMinutes = 60; // Default duration
+    const durationMinutes = 60;
     const [hours, minutes] = formData.start_time.split(':').map(Number);
     
     const instances: { start_time: Date; end_time: Date; location_id: string }[] = [];
@@ -141,7 +164,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
       
       for (let day = 0; day < totalDays; day++) {
         const currentDate = addDays(formData.start_date, day);
-        const dayOfWeek = (currentDate.getDay() + 6) % 7; // Convert to Mon=0
+        const dayOfWeek = (currentDate.getDay() + 6) % 7;
         
         if (formData.recurrence_type === 'daily' || formData.selected_days.includes(dayOfWeek)) {
           const startTime = setMinutes(setHours(currentDate, hours), minutes);
@@ -168,7 +191,6 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
     
     setLoading(true);
     
-    // Check for conflicts
     const foundConflicts = await checkConflicts(instances);
     if (foundConflicts.length > 0) {
       setConflicts(foundConflicts);
@@ -192,11 +214,12 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
         discipline_id: formData.discipline_id || null,
         location_id: formData.location_id || null,
         coach_id: formData.coach_id || null,
+        workout_template_id: formData.workout_template_id || null,
         start_time: inst.start_time.toISOString(),
         end_time: inst.end_time.toISOString(),
         capacity: formData.capacity,
         is_recurring: formData.is_recurring,
-        recurrence_rule: idx === 0 ? recurrenceRule : null, // Only store rule on first instance
+        recurrence_rule: idx === 0 ? recurrenceRule : null,
       }));
       
       const { error } = await supabase.from('classes').insert(classesToInsert);
@@ -242,7 +265,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
           <SelectTrigger>
             <SelectValue placeholder="Selecionar disciplina" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background border z-50">
             {disciplines.map(discipline => (
               <SelectItem key={discipline.id} value={discipline.id}>
                 {discipline.name}
@@ -271,7 +294,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
                 {format(formData.start_date, 'PPP')}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-background border z-50" align="start">
               <Calendar
                 mode="single"
                 selected={formData.start_date}
@@ -312,7 +335,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
             <SelectTrigger>
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background border z-50">
               {locations.map(loc => (
                 <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
               ))}
@@ -341,13 +364,41 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
           <SelectTrigger>
             <SelectValue placeholder="Select coach" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background border z-50">
             <SelectItem value="">No coach assigned</SelectItem>
             {coaches.map(coach => (
               <SelectItem key={coach.id} value={coach.id}>{coach.full_name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Workout Template Dropdown */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2">
+          <Dumbbell className="w-4 h-4" />
+          Workout Template (optional)
+        </Label>
+        <Select
+          value={formData.workout_template_id}
+          onValueChange={(v) => setFormData(prev => ({ ...prev, workout_template_id: v }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Link a workout template" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border z-50">
+            <SelectItem value="">No workout linked</SelectItem>
+            {workoutTemplates.map(template => (
+              <SelectItem key={template.id} value={template.id}>
+                {template.name}
+                {template.difficulty && ` (${template.difficulty})`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Link a workout template to this class for members to follow
+        </p>
       </div>
 
       <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -397,7 +448,7 @@ export function RecurringClassForm({ disciplines, locations, coaches, onSuccess,
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background border z-50">
                 {[1, 2, 4, 6, 8, 12].map(w => (
                   <SelectItem key={w} value={String(w)}>{w} week{w > 1 ? 's' : ''}</SelectItem>
                 ))}

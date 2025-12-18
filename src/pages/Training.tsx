@@ -3,10 +3,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExerciseLibrary } from '@/components/training/ExerciseLibrary';
-import { WorkoutTemplateBuilder } from '@/components/training/WorkoutTemplateBuilder';
 import { WorkoutAssignment } from '@/components/training/WorkoutAssignment';
 import { RankPromotion } from '@/components/training/RankPromotion';
 import { PromotionCriteria } from '@/components/training/PromotionCriteria';
@@ -27,7 +25,7 @@ import {
 export default function Training() {
   const { currentGym } = useGym();
   const { hasPermission } = useRBAC();
-  const [activeTab, setActiveTab] = useState('exercises');
+  const [activeTab, setActiveTab] = useState('library');
   const [stats, setStats] = useState({
     exercises: 0,
     templates: 0,
@@ -133,14 +131,10 @@ export default function Training() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="exercises" className="flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />
-              <span className="hidden sm:inline">Exercícios</span>
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
-              <Dumbbell className="w-4 h-4" />
-              <span className="hidden sm:inline">Modelos</span>
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+            <TabsTrigger value="library" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Biblioteca</span>
             </TabsTrigger>
             <TabsTrigger value="assignments" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />
@@ -158,22 +152,14 @@ export default function Training() {
               <Target className="w-4 h-4" />
               <span className="hidden sm:inline">Critérios</span>
             </TabsTrigger>
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Biblioteca</span>
-            </TabsTrigger>
             <TabsTrigger value="custom" className="flex items-center gap-2">
               <Settings2 className="w-4 h-4" />
               <span className="hidden sm:inline">Personalizado</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="exercises" className="mt-6">
-            <ExerciseLibrary />
-          </TabsContent>
-
-          <TabsContent value="templates" className="mt-6">
-            <WorkoutTemplateBuilder />
+          <TabsContent value="library" className="mt-6">
+            <TrainingLibraryView />
           </TabsContent>
 
           <TabsContent value="assignments" className="mt-6">
@@ -190,10 +176,6 @@ export default function Training() {
 
           <TabsContent value="criteria" className="mt-6">
             <PromotionCriteria />
-          </TabsContent>
-
-          <TabsContent value="library" className="mt-6">
-            <TrainingLibraryView />
           </TabsContent>
 
           <TabsContent value="custom" className="mt-6">
