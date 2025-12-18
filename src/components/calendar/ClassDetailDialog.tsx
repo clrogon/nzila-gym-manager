@@ -4,11 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGym } from '@/contexts/GymContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Clock, MapPin, Users, User, AlertCircle, CheckCircle, XCircle, UserPlus } from 'lucide-react';
+import { 
+  Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus, 
+  Dumbbell, Edit2, Save, Loader2 
+} from 'lucide-react';
 
 interface ClassEvent {
   id: string;
@@ -20,6 +28,10 @@ interface ClassEvent {
   status: string;
   is_recurring?: boolean;
   recurrence_rule?: string;
+  discipline_id?: string | null;
+  workout_template_id?: string | null;
+  coach_id?: string | null;
+  location_id?: string | null;
   class_type?: { name: string; color: string } | null;
   location?: { name: string } | null;
 }
@@ -31,6 +43,23 @@ interface Booking {
   booked_at: string;
   checked_in_at: string | null;
   member?: { full_name: string; email: string | null } | null;
+}
+
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  difficulty: string | null;
+  estimated_duration: number | null;
+  exercises: WorkoutExercise[] | null;
+}
+
+interface WorkoutExercise {
+  name: string;
+  sets?: number;
+  reps?: string;
+  notes?: string;
 }
 
 interface Props {
@@ -45,11 +74,31 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [members, setMembers] = useState<{ id: string; full_name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [workoutTemplate, setWorkoutTemplate] = useState<WorkoutTemplate | null>(null);
+  const [workoutTemplates, setWorkoutTemplates] = useState<WorkoutTemplate[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    capacity: 20,
+    workout_template_id: '',
+  });
 
   useEffect(() => {
     if (open && classEvent) {
       fetchBookings();
       fetchMembers();
+      fetchWorkoutTemplate();
+      fetchAllWorkoutTemplates();
+      setEditForm({
+        title: classEvent.title,
+        description: classEvent.description || '',
+        capacity: classEvent.capacity,
+        workout_template_id: classEvent.workout_template_id || '',
+      });
+      setIsEditing(false);
     }
   }, [open, classEvent?.id]);
 
@@ -71,6 +120,40 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
       .eq('gym_id', currentGym.id)
       .eq('status', 'active');
     setMembers(data || []);
+  };
+
+  const fetchWorkoutTemplate = async () => {
+    if (!classEvent?.workout_template_id) {
+      setWorkoutTemplate(null);
+      return;
+    }
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('*')
+      .eq('id', classEvent.workout_template_id)
+      .maybeSingle();
+    
+    if (data) {
+      setWorkoutTemplate({
+        ...data,
+        exercises: Array.isArray(data.exercises) ? (data.exercises as unknown as WorkoutExercise[]) : null,
+      });
+    } else {
+      setWorkoutTemplate(null);
+    }
+  };
+
+  const fetchAllWorkoutTemplates = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('id, name, description, category, difficulty, estimated_duration, exercises')
+      .eq('gym_id', currentGym.id)
+      .order('name');
+    setWorkoutTemplates(data?.map(t => ({
+      ...t,
+      exercises: Array.isArray(t.exercises) ? (t.exercises as unknown as WorkoutExercise[]) : null,
+    })) || []);
   };
 
   const confirmedBookings = bookings.filter(b => b.status === 'booked' || b.status === 'confirmed');
@@ -118,7 +201,6 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
         .eq('id', bookingId);
       if (error) throw error;
       
-      // Promote first waitlist member if any
       if (waitlistBookings.length > 0) {
         await supabase
           .from('class_bookings')
@@ -150,6 +232,39 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!classEvent) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('classes')
+        .update({
+          title: editForm.title,
+          description: editForm.description || null,
+          capacity: editForm.capacity,
+          workout_template_id: editForm.workout_template_id || null,
+        })
+        .eq('id', classEvent.id);
+      
+      if (error) throw error;
+      toast.success('Class updated successfully');
+      setIsEditing(false);
+      onRefresh();
+      
+      // Refresh workout template display
+      if (editForm.workout_template_id) {
+        const selected = workoutTemplates.find(t => t.id === editForm.workout_template_id);
+        setWorkoutTemplate(selected || null);
+      } else {
+        setWorkoutTemplate(null);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update class');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!classEvent) return null;
 
   const availableMembersForBooking = members.filter(
@@ -158,7 +273,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div
@@ -205,12 +320,20 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
           )}
 
           <Tabs defaultValue="bookings">
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="bookings">
                 Bookings ({confirmedBookings.length})
               </TabsTrigger>
               <TabsTrigger value="waitlist">
                 Waitlist ({waitlistBookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="workout">
+                <Dumbbell className="w-4 h-4 mr-1" />
+                Workout
+              </TabsTrigger>
+              <TabsTrigger value="edit">
+                <Edit2 className="w-4 h-4 mr-1" />
+                Edit
               </TabsTrigger>
               <TabsTrigger value="add">Add Member</TabsTrigger>
             </TabsList>
@@ -299,6 +422,149 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
                   </div>
                 )}
               </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="workout">
+              <ScrollArea className="h-[300px]">
+                {workoutTemplate ? (
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Dumbbell className="w-5 h-5 text-primary" />
+                        {workoutTemplate.name}
+                      </CardTitle>
+                      <div className="flex gap-2 mt-2">
+                        {workoutTemplate.difficulty && (
+                          <Badge variant="outline">{workoutTemplate.difficulty}</Badge>
+                        )}
+                        {workoutTemplate.category && (
+                          <Badge variant="secondary">{workoutTemplate.category}</Badge>
+                        )}
+                        {workoutTemplate.estimated_duration && (
+                          <Badge variant="outline">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {workoutTemplate.estimated_duration} min
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {workoutTemplate.description && (
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {workoutTemplate.description}
+                        </p>
+                      )}
+                      
+                      {workoutTemplate.exercises && workoutTemplate.exercises.length > 0 ? (
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Exercises:</h4>
+                          <div className="space-y-2">
+                            {workoutTemplate.exercises.map((exercise, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                              >
+                                <div>
+                                  <p className="font-medium">{exercise.name}</p>
+                                  {exercise.notes && (
+                                    <p className="text-xs text-muted-foreground">{exercise.notes}</p>
+                                  )}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {exercise.sets && exercise.reps && (
+                                    <span>{exercise.sets} x {exercise.reps}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          No exercises defined for this workout.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Dumbbell className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                    <p>No workout template linked to this class</p>
+                    <p className="text-sm mt-2">Use the Edit tab to link a workout template</p>
+                  </div>
+                )}
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="edit">
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    value={editForm.title}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={editForm.description}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows={2}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Capacity</Label>
+                  <Input
+                    type="number"
+                    value={editForm.capacity}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, capacity: parseInt(e.target.value) || 20 }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Dumbbell className="w-4 h-4" />
+                    Workout Template
+                  </Label>
+                  <Select
+                    value={editForm.workout_template_id}
+                    onValueChange={(v) => setEditForm(prev => ({ ...prev, workout_template_id: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a workout template" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border z-50">
+                      <SelectItem value="">No workout linked</SelectItem>
+                      {workoutTemplates.map(template => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                          {template.difficulty && ` (${template.difficulty})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Link a workout template for members to follow during this class
+                  </p>
+                </div>
+
+                <Button onClick={handleSaveEdit} disabled={saving} className="w-full">
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="add">
