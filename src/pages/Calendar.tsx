@@ -308,6 +308,58 @@ export default function Calendar() {
         {/* … (intencionalmente igual ao teu original) */}
 
         {/* CALENDAR */}
+        {/* HEADER */}
+<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+  <div>
+    <h1 className="text-2xl font-display font-bold text-foreground">
+      Calendário
+    </h1>
+    <p className="text-muted-foreground">
+      Agendar e gerir aulas com opções recorrentes
+    </p>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <Select value={filterType} onValueChange={setFilterType}>
+      <SelectTrigger className="w-[200px]">
+        <Filter className="w-4 h-4 mr-2" />
+        <SelectValue placeholder="Filtrar por disciplina" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">Todas as Aulas</SelectItem>
+        {disciplines.map(d => (
+          <SelectItem key={d.id} value={d.id}>
+            {d.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+
+    {hasPermission('classes:create') && (
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar Aula
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Agendar Aula</DialogTitle>
+          </DialogHeader>
+          <RecurringClassForm
+            disciplines={disciplines}
+            locations={locations}
+            coaches={coaches}
+            onSuccess={handleCreateSuccess}
+            onCancel={() => setIsCreateOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    )}
+  </div>
+</div>
+
         <Card>
           <CardContent>
             {viewMode === 'week' ? (
