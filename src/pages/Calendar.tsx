@@ -36,6 +36,8 @@ import { ClassDetailDialog } from '@/components/calendar/ClassDetailDialog'
 import {
   Plus,
   Filter,
+  ShieldAlert,
+  Loader2,
 } from 'lucide-react'
 
 /* =========================
@@ -78,7 +80,7 @@ const HOURS = Array.from({ length: 16 }, (_, i) => i + 6)
 
 export default function Calendar() {
   const { currentGym } = useGym()
-  const { hasPermission } = useRBAC()
+  const { hasPermission, loading: rbacLoading } = useRBAC()
 
   const gymTimezone = currentGym?.timezone || 'Africa/Luanda'
 
@@ -99,8 +101,12 @@ export default function Calendar() {
     addDays(weekStart, i),
   )
 
+  // Permission checks
+  const canViewClasses = hasPermission('classes:read')
+  const canCreateClasses = hasPermission('classes:create')
+
   /* =========================
-     Time helpers (CORRETOS)
+     Time helpers
   ========================= */
 
   const getGymDayKey = (date: Date | string) =>
@@ -118,8 +124,12 @@ export default function Calendar() {
 
   useEffect(() => {
     if (!currentGym?.id) return
-    fetchAll()
-  }, [currentGym?.id, currentDate, filterType])
+    if (!rbacLoading && canViewClasses) {
+      fetchAll()
+    } else if (!rbacLoading) {
+      setLoading(false)
+    }
+  }, [currentGym?.id, currentDate, filterType, rbacLoading, canViewClasses])
 
   const fetchAll = async () => {
     setLoading(true)
@@ -135,67 +145,88 @@ export default function Calendar() {
   const fetchClasses = async () => {
     if (!currentGym?.id) return
 
-    let query = supabase
-      .from('classes')
-      .select(`
-        *,
-        class_type:class_types(name, color),
-        location:locations(name)
-      `)
-      .eq('gym_id', currentGym.id)
-      .gte('start_time', weekStart.toISOString())
-      .lte('start_time', addDays(weekStart, 7).toISOString())
-      .order('start_time')
+    try {
+      let query = supabase
+        .from('classes')
+        .select(`
+          *,
+          class_type:class_types(name, color),
+          location:locations(name)
+        `)
+        .eq('gym_id', currentGym.id)
+        .gte('start_time', weekStart.toISOString())
+        .lte('start_time', addDays(weekStart, 7).toISOString())
+        .order('start_time')
 
-    if (filterType !== 'all') {
-      query = query.eq('class_type_id', filterType)
+      if (filterType !== 'all') {
+        query = query.eq('class_type_id', filterType)
+      }
+
+      const { data, error } = await query
+
+      if (error) {
+        console.error('Failed to fetch classes:', error.message)
+        return
+      }
+
+      setClasses(data || [])
+    } catch (error) {
+      console.error('Error in fetchClasses:', error)
     }
-
-    const { data, error } = await query
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    setClasses(data || [])
   }
 
   const fetchDisciplines = async () => {
     if (!currentGym?.id) return
-    const { data } = await supabase
-      .from('disciplines')
-      .select('id, name')
-      .eq('gym_id', currentGym.id)
-      .eq('is_active', true)
+    try {
+      const { data, error } = await supabase
+        .from('disciplines')
+        .select('id, name')
+        .eq('gym_id', currentGym.id)
+        .eq('is_active', true)
 
-    setDisciplines(data || [])
+      if (error) throw error
+      setDisciplines(data || [])
+    } catch (error) {
+      console.error('Error fetching disciplines:', error)
+    }
   }
 
   const fetchLocations = async () => {
     if (!currentGym?.id) return
-    const { data } = await supabase
-      .from('locations')
-      .select('id, name')
-      .eq('gym_id', currentGym.id)
-      .eq('is_active', true)
+    try {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('id, name')
+        .eq('gym_id', currentGym.id)
+        .eq('is_active', true)
 
-    setLocations(data || [])
+      if (error) throw error
+      setLocations(data || [])
+    } catch (error) {
+      console.error('Error fetching locations:', error)
+    }
   }
 
   const fetchCoaches = async () => {
     if (!currentGym?.id) return
-    const { data } = await supabase
-      .from('user_roles')
-      .select('user_id, profiles!inner(full_name)')
-      .eq('gym_id', currentGym.id)
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, profiles!inner(full_name)')
+        .eq('gym_id', currentGym.id)
 
-    const list =
-      data?.map((r: any) => ({
-        id: r.user_id,
-        full_name: r.profiles.full_name,
-      })) || []
+      if (error) throw error
 
-    setCoaches(list)
+      const list =
+        data?.map((r: any) => ({
+          id: r.user_id,
+          full_name: r.profiles.full_name,
+        })) || []
+
+      setCoaches(list)
+    } catch (error) {
+      console.error('Error fetching coaches:', error)
+    }
   }
 
   /* =========================
@@ -229,11 +260,35 @@ export default function Calendar() {
     )
   }
 
+  if (rbacLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  if (!canViewClasses) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+          <h2 className="text-2xl font-display font-bold mb-2">Acesso Negado</h2>
+          <p className="text-muted-foreground">
+            Não tem permissão para ver o calendário de aulas.
+          </p>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="p-6 text-muted-foreground">
-          A carregar calendário…
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </DashboardLayout>
     )
@@ -272,7 +327,7 @@ export default function Calendar() {
               </SelectContent>
             </Select>
 
-            {hasPermission('classes:create') && (
+            {canCreateClasses && (
               <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -336,7 +391,7 @@ export default function Calendar() {
                       {items.map(c => (
                         <div
                           key={c.id}
-                          className="p-2 mb-1 rounded text-xs cursor-pointer"
+                          className="p-2 mb-1 rounded text-xs cursor-pointer hover:opacity-80 transition-opacity"
                           style={getClassStyle(c)}
                           onClick={() => {
                             setSelectedClass(c)
