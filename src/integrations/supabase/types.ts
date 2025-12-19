@@ -133,6 +133,104 @@ export type Database = {
           },
         ]
       }
+      bank_reconciliation_items: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          matched_payment_id: string | null
+          reconciliation_id: string
+          reference: string | null
+          status: string | null
+          transaction_date: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          matched_payment_id?: string | null
+          reconciliation_id: string
+          reference?: string | null
+          status?: string | null
+          transaction_date: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          matched_payment_id?: string | null
+          reconciliation_id?: string
+          reference?: string | null
+          status?: string | null
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliation_items_matched_payment_id_fkey"
+            columns: ["matched_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_reconciliation_items_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_name: string
+          gym_id: string
+          id: string
+          imported_at: string
+          matched_transactions: number | null
+          status: string | null
+          total_transactions: number | null
+          unmatched_transactions: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_name: string
+          gym_id: string
+          id?: string
+          imported_at?: string
+          matched_transactions?: number | null
+          status?: string | null
+          total_transactions?: number | null
+          unmatched_transactions?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          gym_id?: string
+          id?: string
+          imported_at?: string
+          matched_transactions?: number | null
+          status?: string | null
+          total_transactions?: number | null
+          unmatched_transactions?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       check_ins: {
         Row: {
           checked_in_at: string
@@ -722,6 +820,8 @@ export type Database = {
       gyms: {
         Row: {
           address: string | null
+          bank_beneficiary: string | null
+          bank_iban: string | null
           created_at: string
           currency: string | null
           email: string | null
@@ -740,6 +840,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bank_beneficiary?: string | null
+          bank_iban?: string | null
           created_at?: string
           currency?: string | null
           email?: string | null
@@ -758,6 +860,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bank_beneficiary?: string | null
+          bank_iban?: string | null
           created_at?: string
           currency?: string | null
           email?: string | null
@@ -1328,11 +1432,15 @@ export type Database = {
           description: string | null
           gym_id: string
           id: string
+          invoice_id: string | null
           member_id: string
           multicaixa_reference: string | null
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"] | null
+          proof_transaction_id: string | null
+          proof_url: string | null
+          proof_verified: boolean | null
           reference: string | null
           updated_at: string
         }
@@ -1343,11 +1451,15 @@ export type Database = {
           description?: string | null
           gym_id: string
           id?: string
+          invoice_id?: string | null
           member_id: string
           multicaixa_reference?: string | null
           paid_at?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          proof_transaction_id?: string | null
+          proof_url?: string | null
+          proof_verified?: boolean | null
           reference?: string | null
           updated_at?: string
         }
@@ -1358,11 +1470,15 @@ export type Database = {
           description?: string | null
           gym_id?: string
           id?: string
+          invoice_id?: string | null
           member_id?: string
           multicaixa_reference?: string | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
+          proof_transaction_id?: string | null
+          proof_url?: string | null
+          proof_verified?: boolean | null
           reference?: string | null
           updated_at?: string
         }
@@ -1372,6 +1488,13 @@ export type Database = {
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
             referencedColumns: ["id"]
           },
           {
