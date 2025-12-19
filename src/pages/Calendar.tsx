@@ -362,7 +362,7 @@ export default function Calendar() {
         <ClassDetailDialog
           classEvent={selectedClass}
           open={detailOpen}
-          onOpenChange={setDetailOpen}
+          onClose={() => setDetailOpen(false)}
           onRefresh={fetchClasses}
         />
       </div>
