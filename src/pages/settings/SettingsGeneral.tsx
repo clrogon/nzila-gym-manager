@@ -164,10 +164,9 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
         gym_id: gym.id,
         user_id: user?.id,
         action: 'UPDATE_GYM_SETTINGS',
-        resource_type: 'gym',
-        resource_id: gym.id,
-        changes: changes,
-        timestamp: new Date().toISOString(),
+        entity_type: 'gym',
+        entity_id: gym.id,
+        new_values: changes,
       });
     } catch (error) {
       console.error('Failed to log audit trail:', error);
