@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getCategoryNames, hasBeltSystem, getDisciplineRanks } from '@/lib/seedData';
 import {
   Search, Plus, Award, Users, Settings2, ChevronRight,
-  GraduationCap, Shield, Swords, Activity, Loader2, Edit2, Trash2
+  GraduationCap, Shield, Swords, Activity, Loader2, Edit2, Trash2, ShieldAlert
 } from 'lucide-react';
 
 interface Discipline {
@@ -48,7 +48,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 export default function Disciplines() {
   const { currentGym } = useGym();
-  const { hasPermission } = useRBAC();
+  const { hasPermission, loading: rbacLoading } = useRBAC();
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [ranks, setRanks] = useState<DisciplineRank[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,20 +64,29 @@ export default function Disciplines() {
   const [editingItem, setEditingItem] = useState<Discipline | null>(null);
   const [deletingItem, setDeletingItem] = useState<Discipline | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const categories = getCategoryNames();
 
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchDisciplines();
-    }
-  }, [currentGym?.id]);
+  // Permission checks
+  const canView = hasPermission('training:read');
+  const canCreate = hasPermission('training:create');
+  const canUpdate = hasPermission('training:update');
+  const canDelete = hasPermission('training:delete');
 
   useEffect(() => {
-    if (selectedDiscipline) {
+    if (currentGym?.id && !rbacLoading && canView) {
+      fetchDisciplines();
+    } else if (!rbacLoading) {
+      setLoading(false);
+    }
+  }, [currentGym?.id, rbacLoading, canView]);
+
+  useEffect(() => {
+    if (selectedDiscipline && canView) {
       fetchRanks(selectedDiscipline.id);
     }
-  }, [selectedDiscipline]);
+  }, [selectedDiscipline, canView]);
 
   const fetchDisciplines = async () => {
     if (!currentGym?.id) return;
@@ -92,8 +101,8 @@ export default function Disciplines() {
 
       if (error) throw error;
       setDisciplines(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar disciplinas:', error);
+    } catch (error: any) {
+      console.error('Failed to load disciplines:', error?.message);
       toast.error('Falha ao carregar disciplinas');
     } finally {
       setLoading(false);
@@ -110,12 +119,36 @@ export default function Disciplines() {
 
       if (error) throw error;
       setRanks(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar graus:', error);
+    } catch (error: any) {
+      console.error('Failed to load ranks:', error?.message);
     }
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Nome deve ter pelo menos 2 caracteres';
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name = 'Nome não pode exceder 100 caracteres';
+    }
+
+    if (formData.description.trim().length > 500) {
+      newErrors.description = 'Descrição não pode exceder 500 caracteres';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const toggleDisciplineActive = async (discipline: Discipline) => {
+    if (!canUpdate) {
+      toast.error('Não tem permissão para modificar disciplinas');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('disciplines')
@@ -126,11 +159,17 @@ export default function Disciplines() {
       toast.success(`${discipline.name} ${!discipline.is_active ? 'ativada' : 'desativada'}`);
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Falha ao atualizar disciplina');
+      console.error('Toggle failed:', error?.message);
+      toast.error('Falha ao atualizar disciplina');
     }
   };
 
   const seedRanksForDiscipline = async (discipline: Discipline) => {
+    if (!canCreate) {
+      toast.error('Não tem permissão para criar graus');
+      return;
+    }
+
     if (!hasBeltSystem(discipline.name)) {
       toast.error('Esta disciplina não tem um sistema de graus predefinido');
       return;
@@ -155,14 +194,24 @@ export default function Disciplines() {
       toast.success(`${rankSeeds.length} graus criados para ${discipline.name}`);
       fetchRanks(discipline.id);
     } catch (error: any) {
-      toast.error(error.message || 'Falha ao criar graus');
+      console.error('Seed ranks failed:', error?.message);
+      toast.error('Falha ao criar graus');
     } finally {
       setIsSeedingRanks(false);
     }
   };
 
   const handleCreate = async () => {
-    if (!currentGym?.id || !formData.name.trim()) return;
+    if (!currentGym?.id || !canCreate) {
+      toast.error('Não tem permissão para criar disciplinas');
+      return;
+    }
+
+    if (!validateForm()) {
+      toast.error('Por favor corrija os erros antes de guardar');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('disciplines').insert({
@@ -177,16 +226,27 @@ export default function Disciplines() {
       toast.success('Disciplina criada com sucesso');
       setIsCreateDialogOpen(false);
       setFormData({ name: '', description: '', category: '' });
+      setErrors({});
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Falha ao criar disciplina');
+      console.error('Create failed:', error?.message);
+      toast.error('Falha ao criar disciplina');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleUpdate = async () => {
-    if (!editingItem?.id || !formData.name.trim()) return;
+    if (!editingItem?.id || !canUpdate) {
+      toast.error('Não tem permissão para editar disciplinas');
+      return;
+    }
+
+    if (!validateForm()) {
+      toast.error('Por favor corrija os erros antes de guardar');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase
@@ -203,19 +263,25 @@ export default function Disciplines() {
       setIsEditDialogOpen(false);
       setEditingItem(null);
       setFormData({ name: '', description: '', category: '' });
+      setErrors({});
       fetchDisciplines();
       if (selectedDiscipline?.id === editingItem.id) {
         setSelectedDiscipline(null);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Falha ao atualizar disciplina');
+      console.error('Update failed:', error?.message);
+      toast.error('Falha ao atualizar disciplina');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!deletingItem?.id) return;
+    if (!deletingItem?.id || !canDelete) {
+      toast.error('Não tem permissão para eliminar disciplinas');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const { error } = await supabase
@@ -232,23 +298,33 @@ export default function Disciplines() {
       }
       fetchDisciplines();
     } catch (error: any) {
-      toast.error(error.message || 'Falha ao eliminar disciplina');
+      console.error('Delete failed:', error?.message);
+      toast.error('Falha ao eliminar disciplina');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const openEditDialog = (discipline: Discipline) => {
+    if (!canUpdate) {
+      toast.error('Não tem permissão para editar disciplinas');
+      return;
+    }
     setEditingItem(discipline);
     setFormData({
       name: discipline.name,
       description: discipline.description || '',
       category: discipline.category || '',
     });
+    setErrors({});
     setIsEditDialogOpen(true);
   };
 
   const openDeleteDialog = (discipline: Discipline) => {
+    if (!canDelete) {
+      toast.error('Não tem permissão para eliminar disciplinas');
+      return;
+    }
     setDeletingItem(discipline);
     setIsDeleteDialogOpen(true);
   };
@@ -274,11 +350,36 @@ export default function Disciplines() {
     categories: new Set(disciplines.map(d => d.category)).size,
   };
 
+  // Guards
   if (!currentGym) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Por favor, selecione um ginásio primeiro.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (rbacLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!canView) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
+          <h2 className="text-2xl font-display font-bold mb-2">Acesso Negado</h2>
+          <p className="text-muted-foreground">
+            Não tem permissão para ver disciplinas.
+          </p>
         </div>
       </DashboardLayout>
     );
@@ -293,7 +394,7 @@ export default function Disciplines() {
             <h1 className="text-2xl font-display font-bold text-foreground">Disciplinas</h1>
             <p className="text-muted-foreground">Gerir modalidades e sistema de graus</p>
           </div>
-          {hasPermission('training:create') && (
+          {canCreate && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Disciplina
@@ -437,27 +538,33 @@ export default function Disciplines() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={(e) => { e.stopPropagation(); openEditDialog(discipline); }}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={(e) => { e.stopPropagation(); openDeleteDialog(discipline); }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                            <Switch
-                              checked={discipline.is_active}
-                              onCheckedChange={() => toggleDisciplineActive(discipline)}
-                              onClick={(e) => e.stopPropagation()}
-                            />
+                            {canUpdate && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => { e.stopPropagation(); openEditDialog(discipline); }}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={(e) => { e.stopPropagation(); openDeleteDialog(discipline); }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {canUpdate && (
+                              <Switch
+                                checked={discipline.is_active}
+                                onCheckedChange={() => toggleDisciplineActive(discipline)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            )}
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </div>
                         </div>
@@ -490,7 +597,7 @@ export default function Disciplines() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">Sistema de Graus</Label>
-                        {ranks.length === 0 && (
+                        {ranks.length === 0 && canCreate && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -563,13 +670,18 @@ export default function Disciplines() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="ex: Jiu-Jitsu Brasileiro"
+                disabled={isSubmitting}
               />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData({ ...formData, category: v })}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar categoria" />
@@ -589,11 +701,17 @@ export default function Disciplines() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Breve descrição desta disciplina"
                 rows={3}
+                disabled={isSubmitting}
               />
+              {errors.description && (
+                <p className="text-xs text-destructive">{errors.description}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
             <Button onClick={handleCreate} disabled={isSubmitting || !formData.name.trim()}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Criar
@@ -616,13 +734,18 @@ export default function Disciplines() {
                 id="edit-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                disabled={isSubmitting}
               />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-category">Categoria</Label>
               <Select
                 value={formData.category}
                 onValueChange={(v) => setFormData({ ...formData, category: v })}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecionar categoria" />
@@ -641,11 +764,17 @@ export default function Disciplines() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
+                disabled={isSubmitting}
               />
+              {errors.description && (
+                <p className="text-xs text-destructive">{errors.description}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
             <Button onClick={handleUpdate} disabled={isSubmitting || !formData.name.trim()}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Guardar Alterações
@@ -664,7 +793,9 @@ export default function Disciplines() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isSubmitting}>
+              Cancelar
+            </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Eliminar
