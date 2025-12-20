@@ -31,7 +31,6 @@ interface ClassWithBooking {
   capacity: number;
   status: string;
   location?: { name: string } | null;
-  instructor?: { full_name: string } | null;
   bookings_count?: number;
   user_booking?: {
     id: string;
@@ -113,8 +112,7 @@ export default function MemberBookings() {
           end_time,
           capacity,
           status,
-          location:locations(name),
-          instructor:profiles(full_name)
+          location:locations(name)
         `)
         .eq('gym_id', currentGym.id)
         .gte('start_time', new Date().toISOString())

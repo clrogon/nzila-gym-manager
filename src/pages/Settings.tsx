@@ -20,36 +20,14 @@ interface MembershipPlan {
   is_active: boolean;
 }
 
-interface NotificationSettings {
-  email_notifications?: boolean;
-  sms_notifications?: boolean;
-  membership_reminders?: boolean;
-  payment_reminders?: boolean;
-  welcome_emails?: boolean;
-  reminder_days?: number;
-  locale?: string;
-}
-
 export default function Settings() {
   const { currentGym, refreshGyms } = useGym();
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Notification state
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [smsNotifications, setSmsNotifications] = useState(false);
-  const [membershipReminders, setMembershipReminders] = useState(true);
-  const [paymentReminders, setPaymentReminders] = useState(true);
-  const [welcomeEmails, setWelcomeEmails] = useState(true);
-  const [reminderDays, setReminderDays] = useState('7');
-  const [timezone, setTimezone] = useState('Africa/Luanda');
-  const [locale, setLocale] = useState('pt-PT');
-
   useEffect(() => {
     if (!currentGym) return;
     fetchPlans();
-    loadNotificationSettings();
-    setTimezone(currentGym.timezone || 'Africa/Luanda');
   }, [currentGym]);
 
   const fetchPlans = async () => {
@@ -64,60 +42,6 @@ export default function Settings() {
     setPlans(data || []);
     setLoading(false);
   };
-
-  const loadNotificationSettings = async () => {
-    if (!currentGym) return;
-
-    // Load from gym's settings JSON field
-    const settings = currentGym.settings as NotificationSettings | null;
-    if (!settings) return;
-
-    if (settings.email_notifications !== undefined) setEmailNotifications(settings.email_notifications);
-    if (settings.sms_notifications !== undefined) setSmsNotifications(settings.sms_notifications);
-    if (settings.membership_reminders !== undefined) setMembershipReminders(settings.membership_reminders);
-    if (settings.payment_reminders !== undefined) setPaymentReminders(settings.payment_reminders);
-    if (settings.welcome_emails !== undefined) setWelcomeEmails(settings.welcome_emails);
-    if (settings.reminder_days !== undefined) setReminderDays(String(settings.reminder_days));
-    if (settings.locale !== undefined) setLocale(settings.locale);
-  };
-
-  const persistNotifications = async () => {
-    if (!currentGym) return;
-
-    const currentSettings = (currentGym.settings as NotificationSettings) || {};
-    const newSettings = {
-      ...currentSettings,
-      email_notifications: emailNotifications,
-      sms_notifications: smsNotifications,
-      membership_reminders: membershipReminders,
-      payment_reminders: paymentReminders,
-      welcome_emails: welcomeEmails,
-      reminder_days: parseInt(reminderDays),
-      locale,
-    };
-
-    await supabase
-      .from('gyms')
-      .update({ settings: newSettings, timezone })
-      .eq('id', currentGym.id);
-  };
-
-  useEffect(() => {
-    if (!currentGym) return;
-    const timeout = setTimeout(() => {
-      persistNotifications();
-    }, 500); // Debounce to avoid too many updates
-    return () => clearTimeout(timeout);
-  }, [
-    emailNotifications,
-    smsNotifications,
-    membershipReminders,
-    paymentReminders,
-    welcomeEmails,
-    reminderDays,
-    timezone,
-    locale,
-  ]);
 
   if (!currentGym) {
     return (
@@ -164,28 +88,7 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="notifications">
-            <SettingsNotifications
-              state={{
-                emailNotifications,
-                smsNotifications,
-                membershipReminders,
-                paymentReminders,
-                welcomeEmails,
-                reminderDays,
-                timezone,
-                locale,
-              }}
-              onChange={{
-                setEmailNotifications,
-                setSmsNotifications,
-                setMembershipReminders,
-                setPaymentReminders,
-                setWelcomeEmails,
-                setReminderDays,
-                setTimezone,
-                setLocale,
-              }}
-            />
+            <SettingsNotifications />
           </TabsContent>
 
           <TabsContent value="integrations"><SettingsIntegrations /></TabsContent>
