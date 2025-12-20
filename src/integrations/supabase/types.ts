@@ -283,29 +283,35 @@ export type Database = {
       class_bookings: {
         Row: {
           booked_at: string
+          cancelled_at: string | null
           checked_in_at: string | null
           class_id: string
           created_at: string
           id: string
           member_id: string
+          promoted_at: string | null
           status: string | null
         }
         Insert: {
           booked_at?: string
+          cancelled_at?: string | null
           checked_in_at?: string | null
           class_id: string
           created_at?: string
           id?: string
           member_id: string
+          promoted_at?: string | null
           status?: string | null
         }
         Update: {
           booked_at?: string
+          cancelled_at?: string | null
           checked_in_at?: string | null
           class_id?: string
           created_at?: string
           id?: string
           member_id?: string
+          promoted_at?: string | null
           status?: string | null
         }
         Relationships: [
@@ -2125,6 +2131,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_class_full: { Args: { class_id_param: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
