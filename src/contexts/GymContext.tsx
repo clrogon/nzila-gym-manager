@@ -20,6 +20,7 @@ interface Gym {
 interface UserRole {
   gym_id: string;
   role: string;
+  is_trainer: boolean;
 }
 
 interface GymContextType {
@@ -53,7 +54,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const { data: rolesData } = await supabase
         .from('user_roles')
-        .select('gym_id, role')
+        .select('gym_id, role, is_trainer')
         .eq('user_id', user.id);
 
       if (rolesData && rolesData.length > 0) {

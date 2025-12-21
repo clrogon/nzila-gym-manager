@@ -17,6 +17,7 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'training:create', 'training:read', 'training:update', 'training:delete',
     'finance:create', 'finance:read', 'finance:update', 'finance:delete',
     'staff:create', 'staff:read', 'staff:update', 'staff:delete',
+    'locations:create', 'locations:read', 'locations:update', 'locations:delete',
     'settings:read', 'settings:update',
     'reports:read',
     'audit:read',
@@ -29,6 +30,7 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'training:create', 'training:read', 'training:update', 'training:delete',
     'finance:create', 'finance:read', 'finance:update', 'finance:delete',
     'staff:create', 'staff:read', 'staff:update', 'staff:delete',
+    'locations:create', 'locations:read', 'locations:update', 'locations:delete',
     'settings:read', 'settings:update',
     'reports:read',
     'audit:read',
@@ -41,6 +43,7 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'training:create', 'training:read', 'training:update',
     'finance:read', 'finance:update',
     'staff:read',
+    'locations:create', 'locations:read', 'locations:update',
     'settings:read',
     'reports:read',
     'audit:read',
@@ -52,6 +55,7 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'classes:read', 'classes:update',
     'training:read',
     'finance:read',
+    'locations:read',
   ],
   member: [
     'checkins:read:own',
@@ -60,6 +64,14 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'training:read:own',
   ],
 };
+
+// Trainer-specific permissions (added when is_trainer flag is true)
+const TRAINER_PERMISSIONS: string[] = [
+  'classes:create', 'classes:update',
+  'training:create', 'training:update',
+  'members:read',
+  'checkins:create', 'checkins:update',
+];
 
 // Role hierarchy (higher index = more permissions)
 const ROLE_HIERARCHY: AppRole[] = ['member', 'staff', 'admin', 'gym_owner', 'super_admin'];
@@ -70,8 +82,9 @@ interface UseRBACReturn {
   isGymOwner: boolean;
   isAdmin: boolean;
   isStaff: boolean;
+  isTrainer: boolean;
   currentRole: AppRole | null;
-  allRoles: { gymId: string | null; role: AppRole }[];
+  allRoles: { gymId: string | null; role: AppRole; isTrainer: boolean }[];
   
   // Permission checks
   hasPermission: (permission: string) => boolean;
@@ -121,6 +134,7 @@ export function useRBAC(): UseRBACReturn {
     return userRoles.map(r => ({
       gymId: r.gym_id,
       role: r.role as AppRole,
+      isTrainer: r.is_trainer || false,
     }));
   }, [userRoles]);
 
@@ -132,6 +146,13 @@ export function useRBAC(): UseRBACReturn {
     const gymRole = userRoles.find(r => r.gym_id === currentGym.id);
     return gymRole?.role as AppRole || null;
   }, [isSuperAdmin, currentGym, userRoles]);
+
+  // Check if user is a trainer for current gym
+  const isTrainer = useMemo(() => {
+    if (!currentGym || !userRoles) return false;
+    const gymRole = userRoles.find(r => r.gym_id === currentGym.id);
+    return gymRole?.is_trainer || false;
+  }, [currentGym, userRoles]);
 
   // Role-specific booleans
   const isGymOwner = currentRole === 'gym_owner' || isSuperAdmin;
@@ -152,11 +173,17 @@ export function useRBAC(): UseRBACReturn {
     return currentIndex >= minimumIndex;
   };
 
-  // Permission check
+  // Permission check - includes trainer permissions if is_trainer is true
   const hasPermission = (permission: string): boolean => {
     if (!currentRole) return false;
-    const permissions = ROLE_PERMISSIONS[currentRole] || [];
-    return permissions.includes(permission);
+    const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
+    
+    // If user is a trainer, add trainer permissions
+    if (isTrainer && TRAINER_PERMISSIONS.includes(permission)) {
+      return true;
+    }
+    
+    return rolePermissions.includes(permission);
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {
@@ -172,6 +199,7 @@ export function useRBAC(): UseRBACReturn {
     isGymOwner,
     isAdmin,
     isStaff,
+    isTrainer,
     currentRole,
     allRoles,
     hasPermission,

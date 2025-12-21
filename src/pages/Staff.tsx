@@ -41,7 +41,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Search, Users } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Pencil, Trash2, Search, Users, Dumbbell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Database } from '@/integrations/supabase/types';
 
@@ -52,6 +53,7 @@ interface StaffMember {
   user_id: string;
   role: AppRole;
   gym_id: string | null;
+  is_trainer: boolean;
   created_at: string;
   profile?: {
     full_name: string | null;
@@ -84,6 +86,7 @@ export default function Staff() {
     email: '',
     role: 'staff' as AppRole,
     gym_id: '',
+    is_trainer: false,
   });
 
   const canManageStaff = hasPermission('staff:create') || hasPermission('staff:update');
@@ -116,6 +119,7 @@ export default function Staff() {
           user_id,
           role,
           gym_id,
+          is_trainer,
           created_at
         `)
         .in('role', ['gym_owner', 'admin', 'staff']);
@@ -204,7 +208,7 @@ export default function Staff() {
       // Update existing role
       const { error } = await supabase
         .from('user_roles')
-        .update({ role: formData.role })
+        .update({ role: formData.role, is_trainer: formData.is_trainer })
         .eq('id', selectedStaff.id);
 
       if (error) {
@@ -220,6 +224,7 @@ export default function Staff() {
           user_id: profile.id,
           gym_id: gymId,
           role: formData.role,
+          is_trainer: formData.is_trainer,
         });
 
       if (error) {
@@ -239,6 +244,7 @@ export default function Staff() {
       email: staff.profile?.email || '',
       role: staff.role,
       gym_id: staff.gym_id || '',
+      is_trainer: staff.is_trainer || false,
     });
     setDialogOpen(true);
   };
@@ -263,7 +269,7 @@ export default function Staff() {
   };
 
   const resetForm = () => {
-    setFormData({ email: '', role: 'staff', gym_id: '' });
+    setFormData({ email: '', role: 'staff', gym_id: '', is_trainer: false });
     setSelectedStaff(null);
     setDialogOpen(false);
   };
@@ -385,6 +391,22 @@ export default function Staff() {
                   </Select>
                 </div>
 
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="is_trainer" className="text-sm font-medium cursor-pointer">
+                      Trainer
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Grant training-specific permissions (classes, workouts, member progress)
+                    </p>
+                  </div>
+                  <Switch
+                    id="is_trainer"
+                    checked={formData.is_trainer}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_trainer: checked })}
+                  />
+                </div>
+
                 <div className="flex justify-end gap-2 pt-4">
                   <Button type="button" variant="outline" onClick={resetForm}>
                     Cancel
@@ -440,7 +462,17 @@ export default function Staff() {
                     {isSuperAdmin && (
                       <TableCell>{staff.gym?.name || '—'}</TableCell>
                     )}
-                    <TableCell>{getRoleBadge(staff.role)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getRoleBadge(staff.role)}
+                        {staff.is_trainer && (
+                          <Badge variant="outline" className="text-green-600 border-green-600/30 bg-green-500/10">
+                            <Dumbbell className="w-3 h-3 mr-1" />
+                            Trainer
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {new Date(staff.created_at).toLocaleDateString()}
                     </TableCell>

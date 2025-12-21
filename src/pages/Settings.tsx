@@ -3,13 +3,14 @@ import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, CreditCard, Bell, Link2, Shield } from 'lucide-react';
+import { Building2, CreditCard, Bell, Link2, Shield, MapPin } from 'lucide-react';
 
 import SettingsGeneral from './settings/SettingsGeneral';
 import SettingsPlans from './settings/SettingsPlans';
 import SettingsNotifications from './settings/SettingsNotifications';
 import SettingsIntegrations from './settings/SettingsIntegrations';
 import SettingsSecurity from './settings/SettingsSecurity';
+import SettingsLocations from './settings/SettingsLocations';
 
 interface MembershipPlan {
   id: string;
@@ -66,9 +67,10 @@ export default function Settings() {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
             <TabsTrigger value="general"><Building2 className="w-4 h-4 mr-2" />Geral</TabsTrigger>
             <TabsTrigger value="plans"><CreditCard className="w-4 h-4 mr-2" />Planos</TabsTrigger>
+            <TabsTrigger value="locations"><MapPin className="w-4 h-4 mr-2" />Locais</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="w-4 h-4 mr-2" />Notificações</TabsTrigger>
             <TabsTrigger value="integrations"><Link2 className="w-4 h-4 mr-2" />Integrações</TabsTrigger>
             <TabsTrigger value="security"><Shield className="w-4 h-4 mr-2" />Segurança</TabsTrigger>
@@ -85,6 +87,10 @@ export default function Settings() {
               currency={currentGym.currency || 'AOA'}
               gymId={currentGym.id}
             />
+          </TabsContent>
+
+          <TabsContent value="locations">
+            <SettingsLocations />
           </TabsContent>
 
           <TabsContent value="notifications">

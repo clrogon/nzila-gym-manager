@@ -1123,30 +1123,45 @@ export type Database = {
           address: string | null
           capacity: number | null
           created_at: string
+          description: string | null
+          equipment: string[] | null
+          floor_number: number | null
           gym_id: string
           id: string
           is_active: boolean | null
           name: string
+          photo_url: string | null
+          type: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
           capacity?: number | null
           created_at?: string
+          description?: string | null
+          equipment?: string[] | null
+          floor_number?: number | null
           gym_id: string
           id?: string
           is_active?: boolean | null
           name: string
+          photo_url?: string | null
+          type?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
           capacity?: number | null
           created_at?: string
+          description?: string | null
+          equipment?: string[] | null
+          floor_number?: number | null
           gym_id?: string
           id?: string
           is_active?: boolean | null
           name?: string
+          photo_url?: string | null
+          type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1666,6 +1681,70 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_criteria: {
+        Row: {
+          created_at: string
+          discipline_id: string
+          from_rank_id: string | null
+          id: string
+          min_attendance_percent: number | null
+          min_classes: number | null
+          min_months: number | null
+          requirements: string | null
+          test_required: boolean | null
+          to_rank_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discipline_id: string
+          from_rank_id?: string | null
+          id?: string
+          min_attendance_percent?: number | null
+          min_classes?: number | null
+          min_months?: number | null
+          requirements?: string | null
+          test_required?: boolean | null
+          to_rank_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discipline_id?: string
+          from_rank_id?: string | null
+          id?: string
+          min_attendance_percent?: number | null
+          min_classes?: number | null
+          min_months?: number | null
+          requirements?: string | null
+          test_required?: boolean | null
+          to_rank_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_criteria_discipline_id_fkey"
+            columns: ["discipline_id"]
+            isOneToOne: false
+            referencedRelation: "disciplines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_criteria_from_rank_id_fkey"
+            columns: ["from_rank_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_ranks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_criteria_to_rank_id_fkey"
+            columns: ["to_rank_id"]
+            isOneToOne: false
+            referencedRelation: "discipline_ranks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rank_promotions: {
         Row: {
           certificate_url: string | null
@@ -1931,6 +2010,7 @@ export type Database = {
           created_at: string
           gym_id: string | null
           id: string
+          is_trainer: boolean | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
@@ -1938,6 +2018,7 @@ export type Database = {
           created_at?: string
           gym_id?: string | null
           id?: string
+          is_trainer?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
@@ -1945,6 +2026,7 @@ export type Database = {
           created_at?: string
           gym_id?: string | null
           id?: string
+          is_trainer?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
