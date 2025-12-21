@@ -10,6 +10,9 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ModuleLoader } from "@/components/common/ModuleLoader";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import UserProfile from '@/pages/UserProfile';
+import Dependents from '@/pages/Dependents';
+
 
 // Modular imports with lazy loading
 import { AuthPage } from "./modules/auth";
@@ -101,6 +104,8 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
       <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<UserProfile />} />
+      <Route path="/dependents" element={<Dependents />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
