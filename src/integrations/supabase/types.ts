@@ -2122,10 +2122,10 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          address?: string | null
+          address?: never
           created_at?: string | null
           date_of_birth?: string | null
-          email?: string | null
+          email?: never
           emergency_contact?: never
           emergency_phone?: never
           full_name?: string | null
@@ -2139,7 +2139,7 @@ export type Database = {
           membership_plan_id?: string | null
           membership_start_date?: string | null
           notes?: string | null
-          phone?: string | null
+          phone?: never
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           tutor_id?: string | null
@@ -2147,10 +2147,10 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          address?: string | null
+          address?: never
           created_at?: string | null
           date_of_birth?: string | null
-          email?: string | null
+          email?: never
           emergency_contact?: never
           emergency_phone?: never
           full_name?: string | null
@@ -2164,7 +2164,7 @@ export type Database = {
           membership_plan_id?: string | null
           membership_start_date?: string | null
           notes?: string | null
-          phone?: string | null
+          phone?: never
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           tutor_id?: string | null
