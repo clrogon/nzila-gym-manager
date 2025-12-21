@@ -65,6 +65,7 @@ interface Discipline {
 interface Location {
   id: string
   name: string
+  capacity?: number
 }
 
 interface Coach {
@@ -196,7 +197,7 @@ export default function Calendar() {
     try {
       const { data, error } = await supabase
         .from('locations')
-        .select('id, name')
+        .select('id, name, capacity')
         .eq('gym_id', currentGym.id)
         .eq('is_active', true)
 

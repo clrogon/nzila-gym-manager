@@ -338,6 +338,88 @@ export type Database = {
           },
         ]
       }
+      class_series: {
+        Row: {
+          capacity: number
+          class_type_id: string | null
+          coach_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          end_time: string
+          gym_id: string
+          id: string
+          location_id: string | null
+          recurrence_days: number[] | null
+          recurrence_type: string
+          start_date: string
+          start_time: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number
+          class_type_id?: string | null
+          coach_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time: string
+          gym_id: string
+          id?: string
+          location_id?: string | null
+          recurrence_days?: number[] | null
+          recurrence_type: string
+          start_date: string
+          start_time: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number
+          class_type_id?: string | null
+          coach_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          end_time?: string
+          gym_id?: string
+          id?: string
+          location_id?: string | null
+          recurrence_days?: number[] | null
+          recurrence_type?: string
+          start_date?: string
+          start_time?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_series_class_type_id_fkey"
+            columns: ["class_type_id"]
+            isOneToOne: false
+            referencedRelation: "class_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_series_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_series_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_types: {
         Row: {
           capacity: number | null
@@ -399,6 +481,7 @@ export type Database = {
           is_recurring: boolean | null
           location_id: string | null
           recurrence_rule: string | null
+          series_id: string | null
           start_time: string
           status: string | null
           title: string
@@ -418,6 +501,7 @@ export type Database = {
           is_recurring?: boolean | null
           location_id?: string | null
           recurrence_rule?: string | null
+          series_id?: string | null
           start_time: string
           status?: string | null
           title: string
@@ -437,6 +521,7 @@ export type Database = {
           is_recurring?: boolean | null
           location_id?: string | null
           recurrence_rule?: string | null
+          series_id?: string | null
           start_time?: string
           status?: string | null
           title?: string
@@ -470,6 +555,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "classes_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "class_series"
             referencedColumns: ["id"]
           },
           {
@@ -2204,6 +2296,30 @@ export type Database = {
       }
     }
     Functions: {
+      check_coach_overlap: {
+        Args: {
+          p_coach_id: string
+          p_end_time: string
+          p_exclude_class_id?: string
+          p_start_time: string
+        }
+        Returns: {
+          conflicting_classes: Json
+          is_available: boolean
+        }[]
+      }
+      check_location_overlap: {
+        Args: {
+          p_end_time: string
+          p_exclude_class_id?: string
+          p_location_id: string
+          p_start_time: string
+        }
+        Returns: {
+          conflicting_classes: Json
+          is_available: boolean
+        }[]
+      }
       get_user_gym_ids: { Args: { _user_id: string }; Returns: string[] }
       has_gym_role: {
         Args: {
