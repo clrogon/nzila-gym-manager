@@ -79,6 +79,10 @@ const ROLE_LABELS: Record<AppRole, string> = {
   staff: 'Funcionário',
   member: 'Membro',
 };
+// Adicionar aos links de navegação
+const userMenuItems = [
+  { icon: User, label: 'Meu Perfil', href: '/profile' },
+  { icon: Users, label:
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
