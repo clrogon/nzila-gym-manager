@@ -57,6 +57,19 @@ class AuthRateLimiter {
 
 const authRateLimiter = new AuthRateLimiter();
 
+// Helper to log audit events safely
+const logAuditEvent = async (action: string, entityType: string, newValues?: object) => {
+  try {
+    await supabase.from('audit_logs').insert([{
+      action,
+      entity_type: entityType,
+      new_values: newValues ? JSON.parse(JSON.stringify(newValues)) : null,
+    }]);
+  } catch (err) {
+    console.error('Audit log failed:', err);
+  }
+};
+
 export function SecureAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -85,11 +98,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         warningShown.current = false;
         
         // Log successful refresh
-        await supabase.from('audit_logs').insert({
-          action: 'SESSION_REFRESHED',
-          entity_type: 'auth',
-          status: 'success',
-        });
+        await logAuditEvent('SESSION_REFRESHED', 'auth');
         
         return true;
       }
@@ -150,11 +159,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSessionExpiresIn(calculateSessionExpiry(currentSession));
 
         // Log auth events
-        await supabase.from('audit_logs').insert({
-          action: `AUTH_${event.toUpperCase()}`,
-          entity_type: 'auth',
-          status: 'success',
-        }).catch(err => console.error('Audit log failed:', err));
+        await logAuditEvent(`AUTH_${event.toUpperCase()}`, 'auth');
 
         if (event === 'TOKEN_REFRESHED') {
           warningShown.current = false;
@@ -197,12 +202,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     // Audit log - attempt
-    await supabase.from('audit_logs').insert({
-      action: 'SIGN_IN_ATTEMPT',
-      entity_type: 'auth',
-      new_values: { email },
-      status: 'pending',
-    }).catch(err => console.error('Audit log failed:', err));
+    await logAuditEvent('SIGN_IN_ATTEMPT', 'auth', { email });
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -213,12 +213,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       authRateLimiter.recordFailure(email);
       
       // Audit log - failure
-      await supabase.from('audit_logs').insert({
-        action: 'SIGN_IN_FAILED',
-        entity_type: 'auth',
-        new_values: { email, error: error.message },
-        status: 'failure',
-      }).catch(err => console.error('Audit log failed:', err));
+      await logAuditEvent('SIGN_IN_FAILED', 'auth', { email, error: error.message });
       
       return { error };
     }
@@ -226,12 +221,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     authRateLimiter.recordSuccess(email);
     
     // Audit log - success
-    await supabase.from('audit_logs').insert({
-      action: 'SIGN_IN_SUCCESS',
-      entity_type: 'auth',
-      new_values: { email },
-      status: 'success',
-    }).catch(err => console.error('Audit log failed:', err));
+    await logAuditEvent('SIGN_IN_SUCCESS', 'auth', { email });
 
     return { error: null };
   };
@@ -252,7 +242,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     if (!(hasUpperCase && hasLowerCase && hasNumbers)) {
       return {
@@ -264,12 +253,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     // Audit log - attempt
-    await supabase.from('audit_logs').insert({
-      action: 'SIGN_UP_ATTEMPT',
-      entity_type: 'auth',
-      new_values: { email },
-      status: 'pending',
-    }).catch(err => console.error('Audit log failed:', err));
+    await logAuditEvent('SIGN_UP_ATTEMPT', 'auth', { email });
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -283,23 +267,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
     if (error) {
       // Audit log - failure
-      await supabase.from('audit_logs').insert({
-        action: 'SIGN_UP_FAILED',
-        entity_type: 'auth',
-        new_values: { email, error: error.message },
-        status: 'failure',
-      }).catch(err => console.error('Audit log failed:', err));
+      await logAuditEvent('SIGN_UP_FAILED', 'auth', { email, error: error.message });
       
       return { error };
     }
 
     // Audit log - success
-    await supabase.from('audit_logs').insert({
-      action: 'SIGN_UP_SUCCESS',
-      entity_type: 'auth',
-      new_values: { email },
-      status: 'success',
-    }).catch(err => console.error('Audit log failed:', err));
+    await logAuditEvent('SIGN_UP_SUCCESS', 'auth', { email });
 
     return { error: null };
   };
@@ -307,11 +281,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   // Secure sign out
   const signOut = async () => {
     // Audit log
-    await supabase.from('audit_logs').insert({
-      action: 'SIGN_OUT',
-      entity_type: 'auth',
-      status: 'success',
-    }).catch(err => console.error('Audit log failed:', err));
+    await logAuditEvent('SIGN_OUT', 'auth');
 
     await supabase.auth.signOut();
     setUser(null);
@@ -356,25 +326,16 @@ export function SessionTimeoutWarning() {
 
   if (!showWarning) return null;
 
-  const minutesLeft = Math.ceil((sessionExpiresIn || 0) / 60000);
-
   return (
-    <div className="fixed bottom-4 right-4 p-4 bg-yellow-500 text-white rounded-lg shadow-lg z-50">
-      <div className="flex items-center gap-3">
-        <div>
-          <p className="font-semibold">Session Expiring</p>
-          <p className="text-sm">Your session will expire in {minutesLeft} minute{minutesLeft !== 1 ? 's' : ''}</p>
-        </div>
-        <button
-          onClick={async () => {
-            await refreshSession();
-            setShowWarning(false);
-          }}
-          className="px-4 py-2 bg-white text-yellow-600 rounded hover:bg-gray-100"
-        >
-          Extend
-        </button>
-      </div>
+    <div className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded shadow-lg z-50">
+      <p className="font-medium">Session expiring soon</p>
+      <p className="text-sm">Your session will expire in {Math.ceil((sessionExpiresIn || 0) / 60000)} minutes</p>
+      <button
+        onClick={() => refreshSession()}
+        className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+      >
+        Extend Session
+      </button>
     </div>
   );
 }

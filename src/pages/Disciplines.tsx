@@ -150,6 +150,22 @@ export default function Disciplines() {
     }
 
     try {
+      // Check impact before disabling
+      if (discipline.is_active) {
+        const { count: classCount } = await supabase
+          .from('classes')
+          .select('id', { count: 'exact', head: true })
+          .eq('discipline_id', discipline.id)
+          .eq('status', 'scheduled');
+
+        if (classCount && classCount > 0) {
+          const confirmed = window.confirm(
+            `Desativar "${discipline.name}" irá ocultar ${classCount} aulas agendadas do calendário.\n\nDeseja continuar?`
+          );
+          if (!confirmed) return;
+        }
+      }
+
       const { error } = await supabase
         .from('disciplines')
         .update({ is_active: !discipline.is_active })

@@ -52,6 +52,8 @@ interface ClassEvent {
   end_time: string
   capacity: number
   status: string
+  discipline_id?: string | null
+  discipline?: { id: string; name: string; is_active: boolean } | null
   class_type?: { name: string; color: string } | null
   location?: { name: string } | null
   bookings_count?: number
@@ -152,7 +154,8 @@ export default function Calendar() {
         .select(`
           *,
           class_type:class_types(name, color),
-          location:locations(name)
+          location:locations(name),
+          discipline:disciplines(id, name, is_active)
         `)
         .eq('gym_id', currentGym.id)
         .gte('start_time', weekStart.toISOString())
@@ -170,7 +173,13 @@ export default function Calendar() {
         return
       }
 
-      setClasses(data || [])
+      // Filter out classes with inactive disciplines
+      const activeClasses = (data || []).filter(cls => {
+        // Include if no discipline or discipline is active
+        return !cls.discipline || cls.discipline.is_active !== false
+      })
+
+      setClasses(activeClasses)
     } catch (error) {
       console.error('Error in fetchClasses:', error)
     }
