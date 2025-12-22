@@ -1266,6 +1266,71 @@ export type Database = {
           },
         ]
       }
+      member_dependents: {
+        Row: {
+          can_checkin_alone: boolean | null
+          created_at: string | null
+          dependent_member_id: string
+          emergency_contact: string | null
+          emergency_phone: string | null
+          id: string
+          primary_member_id: string
+          relationship: string
+          updated_at: string | null
+        }
+        Insert: {
+          can_checkin_alone?: boolean | null
+          created_at?: string | null
+          dependent_member_id: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          id?: string
+          primary_member_id: string
+          relationship: string
+          updated_at?: string | null
+        }
+        Update: {
+          can_checkin_alone?: boolean | null
+          created_at?: string | null
+          dependent_member_id?: string
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          id?: string
+          primary_member_id?: string
+          relationship?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_dependents_dependent_member_id_fkey"
+            columns: ["dependent_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_dependents_dependent_member_id_fkey"
+            columns: ["dependent_member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_dependents_primary_member_id_fkey"
+            columns: ["primary_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_dependents_primary_member_id_fkey"
+            columns: ["primary_member_id"]
+            isOneToOne: false
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_ranks: {
         Row: {
           awarded_at: string
@@ -1397,6 +1462,7 @@ export type Database = {
           gym_id: string
           health_conditions: string | null
           id: string
+          is_dependent: boolean | null
           is_minor: boolean | null
           membership_end_date: string | null
           membership_plan_id: string | null
@@ -1422,6 +1488,7 @@ export type Database = {
           gym_id: string
           health_conditions?: string | null
           id?: string
+          is_dependent?: boolean | null
           is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
@@ -1447,6 +1514,7 @@ export type Database = {
           gym_id?: string
           health_conditions?: string | null
           id?: string
+          is_dependent?: boolean | null
           is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
@@ -2090,6 +2158,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "staff_certifications_gym_id_fkey"
+            columns: ["gym_id"]
+            isOneToOne: false
+            referencedRelation: "gyms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          class_reminders: boolean | null
+          created_at: string | null
+          email_notifications: boolean | null
+          gym_id: string | null
+          id: string
+          marketing_emails: boolean | null
+          membership_reminders: boolean | null
+          payment_reminders: boolean | null
+          reminder_days_before: number | null
+          sms_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          class_reminders?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          gym_id?: string | null
+          id?: string
+          marketing_emails?: boolean | null
+          membership_reminders?: boolean | null
+          payment_reminders?: boolean | null
+          reminder_days_before?: number | null
+          sms_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          class_reminders?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          gym_id?: string | null
+          id?: string
+          marketing_emails?: boolean | null
+          membership_reminders?: boolean | null
+          payment_reminders?: boolean | null
+          reminder_days_before?: number | null
+          sms_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_gym_id_fkey"
             columns: ["gym_id"]
             isOneToOne: false
             referencedRelation: "gyms"
