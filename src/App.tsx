@@ -104,8 +104,8 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
       <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
-      <Route path="/profile" element={<UserProfile />} />
-      <Route path="/dependents" element={<Dependents />} />
+      <Route path="/profile" element={<ProtectedRoute moduleName="Profile"><UserProfile /></ProtectedRoute>} />
+      <Route path="/dependents" element={<ProtectedRoute moduleName="Dependents"><Dependents /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
