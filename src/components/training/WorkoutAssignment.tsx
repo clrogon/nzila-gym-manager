@@ -35,7 +35,7 @@ interface WorkoutTemplate {
   category: string | null;
   difficulty: string | null;
   estimated_duration: number | null;
-  discipline?: { id: string; name: string; is_active: boolean } | null;
+  
 }
 
 interface MemberWorkout {
@@ -121,7 +121,7 @@ export function WorkoutAssignment() {
           .order('full_name'),
         supabase
           .from('workout_templates')
-          .select('id, name, category, difficulty, estimated_duration, discipline:disciplines(id, name, is_active)')
+          .select('id, name, category, difficulty, estimated_duration')
           .eq('gym_id', currentGym.id)
           .order('name'),
       ]);
@@ -132,16 +132,7 @@ export function WorkoutAssignment() {
 
       setAssignments(assignmentsRes.data || []);
       setMembers(membersRes.data || []);
-      // Filter templates to only show those with active disciplines
-      const rawTemplates = (templatesRes.data || []) as any[];
-      const activeTemplates = rawTemplates.filter(t => {
-        const discipline = Array.isArray(t.discipline) ? t.discipline[0] : t.discipline;
-        return !discipline || discipline.is_active !== false;
-      }).map(t => ({
-        ...t,
-        discipline: Array.isArray(t.discipline) ? t.discipline[0] : t.discipline,
-      }));
-      setTemplates(activeTemplates);
+      setTemplates(templatesRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
