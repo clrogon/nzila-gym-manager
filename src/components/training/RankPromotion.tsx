@@ -75,6 +75,7 @@ export function RankPromotion() {
   const [loading, setLoading] = useState(true);
   const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingRanks, setIsCreatingRanks] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const [formData, setFormData] = useState({
@@ -164,6 +165,42 @@ export function RankPromotion() {
       setRanks(data || []);
     } catch (error) {
       console.error('Error fetching ranks:', error);
+      setRanks([]);
+    }
+  };
+
+  const createDefaultRanksForDiscipline = async (disciplineId: string) => {
+    if (!currentGym?.id) return;
+
+    setIsCreatingRanks(true);
+    try {
+      const { count, error: countError } = await supabase
+        .from('discipline_ranks')
+        .select('id', { count: 'exact', head: true })
+        .eq('discipline_id', disciplineId);
+
+      if (countError) throw countError;
+      if ((count ?? 0) > 0) {
+        toast.message('Esta disciplina já tem ranks definidos');
+        await fetchRanksForDiscipline(disciplineId);
+        return;
+      }
+
+      const { error } = await supabase.from('discipline_ranks').insert([
+        { discipline_id: disciplineId, name: 'Iniciante', level: 1, color: null },
+        { discipline_id: disciplineId, name: 'Intermédio', level: 2, color: null },
+        { discipline_id: disciplineId, name: 'Avançado', level: 3, color: null },
+      ]);
+
+      if (error) throw error;
+
+      toast.success('Ranks padrão criados');
+      await fetchRanksForDiscipline(disciplineId);
+    } catch (e: any) {
+      console.error('Error creating default ranks:', e);
+      toast.error(e?.message || 'Falha ao criar ranks');
+    } finally {
+      setIsCreatingRanks(false);
     }
   };
 
@@ -499,8 +536,8 @@ export function RankPromotion() {
                         <SelectItem key={r.id} value={r.id}>
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: r.color || '#gray' }}
+                              className="w-3 h-3 rounded-full bg-muted"
+                              style={r.color ? { backgroundColor: r.color } : undefined}
                             />
                             {r.name}
                           </div>
@@ -509,10 +546,26 @@ export function RankPromotion() {
                     </SelectContent>
                   </Select>
                   {availableRanks.length === 0 && ranks.length > 0 && (
-                    <p className="text-xs text-muted-foreground">Member already at highest rank</p>
+                    <p className="text-xs text-muted-foreground">Membro já está no rank máximo</p>
                   )}
                   {ranks.length === 0 && (
-                    <p className="text-xs text-amber-500">No ranks defined for this discipline. Add ranks in Training Library first.</p>
+                    <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Esta disciplina ainda não tem ranks.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={isCreatingRanks}
+                        onClick={() => createDefaultRanksForDiscipline(formData.discipline_id)}
+                      >
+                        {isCreatingRanks ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        Criar ranks padrão
+                      </Button>
+                    </div>
                   )}
                 </div>
               </>
