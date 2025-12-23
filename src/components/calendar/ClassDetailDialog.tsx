@@ -17,6 +17,7 @@ import {
   Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus, 
   Dumbbell, Edit2, Save, Loader2 
 } from 'lucide-react';
+import { DisciplineStatusBadge } from '@/components/common/DisciplineStatusBadge';
 
 interface ClassEvent {
   id: string;
@@ -34,6 +35,7 @@ interface ClassEvent {
   location_id?: string | null;
   class_type?: { name: string; color: string } | null;
   location?: { name: string } | null;
+  discipline?: { id: string; name: string; is_active: boolean } | null;
 }
 
 interface Booking {
@@ -286,6 +288,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
             )}
             {classEvent.is_recurring && (
               <Badge variant="secondary">Recurring</Badge>
+            )}
+            {classEvent.discipline && (
+              <DisciplineStatusBadge isActive={classEvent.discipline.is_active} size="sm" />
             )}
           </DialogTitle>
         </DialogHeader>
