@@ -561,10 +561,26 @@ export function ExerciseLibrary() {
           {viewingVideo && (
             <div className="aspect-video">
               <iframe
-                src={viewingVideo.includes('youtube.com') 
-                  ? viewingVideo.replace('watch?v=', 'embed/')
-                  : viewingVideo
-                }
+                src={(() => {
+                  try {
+                    const url = new URL(viewingVideo);
+                    const host = url.hostname.toLowerCase();
+                    const isYouTubeHost =
+                      host === 'youtube.com' ||
+                      host === 'www.youtube.com' ||
+                      host === 'm.youtube.com';
+
+                    if (isYouTubeHost && url.pathname === '/watch') {
+                      const videoId = url.searchParams.get('v');
+                      if (videoId) {
+                        return `https://www.youtube.com/embed/${videoId}`;
+                      }
+                    }
+                  } catch {
+                    // Invalid URL or relative path; fall through to default
+                  }
+                  return viewingVideo;
+                })()}
                 className="w-full h-full rounded-lg"
                 allowFullScreen
               />
