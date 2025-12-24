@@ -2454,7 +2454,19 @@ export type Database = {
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "super_admin" | "gym_owner" | "admin" | "staff" | "member"
+      app_role:
+        | "super_admin"
+        | "gym_owner"
+        | "admin"
+        | "staff"
+        | "member"
+        | "coach"
+        | "trainer"
+        | "instructor"
+        | "receptionist"
+        | "physiotherapist"
+        | "nutritionist"
+        | "manager"
       invoice_status: "draft" | "issued" | "paid" | "overdue" | "void"
       lead_source:
         | "walk_in"
@@ -2608,7 +2620,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "gym_owner", "admin", "staff", "member"],
+      app_role: [
+        "super_admin",
+        "gym_owner",
+        "admin",
+        "staff",
+        "member",
+        "coach",
+        "trainer",
+        "instructor",
+        "receptionist",
+        "physiotherapist",
+        "nutritionist",
+        "manager",
+      ],
       invoice_status: ["draft", "issued", "paid", "overdue", "void"],
       lead_source: [
         "walk_in",

@@ -278,11 +278,18 @@ export default function Staff() {
     const variants: Record<AppRole, { variant: 'default' | 'secondary' | 'outline'; label: string }> = {
       super_admin: { variant: 'default', label: 'Super Admin' },
       gym_owner: { variant: 'default', label: 'Gym Owner' },
+      manager: { variant: 'default', label: 'Manager' },
       admin: { variant: 'secondary', label: 'Admin' },
+      coach: { variant: 'secondary', label: 'Coach' },
+      trainer: { variant: 'secondary', label: 'Trainer' },
+      instructor: { variant: 'secondary', label: 'Instructor' },
+      physiotherapist: { variant: 'secondary', label: 'Physiotherapist' },
+      nutritionist: { variant: 'secondary', label: 'Nutritionist' },
+      receptionist: { variant: 'outline', label: 'Receptionist' },
       staff: { variant: 'outline', label: 'Staff' },
       member: { variant: 'outline', label: 'Member' },
     };
-    const config = variants[role];
+    const config = variants[role] || { variant: 'outline' as const, label: role };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
