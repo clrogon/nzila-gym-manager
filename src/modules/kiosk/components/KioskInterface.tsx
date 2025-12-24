@@ -109,7 +109,7 @@ export function KioskInterface() {
           .from('members')
           .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
           .eq('gym_id', currentGym.id)
-          .ilike('email', `%${sanitizedInput.replace(/[%_]/g, '\\$&')}%`)
+          .ilike('email', `%${sanitizedInput.replace(/([\\%_])/g, '\\$1')}%`)
           .limit(1);
         members = result.data;
         error = result.error;
@@ -119,7 +119,7 @@ export function KioskInterface() {
           .from('members')
           .select('id, full_name, photo_url, status, membership_end_date, health_conditions')
           .eq('gym_id', currentGym.id)
-          .ilike('phone', `%${sanitizedInput.replace(/[%_]/g, '\\$&')}%`)
+          .ilike('phone', `%${sanitizedInput.replace(/([\\%_])/g, '\\$1')}%`)
           .limit(1);
         members = result.data;
         error = result.error;
