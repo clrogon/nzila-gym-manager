@@ -391,9 +391,16 @@ export default function Staff() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {isSuperAdmin && <SelectItem value="gym_owner">Gym Owner</SelectItem>}
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
+                      {isSuperAdmin && <SelectItem value="gym_owner">Proprietário | Gym Owner</SelectItem>}
+                      <SelectItem value="manager">Gerente | Manager</SelectItem>
+                      <SelectItem value="admin">Administrador | Admin</SelectItem>
+                      <SelectItem value="coach">Treinador | Coach</SelectItem>
+                      <SelectItem value="trainer">Personal Trainer</SelectItem>
+                      <SelectItem value="instructor">Instrutor | Instructor</SelectItem>
+                      <SelectItem value="physiotherapist">Fisioterapeuta | Physiotherapist</SelectItem>
+                      <SelectItem value="nutritionist">Nutricionista | Nutritionist</SelectItem>
+                      <SelectItem value="receptionist">Recepcionista | Receptionist</SelectItem>
+                      <SelectItem value="staff">Funcionário | Staff</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
