@@ -56,12 +56,28 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
 
   const canEdit = hasPermission('settings:update');
 
+  const sanitizeLogoUrl = (value: string): string => {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      return '';
+    }
+    try {
+      const url = new URL(trimmed);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return url.toString();
+      }
+    } catch {
+      // Invalid URL, fall through to return empty string
+    }
+    return '';
+  };
+
   // Basic info
   const [gymName, setGymName] = useState(gym.name);
   const [phone, setPhone] = useState(gym.phone || '');
   const [address, setAddress] = useState(gym.address || '');
   const [email, setEmail] = useState(gym.email || '');
-  const [logoUrl, setLogoUrl] = useState(gym.logo_url || '');
+  const [logoUrl, setLogoUrl] = useState(sanitizeLogoUrl(gym.logo_url || ''));
 
   // Identity & localisation
   const [timezone, setTimezone] = useState(gym.timezone || 'Africa/Luanda');
@@ -278,7 +294,11 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
               <Input
                 placeholder="URL do Logótipo (https://...)"
                 value={logoUrl}
-                onChange={e => { setLogoUrl(e.target.value); markChanged(); }}
+                onChange={e => {
+                  const safeValue = sanitizeLogoUrl(e.target.value);
+                  setLogoUrl(safeValue);
+                  markChanged();
+                }}
                 disabled={!canEdit}
                 className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
               />
