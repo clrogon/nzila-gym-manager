@@ -3,7 +3,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'super_admin' | 'gym_owner' | 'admin' | 'staff' | 'member';
+// International standard gym roles (IHRSA, ACE, NASM compliant)
+export type AppRole = 
+  | 'super_admin' 
+  | 'gym_owner' 
+  | 'manager'
+  | 'admin' 
+  | 'coach'
+  | 'trainer'
+  | 'instructor'
+  | 'physiotherapist'
+  | 'nutritionist'
+  | 'receptionist'
+  | 'staff' 
+  | 'member';
 
 // Permission definitions for each role
 const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
@@ -35,6 +48,19 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'reports:read',
     'audit:read',
   ],
+  manager: [
+    'members:create', 'members:read', 'members:update', 'members:delete',
+    'checkins:create', 'checkins:read', 'checkins:update', 'checkins:delete',
+    'payments:create', 'payments:read', 'payments:update', 'payments:delete',
+    'classes:create', 'classes:read', 'classes:update', 'classes:delete',
+    'training:create', 'training:read', 'training:update',
+    'finance:create', 'finance:read', 'finance:update',
+    'staff:create', 'staff:read', 'staff:update',
+    'locations:create', 'locations:read', 'locations:update',
+    'settings:read', 'settings:update',
+    'reports:read',
+    'audit:read',
+  ],
   admin: [
     'members:create', 'members:read', 'members:update', 'members:delete',
     'checkins:create', 'checkins:read', 'checkins:update', 'checkins:delete',
@@ -47,6 +73,46 @@ const ROLE_PERMISSIONS: Record<AppRole, string[]> = {
     'settings:read',
     'reports:read',
     'audit:read',
+  ],
+  coach: [
+    'members:read',
+    'checkins:create', 'checkins:read', 'checkins:update',
+    'classes:create', 'classes:read', 'classes:update',
+    'training:create', 'training:read', 'training:update',
+    'locations:read',
+  ],
+  trainer: [
+    'members:read',
+    'checkins:create', 'checkins:read', 'checkins:update',
+    'classes:read', 'classes:update',
+    'training:create', 'training:read', 'training:update',
+    'locations:read',
+  ],
+  instructor: [
+    'members:read',
+    'checkins:create', 'checkins:read',
+    'classes:read', 'classes:update',
+    'training:read',
+    'locations:read',
+  ],
+  physiotherapist: [
+    'members:read',
+    'checkins:read',
+    'training:read', 'training:update',
+    'locations:read',
+  ],
+  nutritionist: [
+    'members:read',
+    'checkins:read',
+    'training:read',
+    'locations:read',
+  ],
+  receptionist: [
+    'members:create', 'members:read', 'members:update',
+    'checkins:create', 'checkins:read', 'checkins:update',
+    'payments:create', 'payments:read',
+    'classes:read',
+    'locations:read',
   ],
   staff: [
     'members:read',
@@ -73,8 +139,21 @@ const TRAINER_PERMISSIONS: string[] = [
   'checkins:create', 'checkins:update',
 ];
 
-// Role hierarchy (higher index = more permissions)
-const ROLE_HIERARCHY: AppRole[] = ['member', 'staff', 'admin', 'gym_owner', 'super_admin'];
+// Role hierarchy (higher index = more permissions) - International standard
+const ROLE_HIERARCHY: AppRole[] = [
+  'member', 
+  'receptionist',
+  'nutritionist',
+  'physiotherapist',
+  'instructor',
+  'trainer',
+  'coach',
+  'staff', 
+  'admin', 
+  'manager',
+  'gym_owner', 
+  'super_admin'
+];
 
 interface UseRBACReturn {
   // Role checks

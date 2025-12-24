@@ -8,8 +8,31 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E)](https://supabase.com)
+[![Status](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/clrogon/nzila-gym-manager)
 
 **Live Demo | Demo ao Vivo**: [nzila-gym-manager.vercel.app](https://nzila-gym-manager.vercel.app)
+
+---
+
+## 📊 Current Status | Estado Actual (December 2024)
+
+| Module | Status EN | Estado PT |
+|--------|-----------|-----------|
+| **Authentication** | ✅ Complete | ✅ Completo |
+| **Member Management** | ✅ Complete | ✅ Completo |
+| **Check-In System** | ✅ Complete | ✅ Completo |
+| **Calendar/Scheduling** | ✅ Complete | ✅ Completo |
+| **Disciplines & Ranks** | ✅ Complete | ✅ Completo |
+| **Training & Workouts** | ✅ Complete | ✅ Completo |
+| **Payments/Invoices** | ✅ Complete | ✅ Completo |
+| **Lead Pipeline (CRM)** | ✅ Complete | ✅ Completo |
+| **POS/Inventory** | ✅ Complete | ✅ Completo |
+| **Staff Management** | ✅ Complete | ✅ Completo |
+| **Bank Reconciliation** | ✅ Complete | ✅ Completo |
+| **Financial Reports** | ✅ Complete | ✅ Completo |
+| **GDPR Compliance** | 🚧 Stub (DB pending) | 🚧 Stub (BD pendente) |
+| **Email Notifications** | 🚧 Edge Function TODO | 🚧 Edge Function TODO |
+| **Kiosk Mode** | 🚧 In Development | 🚧 Em Desenvolvimento |
 
 ---
 
@@ -32,20 +55,20 @@
 - **PT**: Perfis completos com foto, contactos de emergência, condições de saúde • Facturação familiar com relações de tutor • Tratamento de dados em conformidade com GDPR • Planos de associação com auto-expiração • Gestão de estado (Activo, Suspenso, Pendente)
 
 ### Check-In System | Sistema de Check-In
-- **EN**: Fast member check-in/out logging • Real-time attendance tracking • Kiosk mode for self-service (coming soon)
-- **PT**: Registo rápido de entrada/saída de membros • Rastreamento de presença em tempo real • Modo quiosque para auto-atendimento (em breve)
+- **EN**: Fast member check-in/out logging • Real-time attendance tracking • Kiosk mode for self-service (in development)
+- **PT**: Registo rápido de entrada/saída de membros • Rastreamento de presença em tempo real • Modo quiosque para auto-atendimento (em desenvolvimento)
 
 ### Class Scheduling & Calendar | Agendamento de Aulas & Calendário
-- **EN**: Visual calendar with drag-drop class creation • Recurring classes with flexible rules • Coach assignment with conflict detection • Location-based scheduling • Class type library • Member booking with capacity limits
-- **PT**: Calendário visual com criação de aulas por arrastar e largar • Aulas recorrentes com regras flexíveis • Atribuição de treinador com detecção de conflitos • Agendamento baseado em localização • Biblioteca de tipos de aula • Reserva de membros com limites de capacidade
+- **EN**: Visual calendar with drag-drop class creation • Recurring classes with flexible rules • Coach assignment with conflict detection • Location-based scheduling • Class type library • Member booking with capacity limits • Discipline integration
+- **PT**: Calendário visual com criação de aulas por arrastar e largar • Aulas recorrentes com regras flexíveis • Atribuição de treinador com detecção de conflitos • Agendamento baseado em localização • Biblioteca de tipos de aula • Reserva de membros com limites de capacidade • Integração com disciplinas
 
 ### Training & Progress | Treino & Progresso
 - **EN**: Workout template builder with exercise library • Discipline-specific rank/belt system • Promotion history with certificates • Performance records and personal bests • Assigned workout tracking
 - **PT**: Construtor de modelos de treino com biblioteca de exercícios • Sistema de graduação/faixa específico por disciplina • Histórico de promoções com certificados • Registos de desempenho e recordes pessoais • Rastreamento de treinos atribuídos
 
 ### Financial Management | Gestão Financeira
-- **EN**: Payment processing (Multicaixa, cash, bank transfer) • Invoice generation with line items • Discount/coupon system • Revenue reporting and analytics • Family billing consolidation
-- **PT**: Processamento de pagamentos (Multicaixa, dinheiro, transferência bancária) • Geração de facturas com itens de linha • Sistema de descontos/cupões • Relatórios de receitas e análises • Consolidação de facturação familiar
+- **EN**: Payment processing (Multicaixa, cash, bank transfer) • Invoice generation with line items • Discount/coupon system • Revenue reporting and analytics • Bank reconciliation • Multicaixa proof parsing
+- **PT**: Processamento de pagamentos (Multicaixa, dinheiro, transferência bancária) • Geração de facturas com itens de linha • Sistema de descontos/cupões • Relatórios de receitas e análises • Reconciliação bancária • Parsing de comprovativos Multicaixa
 
 ### Sales CRM | CRM de Vendas
 - **EN**: Lead pipeline management (Kanban board) • Lead source tracking • Task assignment for follow-ups • Conversion tracking to members
@@ -56,8 +79,8 @@
 - **PT**: Catálogo de produtos (suplementos, equipamento, vestuário) • Gestão de stock com alertas de stock baixo • Transacções de ponto de venda • Rastreamento de activos (manutenção de equipamento)
 
 ### Staff Management | Gestão de Staff
-- **EN**: Role-based access control (5 roles) • Staff certifications with expiry tracking • Absence/leave management • Coach scheduling and availability
-- **PT**: Controlo de acesso baseado em funções (5 funções) • Certificações de staff com rastreamento de expiração • Gestão de ausências/licenças • Agendamento e disponibilidade de treinadores
+- **EN**: Role-based access control (12 international standard roles) • Staff certifications with expiry tracking • Coach scheduling and availability
+- **PT**: Controlo de acesso baseado em funções (12 funções padrão internacional) • Certificações de staff com rastreamento de expiração • Agendamento e disponibilidade de treinadores
 
 ### Audit & Compliance | Auditoria & Conformidade
 - **EN**: Immutable audit logs for sensitive operations • GDPR data protection features • Field-level security • Secure view patterns for member data
@@ -79,21 +102,31 @@
 |-----------|-----------|------------|--------------|
 | **Frontend** | React 18 + TypeScript | Type-safe UI components | Componentes UI type-safe |
 | **Build Tool** | Vite | Fast development + HMR | Desenvolvimento rápido + HMR |
-| **Styling** | Tailwind CSS + Flowbite | Utility-first design system | Sistema de design utility-first |
-| **Backend** | Supabase | PostgreSQL + Auth + Edge Functions | PostgreSQL + Auth + Edge Functions |
+| **Styling** | Tailwind CSS + shadcn/ui | Utility-first design system | Sistema de design utility-first |
+| **Backend** | Supabase (Lovable Cloud) | PostgreSQL + Auth + Edge Functions | PostgreSQL + Auth + Edge Functions |
 | **State Management** | TanStack Query | Server state caching | Cache de estado do servidor |
-| **Routing** | React Router v6 | Client-side navigation | Navegação client-side |
+| **Routing** | React Router v7 | Client-side navigation | Navegação client-side |
 | **Validation** | Zod | Schema validation | Validação de esquema |
-| **Date Handling** | date-fns | Timezone-aware dates | Datas com consciência de fuso horário |
+| **Date Handling** | date-fns + date-fns-tz | Timezone-aware dates | Datas com consciência de fuso horário |
 
 ### Security Model | Modelo de Segurança
 
-**Role Hierarchy | Hierarquia de Funções**:
-1. **Super Admin** - EN: Platform-wide access, gym owner onboarding | PT: Acesso a toda a plataforma, integração de proprietários
-2. **Gym Owner** - EN: Full gym management, billing, staff assignment | PT: Gestão completa do ginásio, facturação, atribuição de staff
-3. **Admin** - EN: Operations management, member data, financials | PT: Gestão de operações, dados de membros, finanças
-4. **Staff** - EN: Check-ins, class management, member interactions | PT: Check-ins, gestão de aulas, interacções com membros
-5. **Member** - EN: Self-service profile, class bookings (coming soon) | PT: Perfil de auto-serviço, reservas de aulas (em breve)
+**Role Hierarchy | Hierarquia de Funções** (12 International Standard Roles):
+
+| Role | EN Description | PT Descrição |
+|------|---------------|--------------|
+| **Super Admin** | Platform-wide access, gym owner onboarding | Acesso a toda a plataforma, integração de proprietários |
+| **Gym Owner** | Full gym management, billing, staff assignment | Gestão completa do ginásio, facturação, atribuição de staff |
+| **Manager** | Operations management, staff supervision | Gestão de operações, supervisão de staff |
+| **Admin** | Member data, financials, daily operations | Dados de membros, finanças, operações diárias |
+| **Coach** | Class creation, training programs, member progress | Criação de aulas, programas de treino, progresso de membros |
+| **Trainer** | Personal training, workout assignments | Treino pessoal, atribuição de treinos |
+| **Instructor** | Group class delivery, attendance | Aulas de grupo, presença |
+| **Physiotherapist** | Injury assessment, recovery tracking | Avaliação de lesões, rastreamento de recuperação |
+| **Nutritionist** | Diet plans, member consultations | Planos de dieta, consultas de membros |
+| **Receptionist** | Check-ins, payments, member registration | Check-ins, pagamentos, registo de membros |
+| **Staff** | General operations, limited access | Operações gerais, acesso limitado |
+| **Member** | Self-service profile, class bookings | Perfil de auto-serviço, reservas de aulas |
 
 ---
 
@@ -102,7 +135,6 @@
 ### Prerequisites | Pré-requisitos
 - Node.js 18+ (LTS recommended | LTS recomendado)
 - npm or pnpm
-- Supabase account ([supabase.com](https://supabase.com))
 
 ### Installation | Instalação
 
@@ -117,26 +149,7 @@ cd nzila-gym-manager
 npm install
 ```
 
-**3. Environment setup | Configuração de ambiente**
-```bash
-cp .env.example .env
-# EN: Edit .env with your Supabase credentials
-# PT: Editar .env com as suas credenciais Supabase
-```
-
-**4. Database setup | Configuração da base de dados**
-
-**EN**: Run migrations in Supabase Studio SQL Editor - Navigate to your project, go to SQL Editor, execute migrations from `supabase/migrations/` in order.
-
-**PT**: Executar migrações no Editor SQL do Supabase Studio - Navegar para o seu projecto, ir para Editor SQL, executar migrações de `supabase/migrations/` por ordem.
-
-**5. Seed test data (optional) | Preencher dados de teste (opcional)**
-
-**EN**: Deploy and invoke the Edge Function via Supabase Studio > Edge Functions > seed-test-users > Invoke. This creates 10 test users (2 per role) with credentials: `[role]@nzila.ao` / Password: `!12345678#`
-
-**PT**: Implementar e invocar a Edge Function via Supabase Studio > Edge Functions > seed-test-users > Invoke. Isto cria 10 utilizadores de teste (2 por função) com credenciais: `[função]@nzila.ao` / Senha: `!12345678#`
-
-**6. Start development server | Iniciar servidor de desenvolvimento**
+**3. Start development server | Iniciar servidor de desenvolvimento**
 ```bash
 npm run dev
 # Access at | Aceder em: http://localhost:5173
@@ -150,15 +163,21 @@ npm run dev
 nzila-gym-manager/
 ├── src/
 │   ├── components/        # Reusable UI components | Componentes UI reutilizáveis
+│   │   ├── ui/            # shadcn/ui base components
+│   │   ├── common/        # Shared components (ErrorBoundary, RequirePermission)
+│   │   ├── training/      # Training module components
+│   │   ├── calendar/      # Calendar components
+│   │   └── dashboard/     # Dashboard widgets
 │   ├── pages/             # Route pages | Páginas de rota
-│   ├── hooks/             # Custom React hooks | Hooks React personalizados
-│   ├── lib/               # Utility functions | Funções utilitárias
-│   ├── contexts/          # React context providers | Provedores de contexto React
-│   └── types/             # TypeScript type definitions | Definições de tipo TypeScript
+│   ├── modules/           # Feature modules (auth, booking, payments, etc.)
+│   ├── hooks/             # Custom React hooks (useRBAC, useMobile)
+│   ├── lib/               # Utilities (parsers, validators, PDF service)
+│   ├── contexts/          # React context providers (Auth, Gym)
+│   └── integrations/      # Supabase client & types
 ├── supabase/
-│   ├── migrations/        # Database schema versions | Versões de esquema da base de dados
+│   ├── migrations/        # Database schema versions
 │   └── functions/         # Edge Functions (serverless)
-├── public/                # Static assets | Activos estáticos
+├── public/                # Static assets
 └── workflows/             # GitHub Actions CI/CD
 ```
 
@@ -171,8 +190,8 @@ nzila-gym-manager/
 - **PT**: Rastreamento de consentimento explícito • Suporte para anonimização de dados • Direito ao apagamento • Trilha de auditoria para acesso a dados
 
 ### Data Protection | Protecção de Dados
-- **EN**: Sensitive fields restricted to admin roles • Secure views for member data • Encrypted connections (TLS) • No PII in logs
-- **PT**: Campos sensíveis restritos a funções admin • Visualizações seguras para dados de membros • Conexões encriptadas (TLS) • Sem PII em logs
+- **EN**: Sensitive fields restricted to admin roles • Secure views for member data • Encrypted connections (TLS) • No PII in logs • Row-Level Security on all tables
+- **PT**: Campos sensíveis restritos a funções admin • Visualizações seguras para dados de membros • Conexões encriptadas (TLS) • Sem PII em logs • Row-Level Security em todas as tabelas
 
 ---
 
@@ -186,7 +205,6 @@ npm run build        # Production build | Build de produção
 npm run preview      # Preview build | Pré-visualizar build
 npm run lint         # Run ESLint
 npm run type-check   # TypeScript validation | Validação TypeScript
-npm run test         # Run tests | Executar testes
 ```
 
 ---
@@ -210,16 +228,16 @@ Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LI
 ## 🆘 Support | Suporte
 
 - **Documentation | Documentação**: [README.md](README.md)
+- **Security | Segurança**: [SECURITY.md](SECURITY.md)
 - **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
-- **Discussions | Discussões**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
 - **Email**: support@nzila.ao | suporte@nzila.ao
 
 ---
 
 ## 🙏 Acknowledgments | Agradecimentos
 
-- Built with [Supabase](https://supabase.com) - Open-source Firebase alternative
-- UI components from [Flowbite](https://flowbite.com) and [shadcn/ui](https://ui.shadcn.com)
+- Built with [Supabase](https://supabase.com) via Lovable Cloud
+- UI components from [shadcn/ui](https://ui.shadcn.com)
 - Icons from [Lucide React](https://lucide.dev)
 - **EN**: Inspired by the fitness community in Luanda, Angola
 - **PT**: Inspirado pela comunidade fitness em Luanda, Angola
@@ -231,13 +249,6 @@ Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LI
 **EN**: See [ROADMAP.md](ROADMAP.md) for planned features and timeline.
 
 **PT**: Veja [ROADMAP.md](ROADMAP.md) para funcionalidades planeadas e cronograma.
-
-**Upcoming | Em desenvolvimento**:
-- Mobile app (React Native) | Aplicação móvel
-- Member self-service portal | Portal de auto-serviço para membros
-- WhatsApp integration | Integração WhatsApp
-- Advanced analytics dashboard | Dashboard de análises avançadas
-- Multi-location gym chains | Cadeias de ginásios multi-localização
 
 ---
 

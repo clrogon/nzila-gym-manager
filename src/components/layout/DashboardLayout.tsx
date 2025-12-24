@@ -75,7 +75,14 @@ const platformNavItems: NavItem[] = [
 const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: 'Super Administrador',
   gym_owner: 'Proprietário',
+  manager: 'Gerente',
   admin: 'Administrador',
+  coach: 'Treinador',
+  trainer: 'Personal Trainer',
+  instructor: 'Instrutor',
+  physiotherapist: 'Fisioterapeuta',
+  nutritionist: 'Nutricionista',
+  receptionist: 'Recepcionista',
   staff: 'Funcionário',
   member: 'Membro',
 };
