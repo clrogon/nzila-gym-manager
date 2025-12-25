@@ -45,8 +45,9 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, 
   ShieldAlert, Mail, Phone, MapPin, Calendar, CreditCard, 
-  Activity, MoreHorizontal, Eye, AlertTriangle
+  Activity, MoreHorizontal, Eye, AlertTriangle, UsersRound
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +85,7 @@ export default function Members() {
   const { currentGym } = useGym();
   const { hasPermission, loading: rbacLoading } = useRBAC();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -369,14 +371,23 @@ export default function Members() {
             <p className="text-muted-foreground">Gerir os membros do ginásio</p>
           </div>
 
-          {canCreateMembers && (
-            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-              <DialogTrigger asChild>
-                <Button className="gradient-primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Membro
-                </Button>
-              </DialogTrigger>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dependents')}
+            >
+              <UsersRound className="w-4 h-4 mr-2" />
+              Dependentes
+            </Button>
+            
+            {canCreateMembers && (
+              <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="gradient-primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Membro
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingMember ? 'Editar Membro' : 'Registar Novo Membro'}</DialogTitle>
@@ -533,7 +544,8 @@ export default function Members() {
                 </form>
               </DialogContent>
             </Dialog>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}
