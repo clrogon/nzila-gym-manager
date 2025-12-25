@@ -14,6 +14,15 @@ interface PreRegistrationRequest {
   message?: string;
 }
 
+// Hash password using SHA-256 (for audit trail only - actual auth uses Supabase)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -67,8 +76,11 @@ serve(async (req) => {
       throw new Error("A user with this email already exists");
     }
 
-    // Generate a temporary password
+    // Generate a temporary password (secure random)
     const tempPassword = crypto.randomUUID().slice(0, 12) + "Aa1!";
+    
+    // Hash the password for audit storage (never store plaintext)
+    const hashedTempPassword = await hashPassword(tempPassword);
 
     // Create the user account
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -114,7 +126,7 @@ serve(async (req) => {
       console.error("Role assignment error:", roleInsertError);
     }
 
-    // Store pre-registration record for tracking
+    // Store pre-registration record with HASHED password (for audit only)
     const { error: preRegError } = await supabaseAdmin
       .from("gym_owner_invitations")
       .insert({
@@ -125,7 +137,7 @@ serve(async (req) => {
         phone: phone || null,
         message: message || null,
         invited_by: user.id,
-        temp_password: tempPassword,
+        temp_password: hashedTempPassword, // Store hash, not plaintext
         status: "pending",
       });
 
@@ -133,20 +145,12 @@ serve(async (req) => {
       console.error("Pre-registration record error:", preRegError);
     }
 
-    // TODO: Send actual email when RESEND_API_KEY is configured
-    // For now, log the invitation details
-    console.log("=== GYM OWNER INVITATION ===");
-    console.log(`To: ${email}`);
-    console.log(`Name: ${fullName}`);
-    console.log(`Gym: ${gymName}`);
-    console.log(`Temporary Password: ${tempPassword}`);
-    console.log(`Message: ${message || "N/A"}`);
-    console.log("============================");
+    // Log invitation creation (without sensitive data)
+    console.log(`Gym owner invitation created for: ${email}, gym: ${gymName}`);
 
-    // Placeholder: In production, send email via Resend
+    // Send email via Resend if configured
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (resendApiKey) {
-      // Send actual email
       const emailResponse = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -181,10 +185,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Gym owner pre-registered successfully",
+        message: "Gym owner pre-registered successfully. Credentials sent via email.",
         userId: newUser.user.id,
-        // Only include temp password in development/testing
-        ...(Deno.env.get("ENVIRONMENT") !== "production" && { tempPassword }),
+        // Never return password in response - it's sent via email only
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -192,7 +195,7 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Pre-registration error:", error);
+    console.error("Pre-registration error:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
