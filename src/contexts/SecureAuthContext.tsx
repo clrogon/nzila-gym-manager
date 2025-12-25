@@ -16,7 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Rate limiter for auth attempts
+// Client-side rate limiter for auth attempts
 class AuthRateLimiter {
   private attempts: Map<string, { count: number; resetAt: number; lockedUntil?: number }> = new Map();
   
@@ -35,7 +35,7 @@ class AuthRateLimiter {
       return { allowed: true };
     }
     
-    // Check attempt count
+    // Check attempt count (5 attempts per minute)
     if (record.count >= 5) {
       // Lock for 15 minutes after 5 failed attempts
       record.lockedUntil = now + 900000;
@@ -49,24 +49,26 @@ class AuthRateLimiter {
   recordSuccess(identifier: string): void {
     this.attempts.delete(identifier);
   }
-  
-  recordFailure(identifier: string): void {
-    // Failure is already recorded in canAttempt
-  }
 }
 
 const authRateLimiter = new AuthRateLimiter();
 
-// Helper to log audit events safely
-const logAuditEvent = async (action: string, entityType: string, newValues?: object) => {
+// Log auth events to auth_events table (separate from immutable audit_logs)
+const logAuthEvent = async (
+  eventType: string, 
+  userId?: string | null,
+  metadata?: Record<string, string | number | boolean | null>
+) => {
   try {
-    await supabase.from('audit_logs').insert([{
-      action,
-      entity_type: entityType,
-      new_values: newValues ? JSON.parse(JSON.stringify(newValues)) : null,
+    await supabase.from('auth_events').insert([{
+      user_id: userId || null,
+      event_type: eventType,
+      metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
+      user_agent: navigator.userAgent,
     }]);
   } catch (err) {
-    console.error('Audit log failed:', err);
+    // Silently fail - don't block auth flow for logging failures
+    console.debug('Auth event log skipped:', eventType);
   }
 };
 
@@ -97,9 +99,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
         setSessionExpiresIn(calculateSessionExpiry(data.session));
         warningShown.current = false;
         
-        // Log successful refresh
-        await logAuditEvent('SESSION_REFRESHED', 'auth');
-        
+        await logAuthEvent('SESSION_REFRESHED', data.session.user.id);
         return true;
       }
       return false;
@@ -122,7 +122,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     if (timeLeft < 300000 && timeLeft > 0 && !warningShown.current) {
       warningShown.current = true;
       
-      // Show toast or modal warning
       const shouldExtend = window.confirm(
         'Your session will expire in 5 minutes. Would you like to extend it?'
       );
@@ -151,15 +150,17 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth event:', event);
-        
+      (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setSessionExpiresIn(calculateSessionExpiry(currentSession));
 
-        // Log auth events
-        await logAuditEvent(`AUTH_${event.toUpperCase()}`, 'auth');
+        // Log auth events (deferred to avoid deadlock)
+        if (currentSession?.user) {
+          setTimeout(() => {
+            logAuthEvent(`AUTH_${event.toUpperCase()}`, currentSession.user.id);
+          }, 0);
+        }
 
         if (event === 'TOKEN_REFRESHED') {
           warningShown.current = false;
@@ -201,8 +202,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       };
     }
 
-    // Audit log - attempt
-    await logAuditEvent('SIGN_IN_ATTEMPT', 'auth', { email });
+    await logAuthEvent('SIGN_IN_ATTEMPT', null, { email });
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -210,25 +210,19 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     });
 
     if (error) {
-      authRateLimiter.recordFailure(email);
-      
-      // Audit log - failure
-      await logAuditEvent('SIGN_IN_FAILED', 'auth', { email, error: error.message });
-      
+      await logAuthEvent('SIGN_IN_FAILED', null, { email, error: error.message });
       return { error };
     }
 
     authRateLimiter.recordSuccess(email);
-    
-    // Audit log - success
-    await logAuditEvent('SIGN_IN_SUCCESS', 'auth', { email });
+    await logAuthEvent('SIGN_IN_SUCCESS', data.user?.id, { email });
 
     return { error: null };
   };
 
-  // Secure sign up
+  // Secure sign up with password strength validation
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Basic validation
+    // Password strength validation
     if (password.length < 8) {
       return {
         error: {
@@ -238,7 +232,6 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       };
     }
 
-    // Check password strength
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
@@ -252,13 +245,13 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
       };
     }
 
-    // Audit log - attempt
-    await logAuditEvent('SIGN_UP_ATTEMPT', 'auth', { email });
+    await logAuthEvent('SIGN_UP_ATTEMPT', null, { email });
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: fullName,
         },
@@ -266,22 +259,19 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
     });
 
     if (error) {
-      // Audit log - failure
-      await logAuditEvent('SIGN_UP_FAILED', 'auth', { email, error: error.message });
-      
+      await logAuthEvent('SIGN_UP_FAILED', null, { email, error: error.message });
       return { error };
     }
 
-    // Audit log - success
-    await logAuditEvent('SIGN_UP_SUCCESS', 'auth', { email });
+    await logAuthEvent('SIGN_UP_SUCCESS', data.user?.id, { email });
 
     return { error: null };
   };
 
   // Secure sign out
   const signOut = async () => {
-    // Audit log
-    await logAuditEvent('SIGN_OUT', 'auth');
+    const currentUserId = user?.id;
+    await logAuthEvent('SIGN_OUT', currentUserId);
 
     await supabase.auth.signOut();
     setUser(null);
