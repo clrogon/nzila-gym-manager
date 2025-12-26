@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -45,9 +46,8 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, 
   ShieldAlert, Mail, Phone, MapPin, Calendar, CreditCard, 
-  Activity, MoreHorizontal, Eye, AlertTriangle, UsersRound
+  Activity, MoreHorizontal, Eye, AlertTriangle
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +72,9 @@ interface Member {
   membership_start_date: string | null;
   membership_end_date: string | null;
   created_at: string;
+  is_dependent: boolean | null;
+  tutor_id: string | null;
+  health_conditions: string | null;
 }
 
 interface MembershipPlan {
@@ -85,7 +88,7 @@ export default function Members() {
   const { currentGym } = useGym();
   const { hasPermission, loading: rbacLoading } = useRBAC();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,6 +116,11 @@ export default function Members() {
   const [membershipPlanId, setMembershipPlanId] = useState('');
   const [membershipStartDate, setMembershipStartDate] = useState('');
   const [notes, setNotes] = useState('');
+  
+  // Form state - Dependent
+  const [isDependent, setIsDependent] = useState(false);
+  const [tutorId, setTutorId] = useState('');
+  const [healthConditions, setHealthConditions] = useState('');
 
   const canViewMembers = hasPermission('members:read');
   const canCreateMembers = hasPermission('members:create');
@@ -191,6 +199,9 @@ export default function Members() {
       membership_start_date: membershipStartDate || null,
       membership_end_date: endDate,
       notes: notes || null,
+      is_dependent: isDependent,
+      tutor_id: isDependent && tutorId ? tutorId : null,
+      health_conditions: healthConditions || null,
     };
 
     try {
@@ -234,6 +245,9 @@ export default function Members() {
     setMembershipPlanId(member.membership_plan_id || '');
     setMembershipStartDate(member.membership_start_date || '');
     setNotes(member.notes || '');
+    setIsDependent(member.is_dependent || false);
+    setTutorId(member.tutor_id || '');
+    setHealthConditions(member.health_conditions || '');
     setDialogOpen(true);
   };
 
@@ -270,7 +284,13 @@ export default function Members() {
     setMembershipPlanId('');
     setMembershipStartDate('');
     setNotes('');
+    setIsDependent(false);
+    setTutorId('');
+    setHealthConditions('');
   };
+
+  // Get potential tutors (non-dependent members)
+  const potentialTutors = members.filter(m => !m.is_dependent && m.id !== editingMember?.id);
 
   const filteredMembers = members.filter((m) => {
     const matchesSearch =
@@ -371,33 +391,25 @@ export default function Members() {
             <p className="text-muted-foreground">Gerir os membros do ginásio</p>
           </div>
 
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/dependents')}
-            >
-              <UsersRound className="w-4 h-4 mr-2" />
-              Dependentes
-            </Button>
-            
-            {canCreateMembers && (
-              <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-                <DialogTrigger asChild>
-                  <Button className="gradient-primary">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Membro
-                  </Button>
-                </DialogTrigger>
+          {canCreateMembers && (
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Membro
+                </Button>
+              </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingMember ? 'Editar Membro' : 'Registar Novo Membro'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">Informação Básica</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="basic">Básico</TabsTrigger>
                       <TabsTrigger value="emergency">Emergência</TabsTrigger>
                       <TabsTrigger value="membership">Subscrição</TabsTrigger>
+                      <TabsTrigger value="dependent">Dependente</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="basic" className="space-y-4 mt-4">
@@ -536,6 +548,56 @@ export default function Members() {
                         />
                       </div>
                     </TabsContent>
+
+                    <TabsContent value="dependent" className="space-y-4 mt-4">
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="isDependent">É Dependente / Menor?</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Ative se este membro é filho/a ou dependente de outro membro
+                          </p>
+                        </div>
+                        <Switch
+                          id="isDependent"
+                          checked={isDependent}
+                          onCheckedChange={setIsDependent}
+                        />
+                      </div>
+
+                      {isDependent && (
+                        <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                          <div className="space-y-2">
+                            <Label htmlFor="tutorId">Responsável / Tutor *</Label>
+                            <Select value={tutorId} onValueChange={setTutorId}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecionar o responsável" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {potentialTutors.map((member) => (
+                                  <SelectItem key={member.id} value={member.id}>
+                                    {member.full_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                              A faturação será consolidada na conta do responsável
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="healthConditions">Condições de Saúde / Notas Médicas</Label>
+                            <Textarea
+                              id="healthConditions"
+                              value={healthConditions}
+                              onChange={(e) => setHealthConditions(e.target.value)}
+                              placeholder="Alergias, condições médicas, medicação..."
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
                   </Tabs>
 
                   <Button type="submit" className="w-full">
@@ -544,8 +606,7 @@ export default function Members() {
                 </form>
               </DialogContent>
             </Dialog>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Stats Cards */}
