@@ -11,7 +11,7 @@ import { ModuleLoader } from "@/components/common/ModuleLoader";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import UserProfile from '@/pages/UserProfile';
-import Dependents from '@/pages/Dependents';
+
 
 
 // Modular imports with lazy loading
@@ -105,7 +105,7 @@ function AppRoutes() {
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
       <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute moduleName="Profile"><UserProfile /></ProtectedRoute>} />
-      <Route path="/dependents" element={<ProtectedRoute moduleName="Dependents"><Dependents /></ProtectedRoute>} />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
