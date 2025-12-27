@@ -11,6 +11,8 @@ import { PromotionCriteria } from '@/components/training/PromotionCriteria';
 import { MemberProgressDashboard } from '@/components/training/MemberProgressDashboard';
 import { TrainingLibraryView } from '@/components/training/TrainingLibraryView';
 import { GymContentCrud } from '@/components/training/GymContentCrud';
+import { MemberWorkoutLogger } from '@/components/training/MemberWorkoutLogger';
+import { MemberRankProgress } from '@/components/training/MemberRankProgress';
 import {
   Dumbbell,
   ClipboardList,
@@ -20,23 +22,35 @@ import {
   BookOpen,
   Target,
   ListChecks,
+  User,
 } from 'lucide-react';
 
 export default function Training() {
   const { currentGym } = useGym();
-  const { hasPermission } = useRBAC();
-  const [activeTab, setActiveTab] = useState('library');
+  const { isStaff, isAdmin, isGymOwner, isSuperAdmin } = useRBAC();
+  const [activeTab, setActiveTab] = useState('my-workouts');
   const [stats, setStats] = useState({
     exercises: 0,
     templates: 0,
     assignments: 0,
   });
 
+  const isStaffOrAbove = isStaff || isAdmin || isGymOwner || isSuperAdmin;
+
   useEffect(() => {
     if (currentGym?.id) {
       fetchStats();
     }
   }, [currentGym?.id]);
+
+  // Set default tab based on role
+  useEffect(() => {
+    if (isStaffOrAbove) {
+      setActiveTab('library');
+    } else {
+      setActiveTab('my-workouts');
+    }
+  }, [isStaffOrAbove]);
 
   const fetchStats = async () => {
     if (!currentGym?.id) return;
@@ -82,105 +96,141 @@ export default function Training() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-display font-bold text-foreground">Centro de Treino</h1>
-            <p className="text-muted-foreground">Gerir exercícios, treinos, atribuições e promoções</p>
+            <p className="text-muted-foreground">
+              {isStaffOrAbove 
+                ? 'Gerir exercícios, treinos, atribuições e promoções'
+                : 'Os teus treinos e progresso'
+              }
+            </p>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-primary/10">
-                  <ListChecks className="w-6 h-6 text-primary" />
+        {/* Quick Stats - Only for staff */}
+        {isStaffOrAbove && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-primary/10">
+                    <ListChecks className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.exercises}</p>
+                    <p className="text-sm text-muted-foreground">Exercícios</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.exercises}</p>
-                  <p className="text-sm text-muted-foreground">Exercícios</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-green-500/10">
+                    <Dumbbell className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.templates}</p>
+                    <p className="text-sm text-muted-foreground">Modelos de Treino</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-green-500/10">
-                  <Dumbbell className="w-6 h-6 text-green-500" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-yellow-500/10">
+                    <ClipboardList className="w-6 h-6 text-yellow-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.assignments}</p>
+                    <p className="text-sm text-muted-foreground">Atribuições</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.templates}</p>
-                  <p className="text-sm text-muted-foreground">Modelos de Treino</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-yellow-500/10">
-                  <ClipboardList className="w-6 h-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.assignments}</p>
-                  <p className="text-sm text-muted-foreground">Atribuições</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Biblioteca</span>
+          <TabsList className={`grid w-full ${isStaffOrAbove ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-2'}`}>
+            {/* Member-facing tabs - Always visible */}
+            <TabsTrigger value="my-workouts" className="flex items-center gap-2">
+              <Dumbbell className="w-4 h-4" />
+              <span className="hidden sm:inline">Meus Treinos</span>
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="flex items-center gap-2">
-              <ClipboardList className="w-4 h-4" />
-              <span className="hidden sm:inline">Atribuições</span>
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Progresso</span>
-            </TabsTrigger>
-            <TabsTrigger value="promotions" className="flex items-center gap-2">
+            <TabsTrigger value="my-progress" className="flex items-center gap-2">
               <Award className="w-4 h-4" />
-              <span className="hidden sm:inline">Promoções</span>
+              <span className="hidden sm:inline">Meu Progresso</span>
             </TabsTrigger>
-            <TabsTrigger value="criteria" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Critérios</span>
-            </TabsTrigger>
-            <TabsTrigger value="custom" className="flex items-center gap-2">
-              <Settings2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Personalizado</span>
-            </TabsTrigger>
+
+            {/* Staff/Admin tabs */}
+            {isStaffOrAbove && (
+              <>
+                <TabsTrigger value="library" className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden sm:inline">Biblioteca</span>
+                </TabsTrigger>
+                <TabsTrigger value="assignments" className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4" />
+                  <span className="hidden sm:inline">Atribuições</span>
+                </TabsTrigger>
+                <TabsTrigger value="progress" className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="hidden sm:inline">Membros</span>
+                </TabsTrigger>
+                <TabsTrigger value="promotions" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Promoções</span>
+                </TabsTrigger>
+                <TabsTrigger value="criteria" className="flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  <span className="hidden sm:inline">Critérios</span>
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Personalizado</span>
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
-          <TabsContent value="library" className="mt-6">
-            <TrainingLibraryView />
+          {/* Member-facing content */}
+          <TabsContent value="my-workouts" className="mt-6">
+            <MemberWorkoutLogger />
           </TabsContent>
 
-          <TabsContent value="assignments" className="mt-6">
-            <WorkoutAssignment />
+          <TabsContent value="my-progress" className="mt-6">
+            <MemberRankProgress />
           </TabsContent>
 
-          <TabsContent value="progress" className="mt-6">
-            <MemberProgressDashboard />
-          </TabsContent>
+          {/* Staff/Admin content */}
+          {isStaffOrAbove && (
+            <>
+              <TabsContent value="library" className="mt-6">
+                <TrainingLibraryView />
+              </TabsContent>
 
-          <TabsContent value="promotions" className="mt-6">
-            <RankPromotion />
-          </TabsContent>
+              <TabsContent value="assignments" className="mt-6">
+                <WorkoutAssignment />
+              </TabsContent>
 
-          <TabsContent value="criteria" className="mt-6">
-            <PromotionCriteria />
-          </TabsContent>
+              <TabsContent value="progress" className="mt-6">
+                <MemberProgressDashboard />
+              </TabsContent>
 
-          <TabsContent value="custom" className="mt-6">
-            <GymContentCrud />
-          </TabsContent>
+              <TabsContent value="promotions" className="mt-6">
+                <RankPromotion />
+              </TabsContent>
+
+              <TabsContent value="criteria" className="mt-6">
+                <PromotionCriteria />
+              </TabsContent>
+
+              <TabsContent value="custom" className="mt-6">
+                <GymContentCrud />
+              </TabsContent>
+            </>
+          )}
         </Tabs>
       </div>
     </DashboardLayout>
