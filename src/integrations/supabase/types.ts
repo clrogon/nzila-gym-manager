@@ -165,28 +165,34 @@ export type Database = {
       }
       auth_rate_limits: {
         Row: {
-          attempts: number | null
+          attempt_count: number | null
+          blocked_until: string | null
           created_at: string | null
+          first_attempt_at: string | null
           id: string
           identifier: string
-          locked_until: string | null
-          reset_at: string
+          identifier_type: string
+          last_attempt_at: string | null
         }
         Insert: {
-          attempts?: number | null
+          attempt_count?: number | null
+          blocked_until?: string | null
           created_at?: string | null
+          first_attempt_at?: string | null
           id?: string
           identifier: string
-          locked_until?: string | null
-          reset_at: string
+          identifier_type: string
+          last_attempt_at?: string | null
         }
         Update: {
-          attempts?: number | null
+          attempt_count?: number | null
+          blocked_until?: string | null
           created_at?: string | null
+          first_attempt_at?: string | null
           id?: string
           identifier?: string
-          locked_until?: string | null
-          reset_at?: string
+          identifier_type?: string
+          last_attempt_at?: string | null
         }
         Relationships: []
       }
@@ -2473,6 +2479,17 @@ export type Database = {
       }
     }
     Views: {
+      auth_rate_limit_stats: {
+        Row: {
+          avg_attempts: number | null
+          currently_blocked: number | null
+          high_attempt_count: number | null
+          identifier_type: string | null
+          max_attempts: number | null
+          total_records: number | null
+        }
+        Relationships: []
+      }
       members_safe: {
         Row: {
           address: string | null
@@ -2582,6 +2599,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_auth_rate_limit: {
+        Args: { p_identifier: string; p_identifier_type?: string }
+        Returns: Json
+      }
       check_coach_overlap: {
         Args: {
           p_coach_id: string
@@ -2618,6 +2639,10 @@ export type Database = {
       }
       is_class_full: { Args: { class_id_param: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      reset_auth_rate_limit: {
+        Args: { p_identifier: string; p_identifier_type?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
