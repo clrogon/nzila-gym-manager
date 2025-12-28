@@ -6,6 +6,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface AuthRequest {
+  email: string;
+  password: string;
+  action: 'signin' | 'signup';
+  fullName?: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -18,23 +25,41 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { email, password, action } = await req.json();
+    const { email, password, action, fullName }: AuthRequest = await req.json();
+
+    if (!email || !password || !action) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: email, password, action' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Get client IP
-    const clientIp = req.headers.get('x-forwarded-for') || 
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
+                     req.headers.get('cf-connecting-ip') ||
                      'unknown';
 
+    console.log(`Auth attempt: ${action} for ${email} from IP ${clientIp}`);
+
     // Check rate limit by IP
-    const { data: ipRateLimit } = await supabaseClient.rpc(
+    const { data: ipRateLimit, error: ipError } = await supabaseClient.rpc(
       'check_auth_rate_limit',
       { p_identifier: clientIp, p_identifier_type: 'ip' }
     );
 
-    if (!ipRateLimit.allowed) {
+    if (ipError) {
+      console.error('IP rate limit check error:', ipError);
+    }
+
+    if (ipRateLimit && !ipRateLimit.allowed) {
+      console.log(`IP rate limited: ${clientIp}`);
       return new Response(
         JSON.stringify({
-          error: 'Too many attempts',
+          error: 'Too many attempts from this location',
           ...ipRateLimit
         }),
         {
@@ -45,12 +70,17 @@ serve(async (req) => {
     }
 
     // Check rate limit by email
-    const { data: emailRateLimit } = await supabaseClient.rpc(
+    const { data: emailRateLimit, error: emailError } = await supabaseClient.rpc(
       'check_auth_rate_limit',
       { p_identifier: email.toLowerCase(), p_identifier_type: 'email' }
     );
 
-    if (!emailRateLimit.allowed) {
+    if (emailError) {
+      console.error('Email rate limit check error:', emailError);
+    }
+
+    if (emailRateLimit && !emailRateLimit.allowed) {
+      console.log(`Email rate limited: ${email}`);
       return new Response(
         JSON.stringify({
           error: 'Too many attempts for this account',
@@ -74,13 +104,24 @@ serve(async (req) => {
       authResult = await supabaseClient.auth.signUp({
         email,
         password,
+        options: {
+          data: fullName ? { full_name: fullName } : undefined,
+        },
       });
     } else {
-      throw new Error('Invalid action');
+      return new Response(
+        JSON.stringify({ error: 'Invalid action. Use "signin" or "signup"' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // If successful, reset rate limits
     if (!authResult.error) {
+      console.log(`Auth success: ${action} for ${email}`);
+      
       await supabaseClient.rpc('reset_auth_rate_limit', {
         p_identifier: clientIp,
         p_identifier_type: 'ip'
@@ -89,6 +130,8 @@ serve(async (req) => {
         p_identifier: email.toLowerCase(),
         p_identifier_type: 'email'
       });
+    } else {
+      console.log(`Auth failed: ${action} for ${email} - ${authResult.error.message}`);
     }
 
     return new Response(
@@ -101,6 +144,7 @@ serve(async (req) => {
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    console.error('Auth edge function error:', errorMessage);
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {

@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+
+interface RateLimitResponse {
+  allowed: boolean;
+  reason?: string;
+  blocked_until?: string;
+  retry_after_seconds?: number;
+  attempts_remaining?: number;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -14,39 +22,6 @@ interface AuthContextType {
   refreshSession: () => Promise<boolean>;
   sessionExpiresIn: number | null;
 }
-
-// Client-side rate limiter for auth attempts
-class AuthRateLimiter {
-  private attempts: Map<string, { count: number; resetAt: number; lockedUntil?: number }> = new Map();
-  
-  canAttempt(identifier: string): { allowed: boolean; retryAfter?: number } {
-    const now = Date.now();
-    const record = this.attempts.get(identifier);
-    
-    if (record?.lockedUntil && now < record.lockedUntil) {
-      return { allowed: false, retryAfter: Math.ceil((record.lockedUntil - now) / 1000) };
-    }
-    
-    if (!record || now > record.resetAt) {
-      this.attempts.set(identifier, { count: 1, resetAt: now + 60000 });
-      return { allowed: true };
-    }
-    
-    if (record.count >= 5) {
-      record.lockedUntil = now + 900000; // 15 minutes
-      return { allowed: false, retryAfter: 900 };
-    }
-    
-    record.count++;
-    return { allowed: true };
-  }
-  
-  recordSuccess(identifier: string): void {
-    this.attempts.delete(identifier);
-  }
-}
-
-const authRateLimiter = new AuthRateLimiter();
 
 // Log auth events
 const logAuthEvent = async (
@@ -161,27 +136,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [session, calculateSessionExpiry, refreshSession]);
 
   const signIn = async (email: string, password: string) => {
-    // Rate limiting
-    const rateLimitCheck = authRateLimiter.canAttempt(email);
-    if (!rateLimitCheck.allowed) {
-      return {
-        error: new Error(`Too many login attempts. Please try again in ${rateLimitCheck.retryAfter} seconds.`),
-      };
+    setLoading(true);
+    try {
+      // Call edge function with server-side rate limiting
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-with-rate-limit`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ email, password, action: 'signin' }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.status === 429) {
+        // Rate limited
+        const retryAfter = (data as RateLimitResponse).retry_after_seconds || 1800;
+        return {
+          error: new Error(`Too many login attempts. Please try again in ${Math.ceil(retryAfter / 60)} minutes.`),
+        };
+      }
+
+      if (data.error) {
+        await logAuthEvent('SIGN_IN_FAILED', null, { email, error: data.error.message || 'Unknown error' });
+        return { error: new Error(data.error.message || 'Authentication failed') };
+      }
+
+      // Set session from the response
+      if (data.data?.session) {
+        await supabase.auth.setSession(data.data.session);
+        await logAuthEvent('SIGN_IN_SUCCESS', data.data.user?.id, { email });
+      }
+
+      return { error: null };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return { error: new Error(errorMessage) };
+    } finally {
+      setLoading(false);
     }
-
-    await logAuthEvent('SIGN_IN_ATTEMPT', null, { email });
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      await logAuthEvent('SIGN_IN_FAILED', null, { email, error: error.message });
-      return { error };
-    }
-
-    authRateLimiter.recordSuccess(email);
-    await logAuthEvent('SIGN_IN_SUCCESS', data.user?.id, { email });
-
-    return { error: null };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -198,25 +195,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: new Error('Password must contain uppercase, lowercase, and numbers') };
     }
 
-    await logAuthEvent('SIGN_UP_ATTEMPT', null, { email });
+    setLoading(true);
+    try {
+      // Call edge function with server-side rate limiting
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-with-rate-limit`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ 
+            email, 
+            password, 
+            action: 'signup',
+            fullName 
+          }),
+        }
+      );
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: { full_name: fullName },
-      },
-    });
+      const data = await response.json();
 
-    if (error) {
-      await logAuthEvent('SIGN_UP_FAILED', null, { email, error: error.message });
-      return { error };
+      if (response.status === 429) {
+        const retryAfter = (data as RateLimitResponse).retry_after_seconds || 1800;
+        return {
+          error: new Error(`Too many signup attempts. Please try again in ${Math.ceil(retryAfter / 60)} minutes.`),
+        };
+      }
+
+      if (data.error) {
+        await logAuthEvent('SIGN_UP_FAILED', null, { email, error: data.error.message || 'Unknown error' });
+        return { error: new Error(data.error.message || 'Registration failed') };
+      }
+
+      await logAuthEvent('SIGN_UP_SUCCESS', data.data?.user?.id, { email });
+
+      return { error: null };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return { error: new Error(errorMessage) };
+    } finally {
+      setLoading(false);
     }
-
-    await logAuthEvent('SIGN_UP_SUCCESS', data.user?.id, { email });
-
-    return { error: null };
   };
 
   const signInWithMagicLink = async (email: string) => {

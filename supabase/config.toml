@@ -2,3 +2,9 @@ project_id = "bhcnvdlezwudxywrknru"
 
 [functions.seed-test-users]
 verify_jwt = false
+
+[functions.auth-with-rate-limit]
+verify_jwt = false
+
+[functions.pre-register-gym-owner]
+verify_jwt = false
