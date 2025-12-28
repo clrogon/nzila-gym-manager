@@ -404,8 +404,18 @@ export function GymContentCrud() {
       </Tabs>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={isCreateOpen || isEditOpen} onOpenChange={(open) => { if (!open) { setIsCreateOpen(false); setIsEditOpen(false); setEditingItem(null); } }}>
-        <DialogContent>
+      <Dialog 
+        open={isCreateOpen || isEditOpen} 
+        onOpenChange={(open) => { 
+          if (!open) { 
+            setIsCreateOpen(false); 
+            setIsEditOpen(false); 
+            setEditingItem(null); 
+            resetForm();
+          } 
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Edit' : 'Create'} {getTabLabel(activeTab).slice(0, -1)}</DialogTitle>
           </DialogHeader>

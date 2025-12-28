@@ -187,18 +187,63 @@ export function RankPromotion() {
       }
 
       const { error } = await supabase.from('discipline_ranks').insert([
-        { discipline_id: disciplineId, name: 'Iniciante', level: 1, color: null },
-        { discipline_id: disciplineId, name: 'Intermédio', level: 2, color: null },
-        { discipline_id: disciplineId, name: 'Avançado', level: 3, color: null },
+        { discipline_id: disciplineId, name: 'Iniciante', level: 1, color: '#22C55E' },
+        { discipline_id: disciplineId, name: 'Intermédio', level: 2, color: '#3B82F6' },
+        { discipline_id: disciplineId, name: 'Avançado', level: 3, color: '#8B5CF6' },
+        { discipline_id: disciplineId, name: 'Expert', level: 4, color: '#EAB308' },
+        { discipline_id: disciplineId, name: 'Master', level: 5, color: '#EF4444' },
       ]);
 
       if (error) throw error;
 
       toast.success('Ranks padrão criados');
       await fetchRanksForDiscipline(disciplineId);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error creating default ranks:', e);
-      toast.error(e?.message || 'Falha ao criar ranks');
+      toast.error(e instanceof Error ? e.message : 'Falha ao criar ranks');
+    } finally {
+      setIsCreatingRanks(false);
+    }
+  };
+
+  const createRanksForAllDisciplines = async () => {
+    if (!currentGym?.id || disciplines.length === 0) return;
+
+    setIsCreatingRanks(true);
+    try {
+      // Get all disciplines that already have ranks
+      const { data: existingRanks, error: ranksError } = await supabase
+        .from('discipline_ranks')
+        .select('discipline_id')
+        .in('discipline_id', disciplines.map(d => d.id));
+
+      if (ranksError) throw ranksError;
+
+      const disciplinesWithRanks = new Set(existingRanks?.map(r => r.discipline_id) || []);
+      const disciplinesWithoutRanks = disciplines.filter(d => !disciplinesWithRanks.has(d.id));
+
+      if (disciplinesWithoutRanks.length === 0) {
+        toast.message('Todas as disciplinas já têm ranks definidos');
+        return;
+      }
+
+      // Create default ranks for all disciplines without ranks
+      const ranksToInsert = disciplinesWithoutRanks.flatMap(d => [
+        { discipline_id: d.id, name: 'Iniciante', level: 1, color: '#22C55E' },
+        { discipline_id: d.id, name: 'Intermédio', level: 2, color: '#3B82F6' },
+        { discipline_id: d.id, name: 'Avançado', level: 3, color: '#8B5CF6' },
+        { discipline_id: d.id, name: 'Expert', level: 4, color: '#EAB308' },
+        { discipline_id: d.id, name: 'Master', level: 5, color: '#EF4444' },
+      ]);
+
+      const { error } = await supabase.from('discipline_ranks').insert(ranksToInsert);
+      if (error) throw error;
+
+      toast.success(`Ranks criados para ${disciplinesWithoutRanks.length} disciplinas`);
+      fetchData();
+    } catch (e: unknown) {
+      console.error('Error creating ranks for all disciplines:', e);
+      toast.error(e instanceof Error ? e.message : 'Falha ao criar ranks');
     } finally {
       setIsCreatingRanks(false);
     }
@@ -294,15 +339,26 @@ export function RankPromotion() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl font-semibold">Belt & Rank Promotions</h2>
           <p className="text-sm text-muted-foreground">Promote members through belt/rank levels</p>
         </div>
-        <Button onClick={() => setIsPromoteDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Promote Member
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={createRanksForAllDisciplines}
+            disabled={isCreatingRanks || disciplines.length === 0}
+          >
+            {isCreatingRanks && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <Award className="w-4 h-4 mr-2" />
+            Create Ranks for All Disciplines
+          </Button>
+          <Button onClick={() => setIsPromoteDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Promote Member
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
