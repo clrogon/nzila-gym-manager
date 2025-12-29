@@ -24,6 +24,7 @@
 - Giving and gracefully accepting constructive feedback
 - Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience
 - Focusing on what is best not just for us as individuals, but for the overall community
+- Following security best practices when contributing code
 
 **PT**:
 - Demonstrar empatia e bondade em relação a outras pessoas
@@ -31,6 +32,7 @@
 - Dar e aceitar graciosamente feedback construtivo
 - Aceitar responsabilidade e pedir desculpas àqueles afectados pelos nossos erros, e aprender com a experiência
 - Focar no que é melhor não apenas para nós como indivíduos, mas para a comunidade em geral
+- Seguir as melhores práticas de segurança ao contribuir código
 
 **EN**: Examples of unacceptable behavior include:
 
@@ -42,6 +44,7 @@
 - Public or private harassment
 - Publishing others' private information, such as a physical or email address, without their explicit permission
 - Other conduct which could reasonably be considered inappropriate in a professional setting
+- Intentionally introducing security vulnerabilities
 
 **PT**:
 - O uso de linguagem ou imagens sexualizadas, e atenção ou avanços sexuais de qualquer tipo
@@ -49,6 +52,7 @@
 - Assédio público ou privado
 - Publicar informações privadas de outros, como endereço físico ou email, sem a sua permissão explícita
 - Outra conduta que poderia razoavelmente ser considerada inadequada num contexto profissional
+- Introduzir intencionalmente vulnerabilidades de segurança
 
 ---
 
@@ -154,6 +158,14 @@
 
 ---
 
+## Security Reporting | Reporte de Segurança
+
+**EN**: Security vulnerabilities should be reported privately to security@nzila.ao, not through public channels. See [SECURITY.md](SECURITY.md) for our security policy.
+
+**PT**: Vulnerabilidades de segurança devem ser reportadas privadamente para security@nzila.ao, não através de canais públicos. Veja [SECURITY.md](SECURITY.md) para a nossa política de segurança.
+
+---
+
 ## Attribution | Atribuição
 
 **EN**: This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org), version 2.1, available at [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html).
@@ -170,6 +182,6 @@
 
 ---
 
-**EN**: Last Updated: December 2024
+**EN**: Last Updated: January 2025
 
-**PT**: Última Actualização: Dezembro 2024
+**PT**: Última Actualização: Janeiro 2025

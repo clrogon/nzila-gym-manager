@@ -4,6 +4,30 @@ Este documento reúne **todas as medidas de segurança** aplicáveis ao projeto 
 
 ---
 
+## Security Fixes Applied (v1.0.1 - January 2025)
+
+### ✅ Implemented Fixes
+
+| Issue | Status | Description |
+|-------|--------|-------------|
+| PUBLIC_USER_DATA | ✅ Fixed | Profiles table now properly protected |
+| EXPOSED_SENSITIVE_DATA | ✅ Fixed | Health data moved to secure table |
+| MISSING_RLS_PROTECTION | ✅ Fixed | members_safe view has RLS |
+
+### Migration Applied
+
+```sql
+-- File: supabase/migrations/20250129000000_comprehensive_security_fixes.sql
+-- Key changes:
+-- 1. Created member_sensitive_data table with strict RLS
+-- 2. Migrated health_conditions from members table
+-- 3. Added audit_sensitive_data_access trigger
+-- 4. Recreated members_safe view with security_invoker
+-- 5. Strengthened auth_rate_limits policies
+```
+
+---
+
 ## 1. Dependências e Supply Chain
 
 **Problema:** Dependências desatualizadas ou mal auditadas.
@@ -53,51 +77,74 @@ jobs:
 
 ## 2. Supabase - Row Level Security (RLS)
 
-**Problema:** Todos os dados podem ser acessados sem restrição.
+**Status:** ✅ Implemented on all tables
 
-**Ação:**
-1. Ativar RLS em todas as tabelas com dados sensíveis.
-2. Criar políticas:
+**Current Policies:**
+
+### profiles table
 ```sql
--- Leitura própria
-create policy "read_own_rows"
-on members for select
-to authenticated
-using (auth.uid() = user_id);
+-- Users can only view their own profile
+CREATE POLICY "Users can view their own profile" ON profiles FOR SELECT USING (id = auth.uid());
 
--- Inserção própria
-create policy "insert_own_rows"
-on members for insert
-to authenticated
-with check (auth.uid() = user_id);
+-- Gym staff can view profiles of gym members
+CREATE POLICY "Gym staff can view profiles of gym members" ON profiles FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM user_roles ur_viewer
+    WHERE ur_viewer.user_id = auth.uid()
+    AND ur_viewer.role = ANY(ARRAY['gym_owner', 'admin', 'staff'])
+    AND EXISTS (
+      SELECT 1 FROM user_roles ur_target
+      WHERE ur_target.user_id = profiles.id
+      AND ur_target.gym_id = ur_viewer.gym_id
+    )
+  ));
+
+-- Super admins can view all profiles
+CREATE POLICY "Super admins can view all profiles" ON profiles FOR SELECT
+  USING (is_super_admin(auth.uid()));
 ```
-3. Repetir para todas as tabelas que armazenem informações pessoais.
+
+### member_sensitive_data table (NEW)
+```sql
+-- Only admins/owners can manage sensitive data
+CREATE POLICY "Admins can manage sensitive data" ON member_sensitive_data FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM members m
+    WHERE m.id = member_sensitive_data.member_id
+    AND has_gym_role(auth.uid(), m.gym_id, ARRAY['gym_owner', 'admin'])
+  ));
+
+-- Staff can view (read-only) sensitive data
+CREATE POLICY "Staff can view sensitive data" ON member_sensitive_data FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM members m
+    WHERE m.id = member_sensitive_data.member_id
+    AND has_gym_role(auth.uid(), m.gym_id, ARRAY['gym_owner', 'admin', 'staff'])
+  ));
+```
 
 ---
 
 ## 3. Proteção de rotas
 
-**Problema:** Qualquer utilizador pode aceder a páginas protegidas.
+**Status:** ✅ Implemented
 
-**Ação:**
-1. Criar `src/components/ProtectedRoute.tsx`:
+**Implementation:**
 ```tsx
+// src/components/ProtectedRoute.tsx
 import { Navigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
-import { useEffect, useState } from "react";
+import { useSecureAuth } from "@/contexts/SecureAuthContext";
 
-export function ProtectedRoute({ children }) {
-  const [session, setSession] = useState(null);
+export function ProtectedRoute({ children, requiredRoles }) {
+  const { user, loading, hasRole } = useSecureAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  }, []);
-
-  if (session === null) return null; // loading
-  return session ? children : <Navigate to="/login" replace />;
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (requiredRoles && !hasRole(requiredRoles)) return <Navigate to="/unauthorized" replace />;
+  
+  return children;
 }
 ```
-2. Envolver rotas críticas com `<ProtectedRoute>`.
 
 ---
 
@@ -127,20 +174,16 @@ export function SafeInput({ value, onChange, ...props }) {
 
 ## 5. Variáveis de ambiente e segredos
 
-**Problema:** Vite expõe `VITE_*` no frontend.
+**Status:** ✅ Properly configured
 
-**Ação:**
-1. `.env` nunca deve conter chaves sensíveis:
-```
-VITE_API_URL=https://api.example.com
-```
-2. Credenciais de admin ou service role devem estar em **Supabase Edge Functions** ou backend.
+**Current Setup:**
+- `.env` contains only public/publishable keys (VITE_*)
+- Service role keys stored in Supabase secrets
+- Edge Functions use server-side secrets
 
 ---
 
 ## 6. Headers de segurança
-
-**Problema:** Falta CSP, clickjacking, referrer leaks.
 
 **Ação (Vercel):**
 1. Criar `vercel.json`:
@@ -163,11 +206,11 @@ VITE_API_URL=https://api.example.com
 
 ## 7. Tailwind e UI Layer
 
-**Problema:** Possível injeção de classes via props ou inputs dinâmicos.
+**Status:** ✅ Using cn() utility
 
-**Ação:**
-1. Criar `src/lib/cn.ts`:
+**Implementation:**
 ```ts
+// src/lib/utils.ts
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -175,106 +218,103 @@ export function cn(...inputs: any[]) {
   return twMerge(clsx(inputs));
 }
 ```
-2. Substituir todos os `className={props.className}` por:
-```tsx
-className={cn("p-4 bg-white", props.className)}
-```
 
 ---
 
-## 8. SVG / Icons
+## 8. Logging e Audit Trail
 
-**Problema:** Scripts escondidos em SVG podem ser executados.
+**Status:** ✅ Implemented
 
-**Ação:**
-- Importar SVG como React component:
-```tsx
-import Logo from "../assets/logo.svg?react";
-```
-- Nunca usar `<img src="/icons/file.svg" />` para ícones externos.
-
----
-
-## 9. Temas e CSS
-
-**Problema:** FOUC, leaks de preferência do utilizador, animações pesadas.
-
-**Ação:**
-1. Inline script no `index.html`:
-```html
-<script>
-  const theme = localStorage.getItem("theme");
-  if (theme === "dark") document.documentElement.classList.add("dark");
-</script>
-```
-2. Evitar dados sensíveis em classes ou atributos CSS.
-3. Animations devem ser GPU-friendly:
-```css
-transform: translateZ(0);
-```
-
----
-
-## 10. Logging e Audit Trail
-
-**Ação:**
-1. Criar tabela `audit_log`:
+**Current Setup:**
 ```sql
-create table audit_log (
-  id bigserial primary key,
+-- Audit log table
+CREATE TABLE audit_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid,
-  table_name text,
-  action text,
-  timestamp timestamptz default now(),
-  row_data jsonb
+  gym_id uuid,
+  entity_type text NOT NULL,
+  entity_id uuid,
+  action text NOT NULL,
+  old_values jsonb,
+  new_values jsonb,
+  ip_address text,
+  user_agent text,
+  created_at timestamptz DEFAULT now()
 );
+
+-- Trigger for sensitive data access
+CREATE TRIGGER audit_sensitive_data
+  AFTER INSERT OR UPDATE OR DELETE ON member_sensitive_data
+  FOR EACH ROW EXECUTE FUNCTION audit_sensitive_data_access();
 ```
-2. Trigger para cada tabela sensível.
 
 ---
+
+## Security Implementation Checklist
+
+### Database Security
+- [x] RLS enabled on all tables
+- [x] Sensitive data in separate table
+- [x] Audit logging for sensitive operations
+- [x] Security definer functions
+- [x] Rate limiting on auth
+
+### Application Security
+- [x] Protected routes
+- [x] Permission-based UI rendering
+- [x] Input validation with Zod
+- [x] Secure auth context
+
+### Infrastructure Security
+- [x] Environment variables properly configured
+- [x] No secrets in client code
+- [ ] CSP headers (pending deployment config)
+- [ ] Rate limiting on API (pending Edge Function)
+
 ---
 
-## ✅ Visual Checklist (Mermaid)
-```mermaid
-flowchart TD
+## Monitoring Recommendations
 
-subgraph Frontend
-UI[React UI Components]
-Tailwind[CSS / Tailwind Classes]
-Shadcn[Shadcn Components]
-Theme[Theme System]
-Inputs[User Inputs / Forms]
-SVG[SVG Icons]
-end
-
-subgraph Backend
-Supabase[Supabase DB / RLS]
-Auth[Authentication]
-Logs[Audit Logging]
-end
-
-subgraph CI_CD
-Dependabot[Dependabot / npm audit]
-Actions[GitHub Actions]
-end
-
-UI --> Tailwind
-UI --> Shadcn
-Shadcn --> Inputs
-Inputs -->|sanitize| Inputs
-Theme --> UI
-SVG -->|import as component| UI
-UI --> Auth
-Auth --> Supabase
-Supabase --> Logs
-Dependabot --> Actions
-Actions --> UI
+### Daily Checks
+```sql
+-- Check for suspicious access patterns
+SELECT 
+  user_id,
+  COUNT(*) as access_count,
+  MIN(created_at) as first_access,
+  MAX(created_at) as last_access
+FROM audit_logs
+WHERE created_at > NOW() - INTERVAL '24 hours'
+AND entity_type = 'member_sensitive_data'
+GROUP BY user_id
+HAVING COUNT(*) > 50
+ORDER BY access_count DESC;
 ```
-Este checklist visual representa rapidamente:
-- **Frontend**: UI, Tailwind, Shadcn, inputs, temas, SVGs
-- **Backend**: Auth, RLS, logs
-- **Supply Chain / CI-CD**: Dependabot, Actions
+
+### Weekly Audit Report
+```sql
+SELECT 
+  DATE_TRUNC('day', created_at) as date,
+  entity_type,
+  action,
+  COUNT(*) as total_actions
+FROM audit_logs
+WHERE created_at > NOW() - INTERVAL '7 days'
+GROUP BY DATE_TRUNC('day', created_at), entity_type, action
+ORDER BY date DESC, total_actions DESC;
+```
+
+---
+
+## Next Steps
+
+1. **Enable Leaked Password Protection** in Supabase Auth settings
+2. **Configure MFA** for admin accounts
+3. **Set up alerts** for suspicious access patterns
+4. **Implement rate limiting** on API endpoints via Edge Functions
+5. **Regular security audits** of user roles
+
+---
 
 # Fim do Security Hardening
 Seguindo estas instruções, o Nzila Gym Manager estará **fortemente protegido** em frontend, backend (Supabase), dependências e UI layer.
-

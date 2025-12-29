@@ -1,6 +1,6 @@
 # MIT License | Licença MIT
 
-Copyright (c) 2024 Carlos Rogão
+Copyright (c) 2024-2025 Carlos Rogão
 
 ---
 
@@ -78,7 +78,7 @@ NO SOFTWARE.
 | TanStack Query | MIT | MIT |
 | React Router | MIT | MIT |
 | Zod | MIT | MIT |
-| Flowbite React | MIT | MIT |
+| shadcn/ui | MIT | MIT |
 | Lucide React | ISC | ISC |
 | date-fns | MIT | MIT |
 
@@ -112,4 +112,14 @@ NO SOFTWARE.
 
 ---
 
-**Last Updated | Última Actualização**: December 2024 | Dezembro 2024
+## Security Considerations | Considerações de Segurança
+
+**EN**: This software includes security features such as Row-Level Security (RLS), audit logging, and data protection mechanisms. Users are responsible for maintaining security configurations and keeping the software updated.
+
+**PT**: Este software inclui funcionalidades de segurança como Row-Level Security (RLS), registo de auditoria e mecanismos de protecção de dados. Os utilizadores são responsáveis por manter as configurações de segurança e manter o software actualizado.
+
+See [SECURITY.md](SECURITY.md) for security policies and [SECURITY_HARDENING.md](SECURITY_HARDENING.md) for implementation details.
+
+---
+
+**Last Updated | Última Actualização**: January 2025 | Janeiro 2025

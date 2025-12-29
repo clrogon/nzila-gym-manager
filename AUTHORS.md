@@ -16,12 +16,14 @@
 - Project architecture and vision
 - Full-stack development
 - Database design and security
+- Security hardening implementation (v1.0.1)
 - Repository: [github.com/clrogon](https://github.com/clrogon)
 
 **PT**:
 - Arquitectura e visão do projecto
 - Desenvolvimento full-stack
 - Design e segurança da base de dados
+- Implementação de endurecimento de segurança (v1.0.1)
 - Repositório: [github.com/clrogon](https://github.com/clrogon)
 
 
@@ -51,25 +53,41 @@
    - **EN**: Report reproducible bugs with detailed information
    - **PT**: Reportar bugs reproduzíveis com informação detalhada
 
-4. **Feature Requests | Pedidos de Funcionalidades**
+4. **Security Reports | Relatórios de Segurança**
+   - **EN**: Report security vulnerabilities responsibly
+   - **PT**: Reportar vulnerabilidades de segurança de forma responsável
+
+5. **Feature Requests | Pedidos de Funcionalidades**
    - **EN**: Propose features that get implemented
    - **PT**: Propor funcionalidades que sejam implementadas
 
-5. **Design Contributions | Contribuições de Design**
+6. **Design Contributions | Contribuições de Design**
    - **EN**: UI/UX improvements, mockups, or designs
    - **PT**: Melhorias de UI/UX, mockups ou designs
 
-6. **Translations | Traduções**
+7. **Translations | Traduções**
    - **EN**: Help translate documentation or UI to other languages
    - **PT**: Ajudar a traduzir documentação ou UI para outros idiomas
 
-7. **Testing | Testes**
+8. **Testing | Testes**
    - **EN**: Beta testing new features and providing feedback
    - **PT**: Testar novas funcionalidades em beta e fornecer feedback
 
 ---
 
 ## Special Thanks | Agradecimentos Especiais
+
+### Security Contributors | Contribuidores de Segurança
+
+**EN**: Special thanks to everyone who helped identify and fix security vulnerabilities in v1.0.1:
+- RLS policy improvements
+- Sensitive data isolation
+- Audit logging implementation
+
+**PT**: Agradecimento especial a todos que ajudaram a identificar e corrigir vulnerabilidades de segurança na v1.0.1:
+- Melhorias de políticas RLS
+- Isolamento de dados sensíveis
+- Implementação de registo de auditoria
 
 ### Community Support | Suporte Comunitário
 
@@ -97,7 +115,6 @@
 - **[Vercel](https://vercel.com)** - Deployment and hosting | Implementação e hospedagem
 - **[React](https://reactjs.org)** - UI framework | Framework UI
 - **[Tailwind CSS](https://tailwindcss.com)** - Utility-first CSS | CSS utility-first
-- **[Flowbite](https://flowbite.com)** - Component library | Biblioteca de componentes
 - **[shadcn/ui](https://ui.shadcn.com)** - UI components | Componentes UI
 - **[Lucide](https://lucide.dev)** - Icon library | Biblioteca de ícones
 
@@ -160,9 +177,10 @@
 **PT**: Quer contribuir? Adoraríamos tê-lo!
 
 1. **Read the guidelines | Leia as diretrizes**: [CONTRIBUTING.md](CONTRIBUTING.md)
-2. **Pick an issue | Escolha um issue**: Look for "good first issue" tags | Procure tags "good first issue"
-3. **Join discussions | Participe em discussões**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
-4. **Submit a PR | Submeta um PR**: Follow the contribution guidelines | Siga as diretrizes de contribuição
+2. **Review security docs | Revise docs de segurança**: [SECURITY_HARDENING.md](SECURITY_HARDENING.md)
+3. **Pick an issue | Escolha um issue**: Look for "good first issue" tags | Procure tags "good first issue"
+4. **Join discussions | Participe em discussões**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
+5. **Submit a PR | Submeta um PR**: Follow the contribution guidelines | Siga as diretrizes de contribuição
 
 **EN**: Every contribution, no matter how small, is valued and appreciated!
 
@@ -181,9 +199,9 @@
 
 ---
 
-**EN**: This file is automatically updated as contributors are added. Last updated: December 2024
+**EN**: This file is automatically updated as contributors are added. Last updated: January 2025
 
-**PT**: Este ficheiro é automaticamente actualizado quando contribuidores são adicionados. Última actualização: Dezembro 2024
+**PT**: Este ficheiro é automaticamente actualizado quando contribuidores são adicionados. Última actualização: Janeiro 2025
 
 ---
 
