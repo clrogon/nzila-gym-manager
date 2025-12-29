@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Users, UserCheck, CreditCard, ArrowRight, CheckCircle } from 'lucide-react';
@@ -31,9 +32,9 @@ const dashboardFeatures = [
   'Controlo de acessos e entradas',
 ];
 
-export default function Index() {
+const Index = forwardRef<HTMLDivElement>(function Index(_props, ref) {
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={ref} className="min-h-screen bg-background">
       {/* Hero Section */}
       <header className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -171,4 +172,6 @@ export default function Index() {
       </footer>
     </div>
   );
-}
+});
+
+export default Index;
