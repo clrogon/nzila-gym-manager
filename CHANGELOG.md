@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2025-01-29
+
+### Security Fixes | Correções de Segurança
+
+#### Critical Security Enhancements | Melhorias Críticas de Segurança
+- **PUBLIC_USER_DATA Fix**: Blocked anonymous access to profiles table, users can only view their own profile + same-gym members
+- **EXPOSED_SENSITIVE_DATA Fix**: Created separate `member_sensitive_data` table for health conditions, restricted to admins/medical staff only
+- **MISSING_RLS_PROTECTION Fix**: Added proper RLS policies and `security_invoker` mode to `members_safe` view
+
+#### Database Changes | Alterações de Base de Dados
+- Created `member_sensitive_data` table with strict RLS policies
+- Migrated existing `health_conditions` data from `members` to new secure table
+- Added audit logging for sensitive data access via `audit_sensitive_data_access` trigger
+- Strengthened `auth_rate_limits` with deny-all policy
+- Added `cleanup_expired_rate_limits` function for maintenance
+
+#### Application Updates | Actualizações da Aplicação
+- Updated Members page to handle sensitive data separately
+- Added `MemberSensitiveData` interface and state management
+- Modified member creation/editing to use new secure data flow
+
+### Fixed | Corrigido
+- React ref warnings in Index page (forwardRef implementation)
+
+---
+
 ## [1.0.0-beta] - 2024-12-24
 
 ### Added | Adicionado
@@ -118,5 +144,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.0.1]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v1.0.1
 [1.0.0-beta]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v1.0.0-beta
 [0.1.0]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v0.1.0

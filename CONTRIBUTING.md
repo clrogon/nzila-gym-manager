@@ -9,6 +9,7 @@ Thank you for your interest in contributing to Nzila Gym Manager! We welcome con
 - [Development Setup](#development-setup)
 - [Development Workflow](#development-workflow)
 - [Coding Standards](#coding-standards)
+- [Security Guidelines](#security-guidelines)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Reporting Bugs](#reporting-bugs)
@@ -195,7 +196,7 @@ src/
 
 ### **Styling**
 - Use Tailwind utility classes
-- Follow Flowbite component patterns
+- Follow shadcn/ui component patterns
 - Keep custom CSS minimal
 - Use CSS modules for component-specific styles
 - Maintain responsive design (mobile-first)
@@ -225,6 +226,45 @@ function calculateProratedFee(baseFee: number, daysRemaining: number): number {
 
 ---
 
+## Security Guidelines
+
+### **Critical Security Rules**
+
+1. **Never store sensitive data in client-side storage**
+   - No API keys in localStorage/sessionStorage
+   - No admin checks using client-side data
+
+2. **Always use RLS policies**
+   - All new tables must have Row-Level Security enabled
+   - Create appropriate policies for each operation (SELECT, INSERT, UPDATE, DELETE)
+
+3. **Separate sensitive data**
+   - Health conditions, emergency contacts → `member_sensitive_data` table
+   - Use the established patterns in `Members.tsx`
+
+4. **Use security definer functions**
+   - For role checks: `has_gym_role()`, `is_super_admin()`
+   - Prevents RLS recursion issues
+
+5. **Validate all inputs**
+   - Use Zod schemas for form validation
+   - Sanitize before database operations
+
+### **Security Review Checklist**
+
+Before submitting a PR with database changes:
+
+- [ ] RLS enabled on new tables
+- [ ] Appropriate policies for all operations
+- [ ] Sensitive data in separate secure tables
+- [ ] No PII exposed in logs or error messages
+- [ ] Uses existing security definer functions
+- [ ] Audit logging for sensitive operations
+
+See [SECURITY_HARDENING.md](SECURITY_HARDENING.md) for detailed security implementation patterns.
+
+---
+
 ## Commit Guidelines
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/) specification.
@@ -248,6 +288,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) specifica
 - `test`: Adding or updating tests
 - `chore`: Maintenance tasks (dependencies, config, etc.)
 - `ci`: CI/CD changes
+- `security`: Security fixes or improvements
 
 ### **Examples**
 ```bash
@@ -260,6 +301,8 @@ docs(readme): update installation instructions
 refactor(payments): simplify Multicaixa integration logic
 
 test(auth): add unit tests for login flow
+
+security(rls): add policies to member_sensitive_data table
 ```
 
 ### **Rules**
@@ -288,6 +331,7 @@ test(auth): add unit tests for login flow
    - Link related issues
    - Add screenshots for UI changes
    - List breaking changes if any
+   - Include security considerations if applicable
 
 4. **Request review**
    - Tag relevant maintainers

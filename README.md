@@ -9,12 +9,13 @@
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E)](https://supabase.com)
 [![Status](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/clrogon/nzila-gym-manager)
+[![Security](https://img.shields.io/badge/Security-Hardened-green)](SECURITY.md)
 
 **Live Demo | Demo ao Vivo**: [nzila-gym-manager.vercel.app](https://nzila-gym-manager.vercel.app)
 
 ---
 
-## 📊 Current Status | Estado Actual (December 2024)
+## 📊 Current Status | Estado Actual (January 2025)
 
 | Module | Status EN | Estado PT |
 |--------|-----------|-----------|
@@ -30,9 +31,24 @@
 | **Staff Management** | ✅ Complete | ✅ Completo |
 | **Bank Reconciliation** | ✅ Complete | ✅ Completo |
 | **Financial Reports** | ✅ Complete | ✅ Completo |
+| **Security Hardening** | ✅ Complete | ✅ Completo |
 | **GDPR Compliance** | 🚧 Stub (DB pending) | 🚧 Stub (BD pendente) |
 | **Email Notifications** | 🚧 Edge Function TODO | 🚧 Edge Function TODO |
 | **Kiosk Mode** | 🚧 In Development | 🚧 Em Desenvolvimento |
+
+---
+
+## 🔐 Security Status | Estado de Segurança
+
+**Latest Security Update: v1.0.1 (January 2025)**
+
+| Security Issue | Status | Description |
+|---------------|--------|-------------|
+| PUBLIC_USER_DATA | ✅ Fixed | Profiles properly protected |
+| EXPOSED_SENSITIVE_DATA | ✅ Fixed | Health data in secure table |
+| MISSING_RLS_PROTECTION | ✅ Fixed | All views have RLS |
+
+See [SECURITY.md](SECURITY.md) for full security documentation.
 
 ---
 
@@ -190,8 +206,8 @@ nzila-gym-manager/
 - **PT**: Rastreamento de consentimento explícito • Suporte para anonimização de dados • Direito ao apagamento • Trilha de auditoria para acesso a dados
 
 ### Data Protection | Protecção de Dados
-- **EN**: Sensitive fields restricted to admin roles • Secure views for member data • Encrypted connections (TLS) • No PII in logs • Row-Level Security on all tables
-- **PT**: Campos sensíveis restritos a funções admin • Visualizações seguras para dados de membros • Conexões encriptadas (TLS) • Sem PII em logs • Row-Level Security em todas as tabelas
+- **EN**: Sensitive fields in separate secure table • Secure views for member data • Encrypted connections (TLS) • No PII in logs • Row-Level Security on all tables • Audit logging for sensitive data access
+- **PT**: Campos sensíveis em tabela segura separada • Visualizações seguras para dados de membros • Conexões encriptadas (TLS) • Sem PII em logs • Row-Level Security em todas as tabelas • Registo de auditoria para acesso a dados sensíveis
 
 ---
 
@@ -229,6 +245,7 @@ Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LI
 
 - **Documentation | Documentação**: [README.md](README.md)
 - **Security | Segurança**: [SECURITY.md](SECURITY.md)
+- **Security Hardening | Endurecimento**: [SECURITY_HARDENING.md](SECURITY_HARDENING.md)
 - **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
 - **Email**: support@nzila.ao | suporte@nzila.ao
 

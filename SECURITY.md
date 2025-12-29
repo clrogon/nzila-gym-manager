@@ -58,6 +58,57 @@ Instead, please report security issues via email to:
 - XSS prevention via React's built-in escaping
 - CSRF protection via Supabase session tokens
 
+## Recent Security Fixes (v1.0.1 - January 2025)
+
+### Fixed Vulnerabilities
+
+| Issue | Severity | Description | Fix |
+|-------|----------|-------------|-----|
+| PUBLIC_USER_DATA | High | Profiles table was publicly readable | Blocked anonymous access, users can only view own profile + same-gym members |
+| EXPOSED_SENSITIVE_DATA | Critical | Health conditions exposed in members table | Created separate `member_sensitive_data` table with strict RLS |
+| MISSING_RLS_PROTECTION | Medium | `members_safe` view lacked RLS | Added proper RLS policies with `security_invoker` mode |
+
+### Compliance Improvements
+
+- **GDPR Compliance**: Sensitive health data now stored separately with audit logging
+- **HIPAA-like Protection**: Medical information restricted to authorized personnel only
+- **Audit Trail**: All sensitive data access is logged for compliance
+
+## Security Architecture
+
+### Data Protection Layers
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                         │
+│  - Input validation (Zod schemas)                           │
+│  - Permission checks (useRBAC hook)                         │
+│  - Secure component rendering                               │
+├─────────────────────────────────────────────────────────────┤
+│                    API Layer                                 │
+│  - Supabase client with auth tokens                         │
+│  - Rate limiting on auth endpoints                          │
+│  - HTTPS encryption                                         │
+├─────────────────────────────────────────────────────────────┤
+│                    Database Layer                            │
+│  - Row Level Security (RLS) on all tables                   │
+│  - Security definer functions                               │
+│  - Audit logging triggers                                   │
+│  - Separate sensitive data storage                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Sensitive Data Handling
+
+| Data Type | Table | Access Level |
+|-----------|-------|--------------|
+| Profile info | `profiles` | Own profile + same-gym staff |
+| Member info | `members` | Gym staff with role permissions |
+| Health conditions | `member_sensitive_data` | Admins/Owners only |
+| Emergency contacts | `member_sensitive_data` | Admins/Owners only |
+| Payment info | `payments` | Admin roles only |
+| Audit logs | `audit_logs` | Gym owner/admin only |
+
 ## Security Disclosure
 
 We believe in responsible disclosure and will:

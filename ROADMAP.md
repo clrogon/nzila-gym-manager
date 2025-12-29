@@ -1,6 +1,18 @@
 # Nzila Gym Manager Roadmap | Roteiro
 
-## 📊 Current Version | Versão Actual: 1.0.0-beta (December 2024)
+## 📊 Current Version | Versão Actual: 1.0.1 (January 2025)
+
+---
+
+## ✅ Version 1.0.1 - Security Hardening (Complete | Completo)
+
+### Security Fixes | Correções de Segurança
+- [x] Fixed PUBLIC_USER_DATA vulnerability | Corrigida vulnerabilidade PUBLIC_USER_DATA
+- [x] Fixed EXPOSED_SENSITIVE_DATA vulnerability | Corrigida vulnerabilidade EXPOSED_SENSITIVE_DATA
+- [x] Fixed MISSING_RLS_PROTECTION vulnerability | Corrigida vulnerabilidade MISSING_RLS_PROTECTION
+- [x] Created member_sensitive_data table | Criada tabela member_sensitive_data
+- [x] Added audit logging for sensitive data | Adicionado registo de auditoria para dados sensíveis
+- [x] Strengthened RLS policies | Políticas RLS reforçadas
 
 ---
 
@@ -17,7 +29,7 @@
 - [x] Member profiles with photos | Perfis de membros com fotos
 - [x] Membership plans & expiration | Planos de associação & expiração
 - [x] Family/dependent relationships | Relações familiares/dependentes
-- [x] Health conditions tracking | Rastreamento de condições de saúde
+- [x] Health conditions tracking (secure) | Rastreamento de condições de saúde (seguro)
 - [x] Status management (Active, Suspended, Pending) | Gestão de estados
 
 ### Check-In System | Sistema de Check-In
@@ -71,7 +83,7 @@
 
 ---
 
-## 🚧 Version 1.1 - Q1 2025 (In Progress | Em Progresso)
+## 🚧 Version 1.2 - Q1 2025 (In Progress | Em Progresso)
 
 ### GDPR Compliance | Conformidade GDPR
 - [ ] Consent management UI | UI de gestão de consentimentos
@@ -97,7 +109,7 @@
 
 ---
 
-## 📋 Version 1.2 - Q2 2025 (Planned | Planeado)
+## 📋 Version 1.3 - Q2 2025 (Planned | Planeado)
 
 ### Mobile Experience | Experiência Móvel
 - [ ] React Native mobile app | Aplicação móvel React Native
