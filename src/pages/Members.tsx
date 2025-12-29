@@ -74,7 +74,14 @@ interface Member {
   created_at: string;
   is_dependent: boolean | null;
   tutor_id: string | null;
+}
+
+interface MemberSensitiveData {
+  id: string;
+  member_id: string;
   health_conditions: string | null;
+  medical_notes: string | null;
+  allergies: string | null;
 }
 
 interface MembershipPlan {
@@ -91,6 +98,7 @@ export default function Members() {
   
   const [members, setMembers] = useState<Member[]>([]);
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [sensitiveDataMap, setSensitiveDataMap] = useState<Record<string, MemberSensitiveData>>({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -148,6 +156,23 @@ export default function Members() {
 
       if (error) throw error;
       setMembers(data || []);
+      
+      // Fetch sensitive data for all members (admins only)
+      if (data && data.length > 0) {
+        const memberIds = data.map(m => m.id);
+        const { data: sensitiveData } = await supabase
+          .from('member_sensitive_data')
+          .select('*')
+          .in('member_id', memberIds);
+        
+        if (sensitiveData) {
+          const dataMap: Record<string, MemberSensitiveData> = {};
+          sensitiveData.forEach(sd => {
+            dataMap[sd.member_id] = sd as MemberSensitiveData;
+          });
+          setSensitiveDataMap(dataMap);
+        }
+      }
     } catch (error) {
       console.error('Erro ao carregar membros:', error);
     } finally {
@@ -201,10 +226,11 @@ export default function Members() {
       notes: notes || null,
       is_dependent: isDependent,
       tutor_id: isDependent && tutorId ? tutorId : null,
-      health_conditions: healthConditions || null,
     };
 
     try {
+      let memberId: string;
+      
       if (editingMember) {
         const { error } = await supabase
           .from('members')
@@ -212,14 +238,32 @@ export default function Members() {
           .eq('id', editingMember.id);
 
         if (error) throw error;
+        memberId = editingMember.id;
         toast({ title: 'Membro Atualizado', description: 'Os detalhes do membro foram atualizados.' });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('members')
-          .insert([{ ...memberData, gym_id: currentGym.id }]);
+          .insert([{ ...memberData, gym_id: currentGym.id }])
+          .select('id')
+          .single();
 
         if (error) throw error;
+        memberId = data.id;
         toast({ title: 'Membro Adicionado', description: 'Novo membro foi registado.' });
+      }
+
+      // Save sensitive data (health conditions) to separate table
+      if (healthConditions) {
+        const { error: sensitiveError } = await supabase
+          .from('member_sensitive_data')
+          .upsert({
+            member_id: memberId,
+            health_conditions: healthConditions,
+          }, { onConflict: 'member_id' });
+        
+        if (sensitiveError) {
+          console.error('Erro ao guardar dados sensíveis:', sensitiveError);
+        }
       }
 
       resetForm();
@@ -247,7 +291,9 @@ export default function Members() {
     setNotes(member.notes || '');
     setIsDependent(member.is_dependent || false);
     setTutorId(member.tutor_id || '');
-    setHealthConditions(member.health_conditions || '');
+    // Get health conditions from sensitive data map
+    const sensitiveData = sensitiveDataMap[member.id];
+    setHealthConditions(sensitiveData?.health_conditions || '');
     setDialogOpen(true);
   };
 

@@ -1561,6 +1561,63 @@ export type Database = {
           },
         ]
       }
+      member_sensitive_data: {
+        Row: {
+          allergies: string | null
+          blood_type: string | null
+          created_at: string
+          emergency_medical_info: string | null
+          health_conditions: string | null
+          id: string
+          last_medical_update: string | null
+          medical_notes: string | null
+          member_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allergies?: string | null
+          blood_type?: string | null
+          created_at?: string
+          emergency_medical_info?: string | null
+          health_conditions?: string | null
+          id?: string
+          last_medical_update?: string | null
+          medical_notes?: string | null
+          member_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allergies?: string | null
+          blood_type?: string | null
+          created_at?: string
+          emergency_medical_info?: string | null
+          health_conditions?: string | null
+          id?: string
+          last_medical_update?: string | null
+          medical_notes?: string | null
+          member_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_sensitive_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_sensitive_data_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_workouts: {
         Row: {
           assigned_by: string | null
@@ -2502,7 +2559,6 @@ export type Database = {
           gdpr_anonymized_at: string | null
           gdpr_consent_at: string | null
           gym_id: string | null
-          health_conditions: string | null
           id: string | null
           is_minor: boolean | null
           membership_end_date: string | null
@@ -2517,24 +2573,23 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          address?: never
+          address?: string | null
           created_at?: string | null
           date_of_birth?: string | null
-          email?: never
-          emergency_contact?: never
-          emergency_phone?: never
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           full_name?: string | null
           gdpr_anonymized_at?: string | null
           gdpr_consent_at?: string | null
           gym_id?: string | null
-          health_conditions?: never
           id?: string | null
           is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
           membership_start_date?: string | null
           notes?: string | null
-          phone?: never
+          phone?: string | null
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           tutor_id?: string | null
@@ -2542,24 +2597,23 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          address?: never
+          address?: string | null
           created_at?: string | null
           date_of_birth?: string | null
-          email?: never
-          emergency_contact?: never
-          emergency_phone?: never
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           full_name?: string | null
           gdpr_anonymized_at?: string | null
           gdpr_consent_at?: string | null
           gym_id?: string | null
-          health_conditions?: never
           id?: string | null
           is_minor?: boolean | null
           membership_end_date?: string | null
           membership_plan_id?: string | null
           membership_start_date?: string | null
           notes?: string | null
-          phone?: never
+          phone?: string | null
           photo_url?: string | null
           status?: Database["public"]["Enums"]["member_status"] | null
           tutor_id?: string | null
