@@ -106,11 +106,144 @@ See [SECURITY.md](SECURITY.md) for full security documentation.
 
 ## 🏗️ Architecture | Arquitectura
 
+### System Architecture Diagram | Diagrama de Arquitectura do Sistema
+
+```mermaid
+flowchart TB
+    subgraph Client["🖥️ Client Layer"]
+        Browser["React 18 + TypeScript<br/>Vite + Tailwind CSS"]
+        Mobile["Progressive Web App<br/>(Responsive)"]
+    end
+
+    subgraph Auth["🔐 Authentication"]
+        AuthFlow["Supabase Auth<br/>JWT Tokens"]
+        RBAC["Role-Based Access Control<br/>12 Standard Roles"]
+    end
+
+    subgraph API["⚡ API Layer"]
+        SupabaseClient["Supabase Client<br/>Real-time Subscriptions"]
+        EdgeFunctions["Edge Functions<br/>Serverless Logic"]
+    end
+
+    subgraph Security["🛡️ Security Layer"]
+        RLS["Row-Level Security<br/>Multi-tenant Isolation"]
+        AuditLog["Audit Logging<br/>Sensitive Data Tracking"]
+        RateLimit["Rate Limiting<br/>Brute Force Protection"]
+    end
+
+    subgraph Database["🗄️ Database Layer"]
+        PostgreSQL["PostgreSQL<br/>46 Tables"]
+        
+        subgraph Tables["Core Tables"]
+            Gyms["gyms"]
+            Members["members"]
+            Classes["classes"]
+            Payments["payments"]
+            Leads["leads"]
+        end
+        
+        subgraph Secure["Secure Tables"]
+            SensitiveData["member_sensitive_data"]
+            AuditLogs["audit_logs"]
+        end
+    end
+
+    subgraph Storage["📦 Storage"]
+        FileStorage["Supabase Storage<br/>Member Photos, Documents"]
+    end
+
+    Browser --> AuthFlow
+    Mobile --> AuthFlow
+    AuthFlow --> RBAC
+    RBAC --> SupabaseClient
+    SupabaseClient --> RLS
+    EdgeFunctions --> RLS
+    RLS --> PostgreSQL
+    RLS --> AuditLog
+    RateLimit --> AuthFlow
+    SupabaseClient --> FileStorage
+```
+
+### Data Flow Architecture | Arquitectura de Fluxo de Dados
+
+```mermaid
+flowchart LR
+    subgraph Frontend["Frontend"]
+        UI["React Components"]
+        Query["TanStack Query<br/>Cache Layer"]
+        Context["Auth & Gym Context"]
+    end
+
+    subgraph Middleware["Security Middleware"]
+        JWT["JWT Validation"]
+        RoleCheck["Role Verification"]
+        GymContext["Gym Context Isolation"]
+    end
+
+    subgraph Backend["Backend Services"]
+        CRUD["CRUD Operations"]
+        Realtime["Real-time Updates"]
+        Functions["Edge Functions"]
+    end
+
+    subgraph Data["Data Layer"]
+        RLS2["RLS Policies"]
+        DB["PostgreSQL"]
+        Audit["Audit Trail"]
+    end
+
+    UI --> Query
+    Query --> Context
+    Context --> JWT
+    JWT --> RoleCheck
+    RoleCheck --> GymContext
+    GymContext --> CRUD
+    GymContext --> Realtime
+    GymContext --> Functions
+    CRUD --> RLS2
+    Realtime --> RLS2
+    Functions --> RLS2
+    RLS2 --> DB
+    RLS2 --> Audit
+```
+
 ### Multi-Tenant Design | Design Multi-Tenant
 
 **EN**: Nzila is architected as a true multi-tenant SaaS with isolated gym data, Row-Level Security (RLS) enforcement, Super Admin platform management, and support for users belonging to multiple gyms with different roles.
 
 **PT**: O Nzila é arquitectado como um verdadeiro SaaS multi-tenant com dados de ginásio isolados, imposição de Row-Level Security (RLS), gestão de plataforma Super Admin e suporte para utilizadores pertencentes a múltiplos ginásios com funções diferentes.
+
+```mermaid
+flowchart TB
+    subgraph Platform["🌐 Platform Level"]
+        SuperAdmin["Super Admin"]
+    end
+
+    subgraph Gym1["🏋️ Gym A (Tenant 1)"]
+        Owner1["Gym Owner"]
+        Staff1["Staff & Coaches"]
+        Members1["Members"]
+        Data1[("Isolated Data")]
+    end
+
+    subgraph Gym2["🥊 Gym B (Tenant 2)"]
+        Owner2["Gym Owner"]
+        Staff2["Staff & Coaches"]
+        Members2["Members"]
+        Data2[("Isolated Data")]
+    end
+
+    SuperAdmin -->|"Manages"| Gym1
+    SuperAdmin -->|"Manages"| Gym2
+    Owner1 --> Staff1
+    Staff1 --> Members1
+    Members1 --> Data1
+    Owner2 --> Staff2
+    Staff2 --> Members2
+    Members2 --> Data2
+    
+    Data1 -.->|"RLS Isolation"| Data2
+```
 
 ### Technology Stack | Stack Tecnológico
 
@@ -126,6 +259,40 @@ See [SECURITY.md](SECURITY.md) for full security documentation.
 | **Date Handling** | date-fns + date-fns-tz | Timezone-aware dates | Datas com consciência de fuso horário |
 
 ### Security Model | Modelo de Segurança
+
+```mermaid
+flowchart TB
+    subgraph Roles["🔐 Role Hierarchy"]
+        direction TB
+        SA["Super Admin<br/>Platform-wide"]
+        GO["Gym Owner<br/>Full Gym Control"]
+        MGR["Manager<br/>Operations"]
+        ADM["Admin<br/>Daily Ops"]
+        
+        subgraph TrainingStaff["Training Staff"]
+            Coach["Coach"]
+            Trainer["Trainer"]
+            Instructor["Instructor"]
+        end
+        
+        subgraph SupportStaff["Support Staff"]
+            Physio["Physiotherapist"]
+            Nutri["Nutritionist"]
+            Recep["Receptionist"]
+            Staff["Staff"]
+        end
+        
+        Member["Member<br/>Self-service"]
+    end
+
+    SA --> GO
+    GO --> MGR
+    MGR --> ADM
+    ADM --> TrainingStaff
+    ADM --> SupportStaff
+    TrainingStaff --> Member
+    SupportStaff --> Member
+```
 
 **Role Hierarchy | Hierarquia de Funções** (12 International Standard Roles):
 
