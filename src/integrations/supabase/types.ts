@@ -2539,11 +2539,10 @@ export type Database = {
       auth_rate_limit_stats: {
         Row: {
           avg_attempts: number | null
-          currently_blocked: number | null
           high_attempt_count: number | null
           identifier_type: string | null
           max_attempts: number | null
-          total_records: number | null
+          total_entries: number | null
         }
         Relationships: []
       }
