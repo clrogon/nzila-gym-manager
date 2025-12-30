@@ -49,6 +49,46 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
+    // ========== AUTHENTICATION CHECK ==========
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("Missing authorization header");
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error("Invalid token or user not found:", userError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // ========== SUPER ADMIN ROLE CHECK ==========
+    const { data: roleData, error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "super_admin")
+      .maybeSingle();
+
+    if (roleError || !roleData) {
+      console.error(`User ${user.email} attempted to seed test users without super_admin role`);
+      return new Response(
+        JSON.stringify({ error: "Only super admins can seed test users" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
+    console.log(`Super admin ${user.email} authorized to seed test users`);
+
+    // ========== PROCEED WITH SEEDING ==========
     const results: { email: string; status: string; error?: string; user_id?: string }[] = [];
 
     // Use existing gym or first available gym
@@ -114,7 +154,7 @@ Deno.serve(async (req) => {
           .eq("user_id", userId);
 
         // Assign role
-        const { error: roleError } = await supabaseAdmin
+        const { error: roleAssignError } = await supabaseAdmin
           .from("user_roles")
           .insert({
             user_id: userId,
@@ -122,8 +162,8 @@ Deno.serve(async (req) => {
             role: testUser.role,
           });
 
-        if (roleError) {
-          results.push({ email: testUser.email, status: "partial", error: `User created but role failed: ${roleError.message}`, user_id: userId });
+        if (roleAssignError) {
+          results.push({ email: testUser.email, status: "partial", error: `User created but role failed: ${roleAssignError.message}`, user_id: userId });
           continue;
         }
 
@@ -142,6 +182,8 @@ Deno.serve(async (req) => {
       users: results,
       credentials_info: "All users have password: !12345678#"
     };
+
+    console.log(`Test user seeding complete: ${summary.success}/${summary.total} successful`);
 
     return new Response(JSON.stringify(summary, null, 2), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
