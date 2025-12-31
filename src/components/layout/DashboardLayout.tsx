@@ -37,8 +37,11 @@ import {
   FileText,
   Scan,
   Award,
+  Home,
+  User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
@@ -48,7 +51,7 @@ type NavItem = {
   permission?: string;
 };
 
-/* Navegação ao nível do ginásio */
+/* Navegação ao nível do ginásio (staff/admin) */
 const gymNavItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Visão Geral', href: '/dashboard' },
   { icon: Users, label: 'Membros', href: '/members', permission: 'members:read' },
@@ -64,6 +67,16 @@ const gymNavItems: NavItem[] = [
   { icon: Scan, label: 'Quiosque', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
   { icon: UserCog, label: 'Treinadores', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: Settings, label: 'Definições', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+];
+
+/* Navegação para membros */
+const memberNavItems: NavItem[] = [
+  { icon: Home, label: 'Meu Portal', href: '/member/portal' },
+  { icon: UserCheck, label: 'Check-In', href: '/member/checkin' },
+  { icon: CalendarDays, label: 'Minhas Aulas', href: '/bookings' },
+  { icon: CreditCard, label: 'Pagamentos', href: '/member/finances' },
+  { icon: TrendingUp, label: 'Progresso', href: '/member/activity' },
+  { icon: User, label: 'Perfil', href: '/profile' },
 ];
 
 /* Navegação da plataforma (apenas Super Admin) */
@@ -103,7 +116,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     navigate('/auth');
   };
 
-  const baseNavItems = viewMode === 'platform' ? platformNavItems : gymNavItems;
+  // Determine if user is member-only (no staff permissions)
+  const isMemberOnly = currentRole === 'member' && !isSuperAdmin;
+
+  // Redirect members away from staff routes
+  useEffect(() => {
+    if (isMemberOnly && !location.pathname.startsWith('/member') && !location.pathname.startsWith('/bookings') && !location.pathname.startsWith('/profile')) {
+      navigate('/member/portal');
+    }
+  }, [isMemberOnly, location.pathname, navigate]);
+
+  const baseNavItems = isSuperAdmin && viewMode === 'platform' 
+    ? platformNavItems 
+    : isMemberOnly 
+      ? memberNavItems 
+      : gymNavItems;
+      
   const navItems = baseNavItems.filter(item => {
     if (item.requiredRoles) return hasRole(item.requiredRoles);
     if (item.permission) return hasPermission(item.permission);

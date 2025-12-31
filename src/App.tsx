@@ -17,7 +17,7 @@ import UserProfile from '@/pages/UserProfile';
 // Modular imports with lazy loading
 import { AuthPage } from "./modules/auth";
 import { DashboardPage } from "./modules/dashboard";
-import { MembersPage } from "./modules/members";
+import { MembersManagementPage, MemberPortalPage, MemberCheckInPage, MemberFinancesPage, MemberActivityPage } from "./modules/members";
 import { CheckInsPage } from "./modules/checkins";
 import { PaymentsPage } from "./modules/payments";
 import { SettingsPage } from "./modules/settings";
@@ -90,7 +90,11 @@ function AppRoutes() {
       <Route path="/auth" element={<PublicRoute><ErrorBoundary moduleName="Auth"><AuthPage /></ErrorBoundary></PublicRoute>} />
       <Route path="/onboarding" element={<OnboardingRoute><OnboardingPage /></OnboardingRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute moduleName="Dashboard"><DashboardPage /></ProtectedRoute>} />
-      <Route path="/members" element={<ProtectedRoute moduleName="Members"><MembersPage /></ProtectedRoute>} />
+      <Route path="/members" element={<ProtectedRoute moduleName="Members"><MembersManagementPage /></ProtectedRoute>} />
+      <Route path="/member/portal" element={<ProtectedRoute moduleName="Member Portal"><MemberPortalPage /></ProtectedRoute>} />
+      <Route path="/member/checkin" element={<ProtectedRoute moduleName="Member Check-In"><MemberCheckInPage /></ProtectedRoute>} />
+      <Route path="/member/finances" element={<ProtectedRoute moduleName="Member Finances"><MemberFinancesPage /></ProtectedRoute>} />
+      <Route path="/member/activity" element={<ProtectedRoute moduleName="Member Activity"><MemberActivityPage /></ProtectedRoute>} />
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
       <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
