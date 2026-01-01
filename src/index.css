@@ -72,6 +72,12 @@
     --sidebar-ring: 216 19% 26%;
     --sidebar: 222 47% 11%;
 
+    /* Brand (Landing Page) */
+    --brand-dark: 0 0% 1%;
+    --brand-gold: 45 93% 56%;
+    --brand-accent: 38 92% 50%;
+    --brand-muted: 0 0% 40%;
+
     /* Charts */
     --chart-1: 217 10% 64%;
     --chart-2: 215 20% 65%;
@@ -85,7 +91,7 @@
     --font-serif: 'Crimson Pro', ui-serif, Georgia, serif;
     --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* Shadows — suaves, não “plástico” */
+    /* Shadows — suaves, não "plástico" */
     --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.08);
     --shadow-md: 0 4px 8px hsl(0 0% 0% / 0.1);
@@ -176,5 +182,31 @@
   @keyframes pulse-soft {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.85; }
+  }
+
+  /* Landing Page Utilities */
+  .glass {
+    @apply bg-white/[0.03] backdrop-blur-[25px] border border-white/[0.08];
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--brand-gold)) 0%, hsl(var(--brand-accent)) 50%, hsl(24 90% 50%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .content-layer {
+    @apply relative z-10;
+  }
+
+  .landing-dark {
+    --background: 0 0% 1%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 40%;
+    --border: 0 0% 10%;
   }
 }
