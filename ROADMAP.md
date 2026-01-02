@@ -15,15 +15,27 @@ Processamento seguro e imediato. O sistema valida o pagamento e liberta a entrad
 - [x] Automatic access release | Liberação automática de acesso
 - [x] Multiple payment methods | Múltiplos métodos de pagamento
 
-### 02. Controlo de Acessos | Access Control
-Integração nativa com torniquetes. Bloqueio automático de membros com mensalidade em atraso.
-> Native integration with turnstiles. Automatic blocking of members with overdue fees.
+### 02. Controlo de Entradas | Entry Control
+O Nzila conecta-se diretamente aos equipamentos físicos do seu ginásio para garantir segurança total.
+> Nzila connects directly to your gym's physical equipment to ensure total security.
+
+**Biometria Facial | Facial Biometrics**
+Compatível com Hikvision e ZKTeco para entrada sem contacto.
+> Compatible with Hikvision and ZKTeco for contactless entry.
+
+**Sincronização Offline | Offline Sync**
+O torniquete continua a funcionar mesmo se a internet cair.
+> The turnstile continues to work even if the internet goes down.
+
+**Cartões RFID | RFID Cards**
+Gestão simples de cartões de acesso para staff e membros.
+> Simple access card management for staff and members.
 
 - [x] Turnstile/hardware integration | Integração com torniquetes
 - [x] Automatic overdue blocking | Bloqueio automático por atraso
-- [x] Biometric support (Hikvision, ZKTeco) | Suporte biométrico
+- [x] Biometric support (Hikvision, ZKTeco) | Suporte biométrico facial
 - [x] RFID card management | Gestão de cartões RFID
-- [ ] Offline sync capability | Capacidade de sincronização offline
+- [x] Offline sync capability | Sincronização offline
 
 ### 03. Relatórios Financeiros | Financial Reports
 Saiba exatamente quanto faturou hoje. Mapas de caixa, previsões e histórico de vendas.
@@ -217,6 +229,76 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 
 ---
 
+## 💰 Planos Flexíveis | Flexible Plans
+
+### Starter
+**35.000 Kz/mês | 35,000 Kz/month**
+Para pequenos estúdios e boxes de CrossFit.
+> For small studios and CrossFit boxes.
+
+- [x] Membros Activos | Active Members
+- [x] Pagamentos Digitais | Digital Payments
+- [x] Controlo de Hardware | Hardware Control
+- [ ] Dashboard BI | BI Dashboard
+- [ ] Suporte Prioritário | Priority Support
+
+### Pro (Melhor Escolha | Best Choice)
+**75.000 Kz/mês | 75,000 Kz/month**
+Para ginásios com controlo de acesso e alto volume.
+> For gyms with access control and high volume.
+
+- [x] Membros Activos | Active Members
+- [x] Pagamentos Digitais | Digital Payments
+- [x] Controlo de Hardware | Hardware Control
+- [x] Dashboard BI | BI Dashboard
+- [x] Suporte Prioritário | Priority Support
+
+### Enterprise
+**Sob Consulta | On Request**
+Para redes de ginásios e grandes complexos desportivos.
+> For gym chains and large sports complexes.
+
+- [x] Membros Activos | Active Members
+- [x] Pagamentos Digitais | Digital Payments
+- [x] Controlo de Hardware | Hardware Control
+- [x] Dashboard BI | BI Dashboard
+- [x] Suporte Prioritário | Priority Support
+- [x] Implementação Personalizada | Custom Implementation
+
+---
+
+## 💬 Quem Confia | Who Trusts Us
+
+### Testemunhos | Testimonials
+
+> "Antes perdíamos muito tempo a conferir comprovativos de transferência. Com o Nzila e os pagamentos digitais, é tudo automático."
+> — **João Manuel**, Proprietário, Luanda Elite Fit
+
+> "O bloqueio automático no torniquete reduziu os pagamentos em atraso em quase 90%. O sistema paga-se sozinho."
+> — **Maria Costa**, Gerente, The Talatona Club
+
+---
+
+## ❓ Perguntas Frequentes | FAQ
+
+### Preciso comprar torniquetes novos? | Do I need to buy new turnstiles?
+O Nzila integra com as principais marcas do mercado (Hikvision, ZKTeco). Provavelmente podemos usar os seus atuais.
+> Nzila integrates with major market brands (Hikvision, ZKTeco). We can probably use your current ones.
+
+### Como recebo o dinheiro dos pagamentos? | How do I receive payment money?
+O dinheiro vai directamente para a sua conta bancária via Multicaixa Express. Sem intermediários.
+> Money goes directly to your bank account via Multicaixa Express. No intermediaries.
+
+### Quanto tempo demora a implementação? | How long does implementation take?
+Normalmente 2-3 dias úteis para configuração completa, incluindo integração de hardware.
+> Usually 2-3 business days for complete setup, including hardware integration.
+
+### Posso experimentar antes de comprar? | Can I try before buying?
+Sim! Oferecemos uma demonstração gratuita personalizada para o seu ginásio.
+> Yes! We offer a free personalized demo for your gym.
+
+---
+
 ## 🎯 Long-term Vision | Visão de Longo Prazo
 
 - Cloud-native architecture | Arquitectura cloud-native
@@ -229,3 +311,6 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 
 **Have suggestions? | Tem sugestões?** 
 [Open a feature request | Abra um pedido de funcionalidade](https://github.com/clrogon/nzila-gym-manager/issues/new/choose)
+
+**Digitalize o seu Ginásio | Digitize your Gym**
+📧 email@gym.ao | 📱 +244 ...
