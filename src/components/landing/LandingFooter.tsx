@@ -35,11 +35,15 @@ export default function LandingFooter() {
           </div>
           
           <div className="flex space-x-12 md:space-x-20">
-            {['Instagram', 'LinkedIn', 'WhatsApp'].map(social => (
-              <a key={social} href="#" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
-                {social}
-              </a>
-            ))}
+            <a href="https://instagram.com/nzila.ao" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
+              Instagram
+            </a>
+            <a href="https://linkedin.com/company/nzila" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
+              LinkedIn
+            </a>
+            <a href="https://wa.me/244923555777" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
+              WhatsApp
+            </a>
           </div>
         </div>
 
