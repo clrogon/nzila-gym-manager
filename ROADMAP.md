@@ -4,6 +4,69 @@
 
 ---
 
+## 🎯 Core Features | Funcionalidades Principais
+
+### 01. Pagamentos Digitais | Digital Payments
+Processamento seguro e imediato. O sistema valida o pagamento e liberta a entrada na hora.
+> Secure and immediate processing. The system validates payment and releases entry instantly.
+
+- [x] Multicaixa Express integration | Integração Multicaixa Express
+- [x] Real-time payment validation | Validação de pagamento em tempo real
+- [x] Automatic access release | Liberação automática de acesso
+- [x] Multiple payment methods | Múltiplos métodos de pagamento
+
+### 02. Controlo de Acessos | Access Control
+Integração nativa com torniquetes. Bloqueio automático de membros com mensalidade em atraso.
+> Native integration with turnstiles. Automatic blocking of members with overdue fees.
+
+- [x] Turnstile/hardware integration | Integração com torniquetes
+- [x] Automatic overdue blocking | Bloqueio automático por atraso
+- [x] Biometric support (Hikvision, ZKTeco) | Suporte biométrico
+- [x] RFID card management | Gestão de cartões RFID
+- [ ] Offline sync capability | Capacidade de sincronização offline
+
+### 03. Relatórios Financeiros | Financial Reports
+Saiba exatamente quanto faturou hoje. Mapas de caixa, previsões e histórico de vendas.
+> Know exactly how much you invoiced today. Cash maps, forecasts, and sales history.
+
+- [x] Daily/monthly revenue reports | Relatórios de receita diária/mensal
+- [x] Cash flow dashboards | Dashboards de fluxo de caixa
+- [x] PDF export | Exportação PDF
+- [x] Bank reconciliation | Reconciliação bancária
+- [ ] Revenue forecasting | Previsão de receitas
+
+### 04. Gestão de Membros | Member Management
+Ficha completa do aluno: histórico de pagamentos, plano de treino e dados de saúde.
+> Complete member profile: payment history, training plan, and health data.
+
+- [x] Complete member profiles | Perfis completos de membros
+- [x] Payment history tracking | Rastreamento de histórico de pagamentos
+- [x] Training plan assignment | Atribuição de plano de treino
+- [x] Health data management (secure) | Gestão de dados de saúde (seguro)
+- [x] Family/dependent relationships | Relações familiares/dependentes
+
+### 05. Renovações Automáticas | Automatic Renewals
+Alertas automáticos via SMS e WhatsApp antes da mensalidade expirar para aumentar a retenção.
+> Automatic alerts via SMS and WhatsApp before membership expires to increase retention.
+
+- [x] Expiration tracking | Rastreamento de expiração
+- [ ] SMS notifications | Notificações SMS
+- [ ] WhatsApp integration | Integração WhatsApp
+- [ ] Email reminders | Lembretes por email
+- [ ] Configurable reminder periods | Períodos de lembrete configuráveis
+
+### 06. Multi-Filial | Multi-Branch
+Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrativo.
+> Manage multiple locations (Luanda, Talatona, Benguela) from a single admin dashboard.
+
+- [x] Multiple gym management | Gestão de múltiplos ginásios
+- [x] Unified admin dashboard | Painel administrativo unificado
+- [x] Per-location permissions | Permissões por localização
+- [ ] Cross-location member access | Acesso de membros entre localizações
+- [ ] Consolidated reporting | Relatórios consolidados
+
+---
+
 ## ✅ Version 1.0.1 - Security Hardening (Complete | Completo)
 
 ### Security Fixes | Correções de Segurança
