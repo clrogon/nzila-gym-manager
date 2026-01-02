@@ -34,22 +34,22 @@ export default function LandingNavbar({ lang, setLang }: LandingNavbarProps) {
         </div>
 
         <div className="hidden lg:flex items-center space-x-12">
-          <a href="#features" className="text-[10px] tracking-[0.4em] font-bold text-gray-500 hover:text-brand-gold transition-all uppercase">{t.features}</a>
-          <a href="#hardware" className="text-[10px] tracking-[0.4em] font-bold text-gray-500 hover:text-brand-gold transition-all uppercase">{t.hardware}</a>
-          <a href="#pricing" className="text-[10px] tracking-[0.4em] font-bold text-gray-500 hover:text-brand-gold transition-all uppercase">{t.pricing}</a>
+          <a href="#features" className="text-[11px] tracking-[0.25em] font-medium text-gray-400 hover:text-white transition-all uppercase">{t.features}</a>
+          <a href="#hardware" className="text-[11px] tracking-[0.25em] font-medium text-gray-400 hover:text-white transition-all uppercase">{t.hardware}</a>
+          <a href="#pricing" className="text-[11px] tracking-[0.25em] font-medium text-gray-400 hover:text-white transition-all uppercase">{t.pricing}</a>
           
           <div className="flex items-center space-x-2 border-l border-white/10 pl-10">
-            <Globe className="w-3 h-3 text-brand-gold" />
+            <Globe className="w-3.5 h-3.5 text-brand-gold" />
             <button 
               onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')}
-              className="text-[10px] tracking-[0.2em] font-black text-white hover:text-brand-gold transition-colors uppercase"
+              className="text-[11px] tracking-[0.15em] font-medium text-white hover:text-brand-gold transition-colors uppercase"
             >
               {lang === 'pt' ? 'EN' : 'PT'}
             </button>
           </div>
 
           <Link to="/auth?mode=login">
-            <Button className="bg-brand-gold text-black hover:bg-brand-gold/90 rounded-full px-5 py-2 text-[10px] tracking-[0.15em] font-bold uppercase">
+            <Button className="bg-brand-gold text-black hover:bg-brand-gold/90 rounded-full px-6 py-2.5 text-[11px] tracking-[0.15em] font-bold uppercase shadow-lg shadow-brand-gold/20">
               {t.access}
             </Button>
           </Link>
