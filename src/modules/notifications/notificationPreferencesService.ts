@@ -67,9 +67,5 @@ export async function setNotificationPreference(
 ): Promise<void> {
   // This would update a notification_preferences table
   // For now, we use gym-level settings
-  // This is a placeholder for a future feature.
-  // In a real implementation, this would update the database.
-  if (import.meta.env.DEV) {
-    console.log('Setting notification preference:', { memberId, event, channel, enabled });
-  }
+  console.log('Setting notification preference:', { memberId, event, channel, enabled });
 }

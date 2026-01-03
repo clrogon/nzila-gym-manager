@@ -13,21 +13,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    debug: process.env.NODE_ENV === 'development',
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'nzila-gym-manager@1.0.0'
-    }
-  },
-  cookieOptions: {
-    name: 'sb-auth-token',
-    lifetime: 60 * 60 * 24 * 7, // 7 days
-    domain: window.location.hostname,
-    path: '/',
-    sameSite: 'lax',
-    secure: window.location.protocol === 'https:'
   }
 });
