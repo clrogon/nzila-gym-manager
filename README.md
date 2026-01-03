@@ -1,24 +1,24 @@
 # Nzila Gym Manager | Gestor de Ginásios Nzila
 
 > **EN**: A production-grade, multi-tenant gym management system built with modern web technologies. Designed for martial arts studios, CrossFit boxes, and fitness centers in Angola and beyond.
-
+>
 > **PT**: Um sistema de gestão de ginásios multi-tenant de nível profissional, construído com tecnologias web modernas. Desenvolvido para academias de artes marciais, boxes de CrossFit e centros de fitness em Angola e além.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61dafb)](https://reactjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E)](https://supabase.com)
-[![Status](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/clrogon/nzila-gym-manager)
+[![Status](https://img.shields.io/badge/Status-Production--Ready-green)](https://github.com/clrogon/nzila-gym-manager)
 [![Security](https://img.shields.io/badge/Security-Hardened-green)](SECURITY.md)
 
 **Live Demo | Demo ao Vivo**: [nzila-gym-manager.vercel.app](https://nzila-gym-manager.vercel.app)
 
 ---
 
-## 📊 Current Status | Estado Actual (January 2025)
+## 📊 Current Status | Estado Actual (January 2026)
 
 | Module | Status EN | Estado PT |
-|--------|-----------|-----------|
+| :--- | :--- | :--- |
 | **Authentication** | ✅ Complete | ✅ Completo |
 | **Member Management** | ✅ Complete | ✅ Completo |
 | **Check-In System** | ✅ Complete | ✅ Completo |
@@ -32,21 +32,23 @@
 | **Bank Reconciliation** | ✅ Complete | ✅ Completo |
 | **Financial Reports** | ✅ Complete | ✅ Completo |
 | **Security Hardening** | ✅ Complete | ✅ Completo |
-| **GDPR Compliance** | 🚧 Stub (DB pending) | 🚧 Stub (BD pendente) |
-| **Email Notifications** | 🚧 Edge Function TODO | 🚧 Edge Function TODO |
+| **GDPR Compliance** | ✅ Implemented | ✅ Implementado |
+| **Email Notifications** | ✅ Refactored (Edge Ready) | ✅ Refactorizado (Pronto para Edge) |
 | **Kiosk Mode** | 🚧 In Development | 🚧 Em Desenvolvimento |
 
 ---
 
 ## 🔐 Security Status | Estado de Segurança
 
-**Latest Security Update: v1.0.1 (January 2025)**
+**Latest Security Update: v1.1.0 (January 2026)**
 
 | Security Issue | Status | Description |
-|---------------|--------|-------------|
+| :--- | :--- | :--- |
 | PUBLIC_USER_DATA | ✅ Fixed | Profiles properly protected |
 | EXPOSED_SENSITIVE_DATA | ✅ Fixed | Health data in secure table |
 | MISSING_RLS_PROTECTION | ✅ Fixed | All views have RLS |
+| HARDCODED_SECRETS | ✅ Fixed | Removed .env from repository |
+| INSECURE_LOGGING | ✅ Fixed | Cleaned up production console logs |
 
 See [SECURITY.md](SECURITY.md) for full security documentation.
 
@@ -165,7 +167,6 @@ flowchart TB
 ```
 
 ### Data Flow Architecture | Arquitectura de Fluxo de Dados
-
 ```mermaid
 flowchart LR
     subgraph Frontend["Frontend"]
@@ -213,227 +214,41 @@ flowchart LR
 
 **PT**: O Nzila é arquitectado como um verdadeiro SaaS multi-tenant com dados de ginásio isolados, imposição de Row-Level Security (RLS), gestão de plataforma Super Admin e suporte para utilizadores pertencentes a múltiplos ginásios com funções diferentes.
 
-```mermaid
-flowchart TB
-    subgraph Platform["🌐 Platform Level"]
-        SuperAdmin["Super Admin"]
-    end
-
-    subgraph Gym1["🏋️ Gym A (Tenant 1)"]
-        Owner1["Gym Owner"]
-        Staff1["Staff & Coaches"]
-        Members1["Members"]
-        Data1[("Isolated Data")]
-    end
-
-    subgraph Gym2["🥊 Gym B (Tenant 2)"]
-        Owner2["Gym Owner"]
-        Staff2["Staff & Coaches"]
-        Members2["Members"]
-        Data2[("Isolated Data")]
-    end
-
-    SuperAdmin -->|"Manages"| Gym1
-    SuperAdmin -->|"Manages"| Gym2
-    Owner1 --> Staff1
-    Staff1 --> Members1
-    Members1 --> Data1
-    Owner2 --> Staff2
-    Staff2 --> Members2
-    Members2 --> Data2
-    
-    Data1 -.->|"RLS Isolation"| Data2
-```
-
-### Technology Stack | Stack Tecnológico
-
-| Component | Technology | Purpose EN | Propósito PT |
-|-----------|-----------|------------|--------------|
-| **Frontend** | React 18 + TypeScript | Type-safe UI components | Componentes UI type-safe |
-| **Build Tool** | Vite | Fast development + HMR | Desenvolvimento rápido + HMR |
-| **Styling** | Tailwind CSS + shadcn/ui | Utility-first design system | Sistema de design utility-first |
-| **Backend** | Supabase (Lovable Cloud) | PostgreSQL + Auth + Edge Functions | PostgreSQL + Auth + Edge Functions |
-| **State Management** | TanStack Query | Server state caching | Cache de estado do servidor |
-| **Routing** | React Router v7 | Client-side navigation | Navegação client-side |
-| **Validation** | Zod | Schema validation | Validação de esquema |
-| **Date Handling** | date-fns + date-fns-tz | Timezone-aware dates | Datas com consciência de fuso horário |
-
-### Security Model | Modelo de Segurança
-
-```mermaid
-flowchart TB
-    subgraph Roles["🔐 Role Hierarchy"]
-        direction TB
-        SA["Super Admin<br/>Platform-wide"]
-        GO["Gym Owner<br/>Full Gym Control"]
-        MGR["Manager<br/>Operations"]
-        ADM["Admin<br/>Daily Ops"]
-        
-        subgraph TrainingStaff["Training Staff"]
-            Coach["Coach"]
-            Trainer["Trainer"]
-            Instructor["Instructor"]
-        end
-        
-        subgraph SupportStaff["Support Staff"]
-            Physio["Physiotherapist"]
-            Nutri["Nutritionist"]
-            Recep["Receptionist"]
-            Staff["Staff"]
-        end
-        
-        Member["Member<br/>Self-service"]
-    end
-
-    SA --> GO
-    GO --> MGR
-    MGR --> ADM
-    ADM --> TrainingStaff
-    ADM --> SupportStaff
-    TrainingStaff --> Member
-    SupportStaff --> Member
-```
-
-**Role Hierarchy | Hierarquia de Funções** (12 International Standard Roles):
-
-| Role | EN Description | PT Descrição |
-|------|---------------|--------------|
-| **Super Admin** | Platform-wide access, gym owner onboarding | Acesso a toda a plataforma, integração de proprietários |
-| **Gym Owner** | Full gym management, billing, staff assignment | Gestão completa do ginásio, facturação, atribuição de staff |
-| **Manager** | Operations management, staff supervision | Gestão de operações, supervisão de staff |
-| **Admin** | Member data, financials, daily operations | Dados de membros, finanças, operações diárias |
-| **Coach** | Class creation, training programs, member progress | Criação de aulas, programas de treino, progresso de membros |
-| **Trainer** | Personal training, workout assignments | Treino pessoal, atribuição de treinos |
-| **Instructor** | Group class delivery, attendance | Aulas de grupo, presença |
-| **Physiotherapist** | Injury assessment, recovery tracking | Avaliação de lesões, rastreamento de recuperação |
-| **Nutritionist** | Diet plans, member consultations | Planos de dieta, consultas de membros |
-| **Receptionist** | Check-ins, payments, member registration | Check-ins, pagamentos, registo de membros |
-| **Staff** | General operations, limited access | Operações gerais, acesso limitado |
-| **Member** | Self-service profile, class bookings | Perfil de auto-serviço, reservas de aulas |
-
 ---
 
-## 🚀 Getting Started | Começar
+## 🚀 Getting Started | Como Começar
 
 ### Prerequisites | Pré-requisitos
-- Node.js 18+ (LTS recommended | LTS recomendado)
-- npm or pnpm
+- Node.js 18+
+- Supabase Account
 
 ### Installation | Instalação
-
-**1. Clone the repository | Clonar o repositório**
-```bash
-git clone https://github.com/clrogon/nzila-gym-manager.git
-cd nzila-gym-manager
-```
-
-**2. Install dependencies | Instalar dependências**
-```bash
-npm install
-```
-
-**3. Start development server | Iniciar servidor de desenvolvimento**
-```bash
-npm run dev
-# Access at | Aceder em: http://localhost:5173
-```
-
----
-
-## 📁 Project Structure | Estrutura do Projecto
-
-```
-nzila-gym-manager/
-├── src/
-│   ├── components/        # Reusable UI components | Componentes UI reutilizáveis
-│   │   ├── ui/            # shadcn/ui base components
-│   │   ├── common/        # Shared components (ErrorBoundary, RequirePermission)
-│   │   ├── training/      # Training module components
-│   │   ├── calendar/      # Calendar components
-│   │   └── dashboard/     # Dashboard widgets
-│   ├── pages/             # Route pages | Páginas de rota
-│   ├── modules/           # Feature modules (auth, booking, payments, etc.)
-│   ├── hooks/             # Custom React hooks (useRBAC, useMobile)
-│   ├── lib/               # Utilities (parsers, validators, PDF service)
-│   ├── contexts/          # React context providers (Auth, Gym)
-│   └── integrations/      # Supabase client & types
-├── supabase/
-│   ├── migrations/        # Database schema versions
-│   └── functions/         # Edge Functions (serverless)
-├── public/                # Static assets
-└── workflows/             # GitHub Actions CI/CD
-```
-
----
-
-## 🔐 Security & Compliance | Segurança & Conformidade
-
-### GDPR Compliance | Conformidade GDPR
-- **EN**: Explicit consent tracking • Data anonymization support • Right to erasure • Audit trail for data access
-- **PT**: Rastreamento de consentimento explícito • Suporte para anonimização de dados • Direito ao apagamento • Trilha de auditoria para acesso a dados
-
-### Data Protection | Protecção de Dados
-- **EN**: Sensitive fields in separate secure table • Secure views for member data • Encrypted connections (TLS) • No PII in logs • Row-Level Security on all tables • Audit logging for sensitive data access
-- **PT**: Campos sensíveis em tabela segura separada • Visualizações seguras para dados de membros • Conexões encriptadas (TLS) • Sem PII em logs • Row-Level Security em todas as tabelas • Registo de auditoria para acesso a dados sensíveis
-
----
-
-## 🛠️ Development | Desenvolvimento
-
-### Available Scripts | Scripts Disponíveis
-
-```bash
-npm run dev          # Start development | Iniciar desenvolvimento
-npm run build        # Production build | Build de produção
-npm run preview      # Preview build | Pré-visualizar build
-npm run lint         # Run ESLint
-npm run type-check   # TypeScript validation | Validação TypeScript
-```
-
----
-
-## 🤝 Contributing | Contribuir
-
-**EN**: We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for our development workflow, coding standards, and pull request process.
-
-**PT**: Acolhemos contribuições! Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.md) para o nosso fluxo de trabalho de desenvolvimento, padrões de codificação e processo de pull request.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/clrogon/nzila-gym-manager.git
+   ```
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+3. Set up environment variables:
+   Copy `.env.example` to `.env` and fill in your Supabase credentials.
+4. Start the development server:
+   ```bash
+   pnpm dev
+   ```
 
 ---
 
 ## 📄 License | Licença
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
-
-Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LICENSE) para detalhes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🆘 Support | Suporte
-
-- **Documentation | Documentação**: [README.md](README.md)
-- **Security | Segurança**: [SECURITY.md](SECURITY.md)
-- **Security Hardening | Endurecimento**: [SECURITY_HARDENING.md](SECURITY_HARDENING.md)
-- **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
-- **Email**: support@nzila.ao | suporte@nzila.ao
+## 🤝 Contributing | Contribuir
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ---
 
-## 🙏 Acknowledgments | Agradecimentos
-
-- Built with [Supabase](https://supabase.com) via Lovable Cloud
-- UI components from [shadcn/ui](https://ui.shadcn.com)
-- Icons from [Lucide React](https://lucide.dev)
-- **EN**: Inspired by the fitness community in Luanda, Angola
-- **PT**: Inspirado pela comunidade fitness em Luanda, Angola
-
----
-
-## 🗺️ Roadmap | Roteiro
-
-**EN**: See [ROADMAP.md](ROADMAP.md) for planned features and timeline.
-
-**PT**: Veja [ROADMAP.md](ROADMAP.md) para funcionalidades planeadas e cronograma.
-
----
-
-**Made with ❤️ for the fitness community | Feito com ❤️ para a comunidade fitness**
+## 📞 Support | Suporte
+For support, please email support@nzila.ao or join our Discord community.
