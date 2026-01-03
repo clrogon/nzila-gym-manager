@@ -95,19 +95,30 @@ export function POSInterface() {
       if (saleError) throw saleError;
 
       // Create sale items and update stock
-      for (const item of cart) {
-        await supabase.from('sale_items').insert({
-          sale_id: sale.id,
-          product_id: item.product.id,
-          quantity: item.quantity,
-          unit_price: item.product.price,
-          total: item.product.price * item.quantity,
-        });
+      // NOTE: In a production environment, this should be handled by a database function (RPC)
+      // to ensure atomicity and prevent race conditions.
+      const saleItems = cart.map(item => ({
+        sale_id: sale.id,
+        product_id: item.product.id,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        total: item.product.price * item.quantity,
+      }));
 
-        await supabase
+      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
+      if (itemsError) throw itemsError;
+
+      // Update stock for each item
+      for (const item of cart) {
+        const { error: stockError } = await supabase
           .from('products')
           .update({ stock_quantity: item.product.stock_quantity - item.quantity })
           .eq('id', item.product.id);
+        
+        if (stockError) {
+          console.error(`Failed to update stock for product ${item.product.id}:`, stockError);
+          // We continue with other items but log the error
+        }
       }
 
       return sale;
