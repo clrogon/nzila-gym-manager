@@ -35,7 +35,7 @@ export default function Auth() {
       passwordSchema.parse(password);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({ title: 'Erro de validação', description: err.errors[0].message, variant: 'destructive' });
+        toast({ title: 'Erro de validação', description: err.issues[0].message, variant: 'destructive' });
         return;
       }
     }
@@ -56,7 +56,7 @@ export default function Auth() {
       passwordSchema.parse(password);
       if (!fullName.trim()) throw new Error('O nome completo é obrigatório');
     } catch (err) {
-      const message = err instanceof z.ZodError ? err.errors[0].message : (err as Error).message;
+      const message = err instanceof z.ZodError ? err.issues[0].message : (err as Error).message;
       toast({ title: 'Erro de validação', description: message, variant: 'destructive' });
       return;
     }
@@ -82,7 +82,7 @@ export default function Auth() {
       emailSchema.parse(magicLinkEmail);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({ title: 'Erro de validação', description: err.errors[0].message, variant: 'destructive' });
+        toast({ title: 'Erro de validação', description: err.issues[0].message, variant: 'destructive' });
         return;
       }
     }

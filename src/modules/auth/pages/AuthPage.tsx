@@ -45,7 +45,7 @@ export default function AuthPage() {
       passwordSchema.parse(password);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({ title: 'Validation Error', description: err.errors[0].message, variant: 'destructive' });
+        toast({ title: 'Validation Error', description: err.issues[0].message, variant: 'destructive' });
         return;
       }
     }
@@ -67,7 +67,7 @@ export default function AuthPage() {
       passwordSchema.parse(password);
       if (!fullName.trim()) throw new Error('Full name is required');
     } catch (err) {
-      const message = err instanceof z.ZodError ? err.errors[0].message : (err as Error).message;
+      const message = err instanceof z.ZodError ? err.issues[0].message : (err as Error).message;
       toast({ title: 'Validation Error', description: message, variant: 'destructive' });
       return;
     }
@@ -92,7 +92,7 @@ export default function AuthPage() {
       emailSchema.parse(email);
     } catch (err) {
       if (err instanceof z.ZodError) {
-        toast({ title: 'Validation Error', description: err.errors[0].message, variant: 'destructive' });
+        toast({ title: 'Validation Error', description: err.issues[0].message, variant: 'destructive' });
         return;
       }
     }

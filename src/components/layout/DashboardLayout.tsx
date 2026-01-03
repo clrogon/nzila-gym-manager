@@ -158,7 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside
         className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:transform-none gradient-sidebar',
+          'fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:transform-none bg-sidebar border-r border-sidebar-border',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -166,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {/* Logótipo */}
           <div className="p-6 border-b border-sidebar-border">
             <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-[0_0_20px_hsl(45_93%_56%/0.3)]">
                 <Dumbbell className="w-5 h-5 text-primary-foreground" />
               </div>
               <div className="flex flex-col">
@@ -247,7 +247,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
                     isActive
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-[0_0_15px_hsl(45_93%_56%/0.25)]'
                       : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   )}
                 >
@@ -296,7 +296,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Conteúdo Principal */}
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="h-16 border-b border-border bg-card flex items-center px-4 lg:px-6 sticky top-0 z-30">
+        <header className="h-16 border-b border-border bg-background/80 backdrop-blur-md flex items-center px-4 lg:px-6 sticky top-0 z-30">
           <Button
             variant="ghost"
             size="icon"
