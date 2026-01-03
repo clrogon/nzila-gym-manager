@@ -11,6 +11,8 @@ import { ModuleLoader } from "@/components/common/ModuleLoader";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import UserProfile from '@/pages/UserProfile';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 
 
@@ -87,6 +89,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="/auth" element={<PublicRoute><ErrorBoundary moduleName="Auth"><AuthPage /></ErrorBoundary></PublicRoute>} />
       <Route path="/onboarding" element={<OnboardingRoute><OnboardingPage /></OnboardingRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute moduleName="Dashboard"><DashboardPage /></ProtectedRoute>} />

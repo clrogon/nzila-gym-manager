@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
@@ -41,7 +41,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import ThemeToggle from '@/components/common/ThemeToggle';
 
 type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
@@ -306,6 +306,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="w-5 h-5" />
           </Button>
           <div className="flex-1" />
+          <ThemeToggle />
         </header>
 
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
