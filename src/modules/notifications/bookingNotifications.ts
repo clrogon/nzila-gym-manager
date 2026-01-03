@@ -31,27 +31,17 @@ eventBus.on<BookingPromotedEvent>(
         return;
       }
 
-      // Call edge function to send email (if implemented)
-      // For now, just log the notification
-      console.log('Booking promoted notification:', {
+      // Send email notification via the centralized email service
+      await sendEmail({
         to: member.email,
-        memberName: member.full_name,
-        classTitle: classInfo.title,
-        classDate: classInfo.start_time,
+        subject: `Sua reserva para ${classInfo.title} foi confirmada!`,
+        template: 'booking-promoted',
+        variables: {
+          memberName: member.full_name,
+          classTitle: classInfo.title,
+          classDate: classInfo.start_time,
+        },
       });
-
-      // TODO: Implement edge function for sending emails
-      // await supabase.functions.invoke('send-booking-notification', {
-      //   body: {
-      //     to: member.email,
-      //     template: 'booking-promoted',
-      //     variables: {
-      //       memberName: member.full_name,
-      //       classTitle: classInfo.title,
-      //       classDate: classInfo.start_time,
-      //     },
-      //   },
-      // });
     } catch (error) {
       console.error('Failed to send booking promotion notification:', error);
     }
