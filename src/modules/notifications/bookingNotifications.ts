@@ -1,6 +1,7 @@
 import { eventBus } from "@/modules/events/eventBus";
 import { BookingPromotedEvent } from "@/modules/booking/events";
 import { supabase } from "@/integrations/supabase/client";
+import { sendEmail } from "./emailService";
 
 // Listen for booking promotions and trigger email notifications via Edge Function
 eventBus.on<BookingPromotedEvent>(
