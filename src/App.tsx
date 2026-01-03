@@ -1,14 +1,23 @@
-// src/App.tsx - COMPLETE FILE WITH ERROR PAGES
+// src/App.tsx – MERGED, COMPLETE, SAFE
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { GymProvider } from "@/contexts/GymContext";
-import { ErrorBoundary } from "@/pages/errors/ErrorBoundary";
+
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { GymProvider, useGym } from "@/contexts/GymContext";
+
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { ModuleLoader } from "@/components/common/ModuleLoader";
+
+// Public & Static Pages
+import Index from "./pages/Index";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import UserProfile from "@/pages/UserProfile";
 
 // Error Pages
 import NotFound from "@/pages/errors/NotFound";
@@ -16,60 +25,177 @@ import ServerError from "@/pages/errors/ServerError";
 import Forbidden from "@/pages/errors/Forbidden";
 import Offline from "@/pages/errors/Offline";
 
-// Auth & Landing
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-
-// Dashboard & Main Pages
-import Dashboard from "./pages/Dashboard";
-import Onboarding from "./pages/Onboarding";
-import CheckIns from "./pages/CheckIns";
-import Payments from "./pages/Payments";
-import Calendar from "./pages/Calendar";
-import Settings from "./pages/Settings";
-import UserProfile from "./pages/UserProfile";
-import Training from "./pages/Training";
-import Disciplines from "./pages/Disciplines";
-import Staff from "./pages/Staff";
-
-// Member Pages
-import MemberPortal from "./pages/member/MemberPortal";
-import MemberCheckIn from "./pages/member/MemberCheckIn";
-import MemberActivity from "./pages/member/MemberActivity";
-import MemberFinances from "./pages/member/MemberFinances";
-
-// Staff Pages
-import MembersManagement from "./pages/staff/MembersManagement";
-
-// Super Admin
-import SuperAdmin from "./pages/SuperAdmin";
+// Modular Pages
+import { AuthPage } from "./modules/auth";
+import { DashboardPage } from "./modules/dashboard";
+import {
+  MembersManagementPage,
+  MemberPortalPage,
+  MemberCheckInPage,
+  MemberFinancesPage,
+  MemberActivityPage,
+} from "./modules/members";
+import { CheckInsPage } from "./modules/checkins";
+import { PaymentsPage } from "./modules/payments";
+import { SettingsPage } from "./modules/settings";
+import { OnboardingPage } from "./modules/onboarding";
+import { SuperAdminPage } from "./modules/superadmin";
+import { StaffPage } from "./modules/staff";
+import { CalendarPage } from "./modules/calendar";
+import { TrainingPage } from "./modules/training";
+import { LeadsPage } from "./modules/leads";
+import { InventoryPage } from "./modules/inventory";
+import { POSPage } from "./modules/pos";
+import { KioskPage } from "./modules/kiosk";
+import { InvoicesPage } from "./modules/invoices";
+import { DisciplinesPage } from "./modules/disciplines";
 
 const queryClient = new QueryClient();
 
+/* -----------------------------
+   Route Guards
+------------------------------*/
+
+function ProtectedRoute({
+  children,
+  moduleName,
+}: {
+  children: React.ReactNode;
+  moduleName: string;
+}) {
+  const { user, loading: authLoading } = useAuth();
+
+  if (authLoading) return <ModuleLoader message="Loading..." />;
+  if (!user) return <Navigate to="/auth" replace />;
+
+  return (
+    <ErrorBoundary moduleName={moduleName}>
+      <Suspense fallback={<ModuleLoader message={`Loading ${moduleName}...`} />}>
+        {children}
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { gyms, loading: gymLoading } = useGym();
+
+  if (authLoading || gymLoading) return <ModuleLoader />;
+
+  if (user) {
+    if (gyms.length === 0) return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function OnboardingRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth();
+  const { gyms, loading: gymLoading } = useGym();
+
+  if (authLoading || gymLoading) return <ModuleLoader />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (gyms.length > 0) return <Navigate to="/dashboard" replace />;
+
+  return (
+    <ErrorBoundary moduleName="Onboarding">
+      <Suspense fallback={<ModuleLoader />}>{children}</Suspense>
+    </ErrorBoundary>
+  );
+}
+
+/* -----------------------------
+   Routes
+------------------------------*/
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<Index />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+
+      {/* Auth & Onboarding */}
+      <Route
+        path="/auth"
+        element={
+          <PublicRoute>
+            <ErrorBoundary moduleName="Auth">
+              <AuthPage />
+            </ErrorBoundary>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/onboarding"
+        element={
+          <OnboardingRoute>
+            <OnboardingPage />
+          </OnboardingRoute>
+        }
+      />
+
+      {/* Core App */}
+      <Route path="/dashboard" element={<ProtectedRoute moduleName="Dashboard"><DashboardPage /></ProtectedRoute>} />
+      <Route path="/members" element={<ProtectedRoute moduleName="Members"><MembersManagementPage /></ProtectedRoute>} />
+      <Route path="/staff" element={<ProtectedRoute moduleName="Staff"><StaffPage /></ProtectedRoute>} />
+
+      {/* Member */}
+      <Route path="/member/portal" element={<ProtectedRoute moduleName="Member Portal"><MemberPortalPage /></ProtectedRoute>} />
+      <Route path="/member/checkin" element={<ProtectedRoute moduleName="Member Check-In"><MemberCheckInPage /></ProtectedRoute>} />
+      <Route path="/member/finances" element={<ProtectedRoute moduleName="Member Finances"><MemberFinancesPage /></ProtectedRoute>} />
+      <Route path="/member/activity" element={<ProtectedRoute moduleName="Member Activity"><MemberActivityPage /></ProtectedRoute>} />
+
+      {/* Operations */}
+      <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
+      <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
+      <Route path="/disciplines" element={<ProtectedRoute moduleName="Disciplines"><DisciplinesPage /></ProtectedRoute>} />
+      <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute moduleName="Invoices"><InvoicesPage /></ProtectedRoute>} />
+      <Route path="/leads" element={<ProtectedRoute moduleName="Leads"><LeadsPage /></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute moduleName="Inventory"><InventoryPage /></ProtectedRoute>} />
+      <Route path="/pos" element={<ProtectedRoute moduleName="POS"><POSPage /></ProtectedRoute>} />
+
+      {/* Special */}
+      <Route path="/kiosk" element={<KioskPage />} />
+      <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute moduleName="Profile"><UserProfile /></ProtectedRoute>} />
+      <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
+
+      {/* Error Pages */}
+      <Route path="/403" element={<Forbidden />} />
+      <Route path="/500" element={<ServerError />} />
+      <Route path="/offline" element={<Offline />} />
+
+      {/* 404 */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+/* -----------------------------
+   App Root
+------------------------------*/
+
 const App = () => {
-  // Check for offline status
+  // Offline detection (from previous version)
   useEffect(() => {
-    const handleOnline = () => console.log("Back online");
     const handleOffline = () => {
-      // Redirect to offline page if needed
-      if (window.location.pathname !== '/offline') {
-        window.location.href = '/offline';
+      if (window.location.pathname !== "/offline") {
+        window.location.href = "/offline";
       }
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    window.addEventListener("offline", handleOffline);
+    return () => window.removeEventListener("offline", handleOffline);
   }, []);
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary moduleName="App">
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -77,45 +203,7 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <GymProvider>
-                <Routes>
-                  {/* Landing & Auth */}
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/terms" element={<Terms />} />
-
-                  {/* Dashboard & Main */}
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/onboarding" element={<Onboarding />} />
-                  <Route path="/check-ins" element={<CheckIns />} />
-                  <Route path="/payments" element={<Payments />} />
-                  <Route path="/calendar" element={<Calendar />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile" element={<UserProfile />} />
-                  <Route path="/training" element={<Training />} />
-                  <Route path="/disciplines" element={<Disciplines />} />
-                  <Route path="/staff" element={<Staff />} />
-
-                  {/* Member Portal */}
-                  <Route path="/member" element={<MemberPortal />} />
-                  <Route path="/member/checkin" element={<MemberCheckIn />} />
-                  <Route path="/member/activity" element={<MemberActivity />} />
-                  <Route path="/member/finances" element={<MemberFinances />} />
-
-                  {/* Staff Management */}
-                  <Route path="/members" element={<MembersManagement />} />
-
-                  {/* Super Admin */}
-                  <Route path="/super-admin" element={<SuperAdmin />} />
-
-                  {/* Error Pages - Explicit Routes */}
-                  <Route path="/500" element={<ServerError />} />
-                  <Route path="/403" element={<Forbidden />} />
-                  <Route path="/offline" element={<Offline />} />
-
-                  {/* 404 - Must be last */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <AppRoutes />
               </GymProvider>
             </AuthProvider>
           </BrowserRouter>
