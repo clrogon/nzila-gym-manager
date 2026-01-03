@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Dumbbell, MapPin, Mail, Phone, FileText } from 'lucide-react';
 
 export default function LandingFooter() {
@@ -6,10 +7,10 @@ export default function LandingFooter() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
           <div className="space-y-8 max-w-sm">
-            <div className="flex items-center space-x-6 grayscale opacity-40 group hover:opacity-100 transition-opacity cursor-pointer">
+            <Link to="/" className="flex items-center space-x-6 grayscale opacity-40 group hover:opacity-100 transition-opacity cursor-pointer">
               <Dumbbell className="w-10 h-10 text-brand-gold" />
               <span className="text-3xl font-thin tracking-[0.6em] text-white">NZILA</span>
-            </div>
+            </Link>
             
             <div className="space-y-4 text-gray-500 font-light text-sm">
               <div className="flex items-start space-x-3 group">
@@ -19,14 +20,14 @@ export default function LandingFooter() {
                   Avenida Comandante Gika, Luanda, Angola
                 </span>
               </div>
-              <div className="flex items-center space-x-3 group">
+              <a href="mailto:comercial@nzila.ao" className="flex items-center space-x-3 group hover:text-brand-gold transition-colors">
                 <Mail className="w-4 h-4 text-brand-gold flex-shrink-0 group-hover:text-white transition-colors" />
-                <a href="mailto:comercial@nzila.ao" className="hover:text-brand-gold transition-colors">comercial@nzila.ao</a>
-              </div>
-              <div className="flex items-center space-x-3 group">
+                <span>comercial@nzila.ao</span>
+              </a>
+              <a href="tel:+244923555777" className="flex items-center space-x-3 group hover:text-brand-gold transition-colors">
                 <Phone className="w-4 h-4 text-brand-gold flex-shrink-0 group-hover:text-white transition-colors" />
                 <span>+244 923 555 777</span>
-              </div>
+              </a>
               <div className="flex items-center space-x-3 group pt-2 border-t border-white/5">
                 <FileText className="w-4 h-4 text-brand-gold flex-shrink-0 group-hover:text-white transition-colors" />
                 <span className="tracking-widest">NIF: 5410002931</span>
@@ -34,16 +35,26 @@ export default function LandingFooter() {
             </div>
           </div>
           
-          <div className="flex space-x-12 md:space-x-20">
-            <a href="https://instagram.com/nzila.ao" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
-              Instagram
-            </a>
-            <a href="https://linkedin.com/company/nzila" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
-              LinkedIn
-            </a>
-            <a href="https://wa.me/244923555777" target="_blank" rel="noopener noreferrer" className="text-[10px] font-black tracking-[0.3em] text-gray-600 hover:text-white uppercase transition-colors">
-              WhatsApp
-            </a>
+          <div className="flex flex-col md:flex-row gap-8 md:gap-20">
+            <div className="flex flex-col gap-4">
+              <span className="text-[9px] font-black tracking-[0.3em] text-gray-700 uppercase mb-2">Navegação</span>
+              <a href="#features" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">Funcionalidades</a>
+              <a href="#hardware" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">Hardware</a>
+              <a href="#pricing" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">Preços</a>
+              <a href="#demo" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">Demonstração</a>
+            </div>
+            <div className="flex flex-col gap-4">
+              <span className="text-[9px] font-black tracking-[0.3em] text-gray-700 uppercase mb-2">Social</span>
+              <a href="https://instagram.com/nzila.ao" target="_blank" rel="noopener noreferrer" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">
+                Instagram
+              </a>
+              <a href="https://linkedin.com/company/nzila" target="_blank" rel="noopener noreferrer" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">
+                LinkedIn
+              </a>
+              <a href="https://wa.me/244923555777" target="_blank" rel="noopener noreferrer" className="text-[10px] font-medium tracking-[0.2em] text-gray-500 hover:text-white uppercase transition-colors">
+                WhatsApp
+              </a>
+            </div>
           </div>
         </div>
 
@@ -53,9 +64,9 @@ export default function LandingFooter() {
             <p className="text-[10px] font-black tracking-[0.4em] text-gray-800 uppercase">Tecnologia Feita em Angola</p>
           </div>
           
-          <div className="flex space-x-10 text-[9px] font-black tracking-[0.3em] text-gray-800 uppercase">
-            <a href="#" className="hover:text-gray-400 transition-colors">Privacy Protocol</a>
-            <a href="#" className="hover:text-gray-400 transition-colors">Service Terms</a>
+          <div className="flex space-x-10 text-[9px] font-black tracking-[0.3em] text-gray-600 uppercase">
+            <Link to="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Termos de Serviço</Link>
           </div>
         </div>
       </div>
