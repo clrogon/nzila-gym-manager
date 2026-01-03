@@ -53,7 +53,7 @@ export function StatCard({
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm transition-all hover:shadow-md",
+      "relative overflow-hidden rounded-xl border border-border bg-card/80 backdrop-blur-sm p-6 shadow-sm transition-all hover:shadow-md hover:border-primary/30",
       className
     )}>
       <div className="flex items-start justify-between">

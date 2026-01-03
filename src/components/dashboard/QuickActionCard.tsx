@@ -12,28 +12,28 @@ interface QuickActionCardProps {
 
 const variantStyles = {
   primary: {
-    bg: 'bg-primary/5 hover:bg-primary/10',
-    iconBg: 'bg-primary/10',
+    bg: 'bg-primary/10 hover:bg-primary/15',
+    iconBg: 'bg-primary/20',
     iconColor: 'text-primary',
-    border: 'border-primary/10 hover:border-primary/30',
+    border: 'border-primary/20 hover:border-primary/40',
   },
   success: {
-    bg: 'bg-success/5 hover:bg-success/10',
-    iconBg: 'bg-success/10',
+    bg: 'bg-success/10 hover:bg-success/15',
+    iconBg: 'bg-success/20',
     iconColor: 'text-success',
-    border: 'border-success/10 hover:border-success/30',
+    border: 'border-success/20 hover:border-success/40',
   },
   accent: {
     bg: 'bg-accent hover:bg-accent/80',
-    iconBg: 'bg-accent-foreground/10',
-    iconColor: 'text-accent-foreground',
-    border: 'border-accent-foreground/10 hover:border-accent-foreground/30',
+    iconBg: 'bg-foreground/10',
+    iconColor: 'text-foreground',
+    border: 'border-border hover:border-foreground/30',
   },
   warning: {
-    bg: 'bg-warning/5 hover:bg-warning/10',
-    iconBg: 'bg-warning/10',
+    bg: 'bg-warning/10 hover:bg-warning/15',
+    iconBg: 'bg-warning/20',
     iconColor: 'text-warning',
-    border: 'border-warning/10 hover:border-warning/30',
+    border: 'border-warning/20 hover:border-warning/40',
   },
 };
 
