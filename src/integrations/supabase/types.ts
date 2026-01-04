@@ -2682,10 +2682,29 @@ export type Database = {
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       get_user_gym_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_user_role: {
+        Args: { _gym_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_any_role: {
+        Args: {
+          _gym_id: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_gym_role: {
         Args: {
           _gym_id: string
           _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean

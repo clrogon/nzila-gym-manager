@@ -122,7 +122,7 @@ export default function Staff() {
           is_trainer,
           created_at
         `)
-        .in('role', ['gym_owner', 'admin', 'staff']);
+        .in('role', ['gym_owner', 'manager', 'admin', 'coach', 'trainer', 'instructor', 'physiotherapist', 'nutritionist', 'receptionist', 'staff']);
 
       // If not super admin, only show staff for current gym
       if (!isSuperAdmin && currentGym) {
