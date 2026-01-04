@@ -245,12 +245,15 @@ export function POSInterface() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Member Selection */}
-            <Select value={selectedMember || ''} onValueChange={setSelectedMember}>
+            <Select 
+              value={selectedMember || 'walk-in'} 
+              onValueChange={(value) => setSelectedMember(value === 'walk-in' ? null : value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select member (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Walk-in Customer</SelectItem>
+                <SelectItem value="walk-in">Walk-in Customer</SelectItem>
                 {members.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.full_name}
