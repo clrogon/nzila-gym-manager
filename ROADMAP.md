@@ -1,6 +1,6 @@
 # Nzila Gym Manager Roadmap | Roteiro
 
-## 📊 Current Version | Versão Actual: 1.0.1 (January 2025)
+## 📊 Current Version | Versão Actual: 1.0.2 (January 2025)
 
 ---
 
@@ -56,18 +56,33 @@ Ficha completa do aluno: histórico de pagamentos, plano de treino e dados de sa
 - [x] Training plan assignment | Atribuição de plano de treino
 - [x] Health data management (secure) | Gestão de dados de saúde (seguro)
 - [x] Family/dependent relationships | Relações familiares/dependentes
+- [x] Member portal | Portal do membro
+- [x] QR Code check-in | Check-in por QR Code
 
-### 05. Renovações Automáticas | Automatic Renewals
+### 05. Notificações | Notifications
+Sistema de notificações por email para comunicação automática com membros e staff.
+> Email notification system for automatic communication with members and staff.
+
+- [x] Welcome emails (self-signup) | Emails de boas-vindas (auto-registo)
+- [x] Admin-created account emails with temp password | Emails de contas criadas por admin com senha temporária
+- [x] Password reset emails | Emails de recuperação de senha
+- [x] Email audit logging | Registo de auditoria de emails
+- [ ] SMS notifications | Notificações SMS
+- [ ] WhatsApp integration | Integração WhatsApp
+- [ ] Payment reminders | Lembretes de pagamento
+- [ ] Class cancellation alerts | Alertas de cancelamento de aulas
+
+### 06. Renovações Automáticas | Automatic Renewals
 Alertas automáticos via SMS e WhatsApp antes da mensalidade expirar para aumentar a retenção.
 > Automatic alerts via SMS and WhatsApp before membership expires to increase retention.
 
 - [x] Expiration tracking | Rastreamento de expiração
+- [x] Email reminders | Lembretes por email
 - [ ] SMS notifications | Notificações SMS
 - [ ] WhatsApp integration | Integração WhatsApp
-- [ ] Email reminders | Lembretes por email
 - [ ] Configurable reminder periods | Períodos de lembrete configuráveis
 
-### 06. Multi-Filial | Multi-Branch
+### 07. Multi-Filial | Multi-Branch
 Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrativo.
 > Manage multiple locations (Luanda, Talatona, Benguela) from a single admin dashboard.
 
@@ -76,6 +91,21 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Per-location permissions | Permissões por localização
 - [ ] Cross-location member access | Acesso de membros entre localizações
 - [ ] Consolidated reporting | Relatórios consolidados
+
+---
+
+## ✅ Version 1.0.2 - Email Notifications (Complete | Completo)
+
+### Email System | Sistema de Email
+- [x] send-email Edge Function | Edge Function send-email
+- [x] send-welcome-email Edge Function | Edge Function send-welcome-email
+- [x] create-user-account Edge Function | Edge Function create-user-account
+- [x] Welcome emails for self-signup | Emails de boas-vindas para auto-registo
+- [x] Temporary password emails for admin-created accounts | Emails com senha temporária para contas criadas por admin
+- [x] Password reset email support | Suporte a emails de recuperação de senha
+- [x] Email notification audit table | Tabela de auditoria de notificações
+- [x] Database trigger for profile creation | Trigger de base de dados para criação de perfil
+- [x] Resend API integration | Integração com API Resend
 
 ---
 
@@ -99,6 +129,7 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Row-Level Security (RLS) on all tables | RLS em todas as tabelas
 - [x] Secure session management | Gestão segura de sessões
 - [x] Protected routes | Rotas protegidas
+- [x] Rate limiting | Limitação de taxa
 
 ### Member Management | Gestão de Membros
 - [x] Member profiles with photos | Perfis de membros com fotos
@@ -106,11 +137,17 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Family/dependent relationships | Relações familiares/dependentes
 - [x] Health conditions tracking (secure) | Rastreamento de condições de saúde (seguro)
 - [x] Status management (Active, Suspended, Pending) | Gestão de estados
+- [x] Member portal dashboard | Dashboard do portal do membro
+- [x] Member finances view | Visualização de finanças do membro
+- [x] Member check-in page | Página de check-in do membro
+- [x] Member activity heatmap | Mapa de calor de actividade do membro
+- [x] Member QR code | Código QR do membro
 
 ### Check-In System | Sistema de Check-In
 - [x] Quick check-in/out | Check-in/out rápido
 - [x] Attendance history | Histórico de presença
 - [x] Real-time tracking | Rastreamento em tempo real
+- [x] QR Code support | Suporte a QR Code
 
 ### Calendar & Scheduling | Calendário & Agendamento
 - [x] Visual weekly calendar | Calendário semanal visual
@@ -120,20 +157,31 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Location management | Gestão de localização
 - [x] Conflict detection | Detecção de conflitos
 - [x] Discipline integration | Integração com disciplinas
+- [x] Class booking system | Sistema de reserva de aulas
+- [x] Waitlist management | Gestão de lista de espera
+- [x] Booking notifications | Notificações de reserva
 
 ### Training & Progress | Treino & Progresso
 - [x] Exercise library | Biblioteca de exercícios
+- [x] Gym-specific exercise management | Gestão de exercícios específicos do ginásio
+- [x] Gym-specific class library | Biblioteca de aulas específicas do ginásio
+- [x] Gym-specific workout library | Biblioteca de treinos específicos do ginásio
 - [x] Workout template builder | Construtor de modelos de treino
+- [x] Polymorphic WOD builder | Construtor de WOD polimórfico
 - [x] Workout assignment to members | Atribuição de treinos a membros
 - [x] Discipline management | Gestão de disciplinas
 - [x] Rank/belt system | Sistema de graduação/faixa
 - [x] Promotion criteria | Critérios de promoção
 - [x] Member progress dashboard | Dashboard de progresso de membros
+- [x] Member rank progress | Progresso de graduação do membro
+- [x] Training library view | Visualização da biblioteca de treino
 
 ### Financial Management | Gestão Financeira
 - [x] Payment processing | Processamento de pagamentos
 - [x] Invoice generation | Geração de facturas
+- [x] Invoice list view | Visualização de lista de facturas
 - [x] Multicaixa Express integration | Integração Multicaixa Express
+- [x] Multicaixa proof upload | Upload de comprovativo Multicaixa
 - [x] Bank reconciliation | Reconciliação bancária
 - [x] Financial reports (PDF export) | Relatórios financeiros (exportação PDF)
 - [x] Discount/coupon system | Sistema de descontos/cupões
@@ -150,41 +198,54 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Low stock alerts | Alertas de stock baixo
 - [x] POS interface | Interface PDV
 - [x] Asset tracking | Rastreamento de activos
+- [x] Inventory tabs navigation | Navegação por abas de inventário
 
 ### Staff Management | Gestão de Staff
 - [x] 12 international standard roles | 12 funções padrão internacional
 - [x] Permission-based access | Acesso baseado em permissões
 - [x] Trainer flag for specialized permissions | Flag de treinador para permissões especializadas
+- [x] Gym owner pre-registration | Pré-registo de proprietário de ginásio
+
+### Settings | Definições
+- [x] General settings | Definições gerais
+- [x] Locations management | Gestão de localizações
+- [x] Membership plans configuration | Configuração de planos de associação
+- [x] Notification settings | Definições de notificações
+- [x] Security settings | Definições de segurança
+- [x] Integrations settings | Definições de integrações
+
+### Super Admin | Super Administrador
+- [x] Platform-wide gym management | Gestão de ginásios em toda a plataforma
+- [x] Gym owner invitation system | Sistema de convite de proprietários de ginásio
 
 ---
 
-## 🚧 Version 1.2 - Q1 2025 (In Progress | Em Progresso)
+## 🚧 Version 1.3 - Q1 2025 (In Progress | Em Progresso)
 
 ### GDPR Compliance | Conformidade GDPR
+- [x] GDPR consent tracking fields | Campos de rastreamento de consentimento GDPR
+- [x] GDPR compliance component | Componente de conformidade GDPR
 - [ ] Consent management UI | UI de gestão de consentimentos
 - [ ] Data export requests | Pedidos de exportação de dados
 - [ ] Data deletion requests | Pedidos de eliminação de dados
 - [ ] Anonymization workflows | Fluxos de anonimização
 
-### Notifications | Notificações
-- [ ] Email notifications (Edge Function) | Notificações por email
-- [ ] Booking confirmations | Confirmações de reserva
-- [ ] Payment reminders | Lembretes de pagamento
-- [ ] Class cancellation alerts | Alertas de cancelamento de aulas
-
 ### Kiosk Mode | Modo Quiosque
+- [x] Kiosk interface component | Componente de interface de quiosque
 - [ ] Self-service check-in terminal | Terminal de check-in self-service
 - [ ] PIN-based authentication | Autenticação baseada em PIN
 - [ ] Tablet-optimized interface | Interface optimizada para tablet
 
-### Member Portal | Portal do Membro
-- [ ] Class booking interface | Interface de reserva de aulas
-- [ ] Payment history | Histórico de pagamentos
-- [ ] Profile management | Gestão de perfil
+### Advanced Notifications | Notificações Avançadas
+- [ ] Booking confirmations | Confirmações de reserva
+- [ ] Payment reminders | Lembretes de pagamento
+- [ ] Class cancellation alerts | Alertas de cancelamento de aulas
+- [ ] SMS integration | Integração SMS
+- [ ] WhatsApp integration | Integração WhatsApp
 
 ---
 
-## 📋 Version 1.3 - Q2 2025 (Planned | Planeado)
+## 📋 Version 1.4 - Q2 2025 (Planned | Planeado)
 
 ### Mobile Experience | Experiência Móvel
 - [ ] React Native mobile app | Aplicação móvel React Native
@@ -192,7 +253,7 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [ ] Offline check-in support | Suporte a check-in offline
 
 ### Communication | Comunicação
-- [ ] WhatsApp integration | Integração WhatsApp
+- [ ] WhatsApp Business integration | Integração WhatsApp Business
 - [ ] SMS notifications | Notificações SMS
 - [ ] In-app messaging | Mensagens na aplicação
 
