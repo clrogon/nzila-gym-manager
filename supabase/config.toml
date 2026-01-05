@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.pre-register-gym-owner]
 verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.create-user-account]
+verify_jwt = false
