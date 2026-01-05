@@ -15,16 +15,19 @@
 
 ---
 
-## 📊 Current Status | Estado Actual (January 2025)
+## 📊 Current Status | Estado Actual (January 2025) - v1.0.2
 
 | Module | Status EN | Estado PT |
 |--------|-----------|-----------|
 | **Authentication** | ✅ Complete | ✅ Completo |
 | **Member Management** | ✅ Complete | ✅ Completo |
+| **Member Portal** | ✅ Complete | ✅ Completo |
 | **Check-In System** | ✅ Complete | ✅ Completo |
 | **Calendar/Scheduling** | ✅ Complete | ✅ Completo |
+| **Class Booking** | ✅ Complete | ✅ Completo |
 | **Disciplines & Ranks** | ✅ Complete | ✅ Completo |
 | **Training & Workouts** | ✅ Complete | ✅ Completo |
+| **Training Library** | ✅ Complete | ✅ Completo |
 | **Payments/Invoices** | ✅ Complete | ✅ Completo |
 | **Lead Pipeline (CRM)** | ✅ Complete | ✅ Completo |
 | **POS/Inventory** | ✅ Complete | ✅ Completo |
@@ -32,9 +35,12 @@
 | **Bank Reconciliation** | ✅ Complete | ✅ Completo |
 | **Financial Reports** | ✅ Complete | ✅ Completo |
 | **Security Hardening** | ✅ Complete | ✅ Completo |
-| **GDPR Compliance** | 🚧 Stub (DB pending) | 🚧 Stub (BD pendente) |
-| **Email Notifications** | 🚧 Edge Function TODO | 🚧 Edge Function TODO |
+| **Email Notifications** | ✅ Complete | ✅ Completo |
+| **Settings** | ✅ Complete | ✅ Completo |
+| **Super Admin** | ✅ Complete | ✅ Completo |
+| **GDPR Compliance** | 🚧 UI pending | 🚧 UI pendente |
 | **Kiosk Mode** | 🚧 In Development | 🚧 Em Desenvolvimento |
+| **SMS/WhatsApp** | 📋 Planned | 📋 Planeado |
 
 ---
 

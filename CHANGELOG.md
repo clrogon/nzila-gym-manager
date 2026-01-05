@@ -8,6 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2025-01-05
+
+### Added | Adicionado
+
+#### Email Notification System | Sistema de Notificações por Email
+- **send-email Edge Function**: Generic email sending with HTML template support via Resend
+- **send-welcome-email Edge Function**: Specialized welcome emails for new users with multiple scenarios:
+  - Self-signup welcome confirmation
+  - Admin-created accounts with temporary password
+  - Password reset instructions
+- **create-user-account Edge Function**: Complete user account creation with:
+  - Automatic role assignment (staff_assignments)
+  - Secure temporary password generation
+  - Welcome email dispatch with credentials
+  - Gym owner pre-registration support
+- **Database trigger**: `on_profile_created_send_welcome` for automatic email on profile creation
+- **Notification queue**: `email_notifications` table for audit logging and retry tracking
+
+#### Infrastructure | Infraestrutura
+- Email service integration via Resend API
+- Notification event bus for decoupled email dispatch
+- Email provider factory pattern for future provider support
+
+### Changed | Alterado
+- Updated `emailService.ts` with helper functions for edge function invocation
+- Enhanced booking notification system with email integration
+
+---
+
 ## [1.0.1] - 2025-01-29
 
 ### Security Fixes | Correções de Segurança
@@ -126,8 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No PII in console logs
 
 ### Known Issues | Problemas Conhecidos
-- GDPR module is a stub pending additional database tables
-- Email notifications require Edge Function implementation
+- GDPR module UI pending (database tables ready)
 - Kiosk mode is in development
 
 ---
@@ -144,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.0.2]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v1.0.2
 [1.0.1]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v1.0.1
 [1.0.0-beta]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v1.0.0-beta
 [0.1.0]: https://github.com/clrogon/nzila-gym-manager/releases/tag/v0.1.0
