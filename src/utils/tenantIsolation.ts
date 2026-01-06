@@ -45,7 +45,7 @@ export const logPlatformAction = async (
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
-    await supabase.from('platform_audit_logs').insert([{
+    await supabase.from('platform_audit_logs' as any).insert([{
       user_id: user?.id,
       action,
       entity_type: entityType,

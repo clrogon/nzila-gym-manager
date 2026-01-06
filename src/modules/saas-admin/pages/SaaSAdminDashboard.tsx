@@ -40,6 +40,17 @@ interface GymMetrics {
   plan: string;
 }
 
+interface Subscription {
+  gym_id: string;
+  status: string;
+  plan_id: string | null;
+}
+
+interface Plan {
+  id: string;
+  price_monthly: number;
+}
+
 export default function SaaSAdminDashboard() {
   const [stats, setStats] = useState<PlatformStats>({
     totalGyms: 0,
@@ -67,19 +78,21 @@ export default function SaaSAdminDashboard() {
 
       const gymsArray = gymsData || [];
 
-      // Fetch subscriptions
-      const { data: subscriptionsData, error: subsError } = await supabase
-        .from('gym_subscriptions')
+      // Fetch subscriptions - cast for new tables not yet in types
+      const { data: rawSubscriptionsData, error: subsError } = await supabase
+        .from('gym_subscriptions' as any)
         .select('gym_id, status, plan_id');
 
       if (subsError) throw subsError;
+      const subscriptionsData = rawSubscriptionsData as unknown as Subscription[] | null;
 
       // Fetch plans for pricing
-      const { data: plansData, error: plansError } = await supabase
-        .from('platform_plans')
+      const { data: rawPlansData, error: plansError } = await supabase
+        .from('platform_plans' as any)
         .select('id, price_monthly');
 
       if (plansError) throw plansError;
+      const plansData = rawPlansData as unknown as Plan[] | null;
 
       // Calculate metrics
       let totalMembers = 0;
