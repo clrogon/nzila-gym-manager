@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.create-user-account]
 verify_jwt = false
+
+[functions.seed-super-admin]
+verify_jwt = false

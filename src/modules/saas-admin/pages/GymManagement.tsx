@@ -193,7 +193,7 @@ export default function GymManagement() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const handleStatusChange = async (id: string, newStatus: 'trial' | 'active' | 'past_due' | 'cancelled' | 'expired') => {
     try {
       const { error } = await supabase
         .from('gyms')
