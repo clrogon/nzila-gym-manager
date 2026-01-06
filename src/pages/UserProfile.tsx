@@ -15,8 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { 
   User, Bell, Shield, Mail, Phone, 
-  MapPin, Calendar, Save, Loader2 
+  MapPin, Calendar, Save, Loader2, Key
 } from 'lucide-react';
+import { ChangePasswordDialog } from '@/components/auth/ChangePasswordDialog';
 
 interface UserPreferences {
   id: string;
@@ -528,12 +529,17 @@ export default function UserProfile() {
                     <div className="space-y-0.5">
                       <p className="font-medium">Palavra-passe</p>
                       <p className="text-sm text-muted-foreground">
-                        Última alteração: desconhecido
+                        Altere a sua palavra-passe regularmente para maior segurança
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" disabled>
-                      Alterar
-                    </Button>
+                    <ChangePasswordDialog
+                      trigger={
+                        <Button variant="outline" size="sm">
+                          <Key className="h-4 w-4 mr-2" />
+                          Alterar
+                        </Button>
+                      }
+                    />
                   </div>
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
