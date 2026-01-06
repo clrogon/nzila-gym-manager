@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -29,7 +29,8 @@ export const MemberListItem = React.memo(function MemberListItem({
   onView: (member: Member) => void;
   onDelete: (memberId: string) => void;
 }) {
-  const getStatusColor = (status: string): string => {
+  // Memoize status color function
+  const getStatusColor = useCallback((status: string): string => {
     const colors: Record<string, string> = {
       active: 'bg-green-100 text-green-800',
       inactive: 'bg-gray-100 text-gray-800',
@@ -37,7 +38,41 @@ export const MemberListItem = React.memo(function MemberListItem({
       pending: 'bg-yellow-100 text-yellow-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
-  };
+  }, []);
+
+  // Memoize action handlers
+  const handleEdit = useCallback(() => {
+    onEdit(member);
+  }, [member, onEdit]);
+
+  const handleView = useCallback(() => {
+    onView(member);
+  }, [member, onView]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(member.id);
+  }, [member.id, onDelete]);
+  const getStatusColor = useCallback((status: string): string => {
+    const colors: Record<string, string> = {
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-gray-100 text-gray-800',
+      suspended: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  }, []);
+
+  const handleEdit = useCallback(() => {
+    onEdit(member);
+  }, [member, onEdit]);
+
+  const handleView = useCallback(() => {
+    onView(member);
+  }, [member, onView]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(member.id);
+  }, [member.id, onDelete]);
 
   return (
     <TableRow>
@@ -62,16 +97,16 @@ export const MemberListItem = React.memo(function MemberListItem({
       </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end space-x-2">
-          <Button variant="ghost" size="sm" onClick={() => onView(member)}>
+          <Button variant="ghost" size="sm" onClick={handleView}>
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => onEdit(member)}>
+          <Button variant="ghost" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => onDelete(member.id)}
+            onClick={handleDelete}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />

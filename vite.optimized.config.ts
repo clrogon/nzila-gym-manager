@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import viteCompression from 'vite-plugin-compression';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -11,6 +12,14 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    
+    // Code splitting visualization (production only)
+    mode === "production" && visualizer({
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+      filename: "./dist/stats.html"
+    }),
     
     // Gzip compression
     mode === "production" && viteCompression({
@@ -69,6 +78,22 @@ export default defineConfig(({ mode }) => ({
     
     // CSS code splitting
     cssCodeSplit: true,
+    
+    // Minification with Terser
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+      format: {
+        comments: false,
+      },
+      mangle: {
+        safari10: true,
+      },
+    },
     
     // Optimize dependencies
     commonjsOptions: {
