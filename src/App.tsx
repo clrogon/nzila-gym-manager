@@ -40,6 +40,8 @@ import { PaymentsPage } from "./modules/payments";
 import { SettingsPage } from "./modules/settings";
 import { OnboardingPage } from "./modules/onboarding";
 import { SuperAdminPage } from "./modules/superadmin";
+import { SaaSAdminGuard } from "./components/auth/SaaSAdminGuard";
+import { SaaSAdminDashboard, GymManagement } from "./modules/saas-admin";
 import { StaffPage } from "./modules/staff";
 import { CalendarPage } from "./modules/calendar";
 import { TrainingPage } from "./modules/training";
@@ -165,6 +167,12 @@ function AppRoutes() {
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute moduleName="Profile"><UserProfile /></ProtectedRoute>} />
       <Route path="/super-admin" element={<ProtectedRoute moduleName="Super Admin"><SuperAdminPage /></ProtectedRoute>} />
+      
+      {/* SaaS Admin Portal */}
+      <Route element={<SaaSAdminGuard />}>
+        <Route path="/saas-admin" element={<SaaSAdminDashboard />} />
+        <Route path="/saas-admin/gyms" element={<GymManagement />} />
+      </Route>
 
       {/* Error Pages */}
       <Route path="/403" element={<Forbidden />} />
