@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Lock, Calendar, Shield, Download, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Lock, Calendar, Shield, Key } from 'lucide-react';
 import GDPRCompliance from '@/modules/gdpr/GDPRCompliance';
+import { ChangePasswordDialog } from '@/components/auth/ChangePasswordDialog';
 
 interface Gym {
   name: string;
@@ -72,6 +74,25 @@ export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
                   <li>✓ Registo de eventos de autenticação</li>
                   <li>✓ Proteção contra injeção SQL</li>
                 </ul>
+              </div>
+
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Alterar Palavra-passe</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Atualize a sua palavra-passe para maior segurança
+                    </p>
+                  </div>
+                  <ChangePasswordDialog
+                    trigger={
+                      <Button variant="outline">
+                        <Key className="h-4 w-4 mr-2" />
+                        Alterar
+                      </Button>
+                    }
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
