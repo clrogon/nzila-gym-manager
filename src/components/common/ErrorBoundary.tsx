@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from 'flowbite-react';
+import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
@@ -14,6 +14,10 @@ interface State {
   error: Error | null;
 }
 
+/**
+ * Error Boundary Component
+ * Catches React errors and displays fallback UI (removed flowbite dependency)
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -26,6 +30,14 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error(`Error in ${this.props.moduleName || 'module'}:`, error, errorInfo);
+    
+    // Log to monitoring service if available
+    if (typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.captureException(error, {
+        moduleName: this.props.moduleName,
+        componentStack: errorInfo.componentStack
+      });
+    }
   }
 
   handleReset = () => {
@@ -48,17 +60,22 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.props.moduleName ? `${this.props.moduleName} Error` : 'Something went wrong'}
           </h2>
           <p className="text-muted-foreground text-center mb-4 max-w-md">
-            This module encountered an error. The rest of the application continues to work normally.
+            {this.state.error?.message || 'An unexpected error occurred. Please try again.'}
           </p>
-          <Button color="primary" onClick={this.handleReset}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
-          </Button>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
-            <details className="mt-4 p-4 bg-muted rounded-lg max-w-full overflow-auto">
-              <summary className="cursor-pointer text-sm font-medium">Error Details</summary>
-              <pre className="mt-2 text-xs text-destructive whitespace-pre-wrap">
-                {this.state.error.message}
+          <div className="flex gap-2">
+            <Button onClick={this.handleReset} variant="default">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+            <Button onClick={() => window.location.href = '/'} variant="outline">
+              Go to Dashboard
+            </Button>
+          </div>
+          {import.meta.env.DEV && this.state.error && (
+            <details className="mt-4 p-4 bg-muted rounded-md">
+              <summary className="cursor-pointer text-sm font-medium">Error Details (Dev Only)</summary>
+              <pre className="mt-2 text-xs overflow-auto">
+                {this.state.error.toString()}
               </pre>
             </details>
           )}
@@ -69,5 +86,3 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
-
-export default ErrorBoundary;
