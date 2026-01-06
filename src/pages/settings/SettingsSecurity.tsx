@@ -1,16 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Users, Lock, Calendar, Shield, Key } from 'lucide-react';
-
 import GDPRCompliance from '@/modules/gdpr/GDPRCompliance';
 import { ChangePasswordDialog } from '@/components/auth/ChangePasswordDialog';
-
-// NEW imports
-import { useGym } from '@/contexts/GymContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 
 interface Gym {
   name: string;
@@ -23,40 +17,10 @@ interface SettingsSecurityProps {
 
 export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
   const [activeTab, setActiveTab] = useState('overview');
-
-  // Existing static placeholders
+  
+  // Placeholder static data (replace with real queries later)
   const lastSettingsChange = new Date('2025-12-01T10:30:00');
   const adminCount = 3;
-
-  // NEW context hooks
-  const { currentGym } = useGym();
-  const { user } = useAuth();
-
-  // NEW member resolution state
-  const [currentMember, setCurrentMember] = useState<string | null>(null);
-  const [memberLoading, setMemberLoading] = useState(false);
-
-  // Fetch current member (GDPR requires member context)
-  useEffect(() => {
-    if (!user || !currentGym) return;
-
-    setMemberLoading(true);
-
-    supabase
-      .from('members')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('gym_id', currentGym.id)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) {
-          setCurrentMember(data.id);
-        }
-      })
-      .finally(() => {
-        setMemberLoading(false);
-      });
-  }, [user, currentGym]);
 
   return (
     <div className="space-y-6">
@@ -66,8 +30,6 @@ export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
             <Shield className="w-4 h-4" />
             Visão Geral
           </TabsTrigger>
-
-          {/* UPDATED GDPR TAB */}
           <TabsTrigger value="gdpr" className="flex items-center gap-2">
             <Lock className="w-4 h-4" />
             Privacidade & GDPR
@@ -86,24 +48,20 @@ export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
                 <Lock className="w-5 h-5 text-muted-foreground" />
-                <p>
-                  Autenticação segura com validação de senha e proteção contra ataques de força bruta.
-                </p>
+                <p>Autenticação segura com validação de senha e proteção contra ataques de força bruta.</p>
               </div>
 
               <div className="flex items-center gap-4">
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <p>
-                  Última alteração de definições:{' '}
-                  <strong>{lastSettingsChange.toLocaleString()}</strong>
+                  Última alteração de definições: <strong>{lastSettingsChange.toLocaleString()}</strong>
                 </p>
               </div>
 
               <div className="flex items-center gap-4">
                 <Users className="w-5 h-5 text-muted-foreground" />
                 <p>
-                  Administradores com acesso completo:{' '}
-                  <strong>{adminCount}</strong>
+                  Administradores com acesso completo: <strong>{adminCount}</strong>
                 </p>
               </div>
 
@@ -126,7 +84,6 @@ export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
                       Atualize a sua palavra-passe para maior segurança
                     </p>
                   </div>
-
                   <ChangePasswordDialog
                     trigger={
                       <Button variant="outline">
@@ -141,21 +98,8 @@ export default function SettingsSecurity({ gym }: SettingsSecurityProps) {
           </Card>
         </TabsContent>
 
-        {/* UPDATED GDPR CONTENT */}
         <TabsContent value="gdpr" className="mt-4">
-          {memberLoading && (
-            <p className="text-sm text-muted-foreground">A carregar dados de privacidade…</p>
-          )}
-
-          {!memberLoading && currentMember && (
-            <GDPRCompliance memberId={currentMember} />
-          )}
-
-          {!memberLoading && !currentMember && (
-            <p className="text-sm text-destructive">
-              Não foi possível determinar o membro associado a esta conta.
-            </p>
-          )}
+          <GDPRCompliance />
         </TabsContent>
       </Tabs>
     </div>
