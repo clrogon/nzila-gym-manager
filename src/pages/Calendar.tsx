@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   format,
   startOfWeek,
@@ -11,9 +11,7 @@ import { pt } from 'date-fns/locale'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useGym } from '@/contexts/GymContext'
 import { useRBAC } from '@/hooks/useRBAC'
-import { supabase } from '@/integrations/supabase/client'
-import { useToast } from '@/hooks/use-toast'
-import { handleError, logError, getUserErrorMessage } from '@/types/errors'
+import { useCalendarData, ClassEvent, Discipline, Location, Coach } from '@/hooks/useCalendarData.tanstack'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -91,26 +89,34 @@ const HOURS = Array.from({ length: 16 }, (_, i) => i + 6)
 export default function Calendar() {
   const { currentGym } = useGym()
   const { hasPermission, loading: rbacLoading } = useRBAC()
-  const { toast } = useToast()
 
   const gymTimezone = currentGym?.timezone || 'Africa/Luanda'
 
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [classes, setClasses] = useState<ClassEvent[]>([])
-  const [disciplines, setDisciplines] = useState<Discipline[]>([])
-  const [locations, setLocations] = useState<Location[]>([])
-  const [coaches, setCoaches] = useState<Coach[]>([])
-  const [loading, setLoading] = useState(true)
-
   const [filterType, setFilterType] = useState('all')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
 
+  // Calculate week boundaries
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
+  const weekEnd = addDays(weekStart, 7)
   const weekDays = Array.from({ length: 7 }, (_, i) =>
     addDays(weekStart, i),
   )
+
+  // Use TanStack Query hook for calendar data
+  const {
+    classes,
+    disciplines,
+    locations,
+    coaches,
+    classTypes,
+    loading,
+    createClass,
+    updateClass,
+    deleteClass,
+  } = useCalendarData(currentGym?.id, weekStart, weekEnd)
 
   // Permission checks
   const canViewClasses = hasPermission('classes:read')
@@ -118,164 +124,22 @@ export default function Calendar() {
 
   /* =========================
      Time helpers
-  ========================= */
+   ========================= */
 
-  const getGymDayKey = (date: Date | string) =>
-    formatInTimeZone(new Date(date), gymTimezone, 'yyyy-MM-dd')
+  const getGymDayKey = useMemo(() => (date: Date | string) =>
+    formatInTimeZone(new Date(date), gymTimezone, 'yyyy-MM-dd'),
+    [gymTimezone]
+  )
 
-  const getGymHour = (date: Date | string) =>
-    Number(formatInTimeZone(new Date(date), gymTimezone, 'H'))
+  const getGymHour = useMemo(() => (date: Date | string) =>
+    Number(formatInTimeZone(new Date(date), gymTimezone, 'H')),
+    [gymTimezone]
+  )
 
-  const formatGymTime = (date: Date | string) =>
-    formatInTimeZone(new Date(date), gymTimezone, 'HH:mm')
-
-  /* =========================
-     Data fetching
-  ========================= */
-
-  useEffect(() => {
-    if (!currentGym?.id) return
-    if (!rbacLoading && canViewClasses) {
-      fetchAll()
-    } else if (!rbacLoading) {
-      setLoading(false)
-    }
-  }, [currentGym?.id, currentDate, filterType, rbacLoading, canViewClasses])
-
-  const fetchAll = async () => {
-    setLoading(true)
-    await Promise.all([
-      fetchClasses(),
-      fetchDisciplines(),
-      fetchLocations(),
-      fetchCoaches(),
-    ])
-    setLoading(false)
-  }
-
-  const fetchClasses = async () => {
-    if (!currentGym?.id) return
-
-    try {
-      let query = supabase
-        .from('classes')
-        .select(`
-          *,
-          class_type:class_types(name, color),
-          location:locations(name),
-          discipline:disciplines(id, name, is_active)
-        `)
-        .eq('gym_id', currentGym.id)
-        .gte('start_time', weekStart.toISOString())
-        .lte('start_time', addDays(weekStart, 7).toISOString())
-        .order('start_time')
-
-      if (filterType !== 'all') {
-        query = query.eq('class_type_id', filterType)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        const appError = handleError(error, 'Calendar.fetchClasses')
-        logError(appError)
-        toast({
-          title: 'Error Loading Classes',
-          description: getUserErrorMessage(appError),
-          variant: 'destructive'
-        })
-        return
-      }
-
-      // Filter out classes with inactive disciplines
-      const activeClasses = (data || []).filter(cls => {
-        // Include if no discipline or discipline is active
-        return !cls.discipline || cls.discipline.is_active !== false
-      })
-
-      setClasses(activeClasses)
-    } catch (error) {
-      const appError = handleError(error, 'Calendar.fetchClasses')
-      logError(appError)
-      toast({
-        title: 'Error Loading Classes',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const fetchDisciplines = async () => {
-    if (!currentGym?.id) return
-    try {
-      const { data, error } = await supabase
-        .from('disciplines')
-        .select('id, name')
-        .eq('gym_id', currentGym.id)
-        .eq('is_active', true)
-
-      if (error) throw error
-      setDisciplines(data || [])
-    } catch (error) {
-      const appError = handleError(error, 'Calendar.fetchDisciplines')
-      logError(appError)
-      toast({
-        title: 'Error Loading Disciplines',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const fetchLocations = async () => {
-    if (!currentGym?.id) return
-    try {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('id, name, capacity')
-        .eq('gym_id', currentGym.id)
-        .eq('is_active', true)
-
-      if (error) throw error
-      setLocations(data || [])
-    } catch (error) {
-      const appError = handleError(error, 'Calendar.fetchLocations')
-      logError(appError)
-      toast({
-        title: 'Error Loading Locations',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      })
-    }
-  }
-
-  const fetchCoaches = async () => {
-    if (!currentGym?.id) return
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id, profiles!inner(full_name)')
-        .eq('gym_id', currentGym.id)
-
-      if (error) throw error
-
-      const list =
-        data?.map((r: UserRoleWithProfile) => ({
-          id: r.user_id,
-          full_name: r.profiles.full_name,
-        })) || []
-
-      setCoaches(list)
-    } catch (error) {
-      const appError = handleError(error, 'Calendar.fetchCoaches')
-      logError(appError)
-      toast({
-        title: 'Error Loading Coaches',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      })
-    }
-  }
+  const formatGymTime = useMemo(() => (date: Date | string) =>
+    formatInTimeZone(new Date(date), gymTimezone, 'HH:mm'),
+    [gymTimezone]
+  )
 
   /* =========================
      Calendar logic
@@ -396,7 +260,6 @@ export default function Calendar() {
                     coaches={coaches}
                     onSuccess={() => {
                       setIsCreateOpen(false)
-                      fetchClasses()
                     }}
                     onClose={() => setIsCreateOpen(false)}
                   />
@@ -466,7 +329,7 @@ export default function Calendar() {
           classEvent={selectedClass}
           open={detailOpen}
           onClose={() => setDetailOpen(false)}
-          onRefresh={fetchClasses}
+          onRefresh={() => {}}
         />
       </div>
     </DashboardLayout>

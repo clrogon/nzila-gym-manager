@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useMemo } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { getCategoryNames } from '@/lib/seedData';
+import { useExercisesData, GymExercise, ExerciseFormData } from '@/hooks/useExercisesData.tanstack';
 import {
   Plus, Search, Loader2, Edit2, Trash2, Dumbbell, Play, X, Filter
 } from 'lucide-react';
@@ -47,8 +47,16 @@ const EQUIPMENT_OPTIONS = [
 export function ExerciseLibrary() {
   const { currentGym } = useGym();
   const { user } = useAuth();
-  const [exercises, setExercises] = useState<GymExercise[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use TanStack Query hook for exercise data
+  const {
+    exercises,
+    loading,
+    createExercise,
+    updateExercise,
+    deleteExercise,
+  } = useExercisesData(currentGym?.id);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterMuscle, setFilterMuscle] = useState<string>('all');
@@ -76,31 +84,6 @@ export function ExerciseLibrary() {
     is_active: true,
   });
 
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchExercises();
-    }
-  }, [currentGym?.id]);
-
-  const fetchExercises = async () => {
-    if (!currentGym?.id) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('gym_exercises')
-        .select('*')
-        .eq('gym_id', currentGym.id)
-        .order('name');
-      if (error) throw error;
-      setExercises(data || []);
-    } catch (error) {
-      console.error('Error fetching exercises:', error);
-      toast.error('Falha ao carregar exercícios');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       name: '',
@@ -108,7 +91,7 @@ export function ExerciseLibrary() {
       category: CATEGORIES[0] || '',
       equipment: '',
       instructions: '',
-      muscle_groups: [],
+      muscle_groups: [] as string[],
       video_url: '',
       is_active: true,
     });
@@ -122,26 +105,21 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('gym_exercises').insert({
-        gym_id: currentGym.id,
+      await createExercise({
         name: formData.name.trim(),
-        description: formData.description.trim() || null,
-        category: formData.category || null,
-        equipment: formData.equipment || null,
-        instructions: formData.instructions.trim() || null,
-        muscle_groups: formData.muscle_groups.length > 0 ? formData.muscle_groups : null,
-        video_url: formData.video_url.trim() || null,
+        description: formData.description.trim() || '',
+        category: formData.category,
+        equipment: formData.equipment,
+        instructions: formData.instructions.trim() || '',
+        muscle_groups: formData.muscle_groups.length > 0 ? formData.muscle_groups : [],
+        video_url: formData.video_url.trim() || '',
         is_active: formData.is_active,
-        created_by: user?.id,
-      });
-
-      if (error) throw error;
-      toast.success('Exercício criado com sucesso');
+      } as ExerciseFormData);
+      
       setIsCreateOpen(false);
       resetForm();
-      fetchExercises();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao criar exercício');
+    } catch (error) {
+      // Toast is already handled by the hook
     } finally {
       setIsSubmitting(false);
     }
@@ -152,25 +130,23 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('gym_exercises').update({
+      await updateExercise({
+        id: editingItem.id,
         name: formData.name.trim(),
-        description: formData.description.trim() || null,
-        category: formData.category || null,
-        equipment: formData.equipment || null,
-        instructions: formData.instructions.trim() || null,
-        muscle_groups: formData.muscle_groups.length > 0 ? formData.muscle_groups : null,
-        video_url: formData.video_url.trim() || null,
+        description: formData.description.trim() || '',
+        category: formData.category,
+        equipment: formData.equipment,
+        instructions: formData.instructions.trim() || '',
+        muscle_groups: formData.muscle_groups.length > 0 ? formData.muscle_groups : [],
+        video_url: formData.video_url.trim() || '',
         is_active: formData.is_active,
-      }).eq('id', editingItem.id);
-
-      if (error) throw error;
-      toast.success('Exercício atualizado com sucesso');
+      });
+      
       setIsEditOpen(false);
       setEditingItem(null);
       resetForm();
-      fetchExercises();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao atualizar exercício');
+    } catch (error) {
+      // Toast is already handled by the hook
     } finally {
       setIsSubmitting(false);
     }
@@ -181,14 +157,12 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from('gym_exercises').delete().eq('id', deletingItem.id);
-      if (error) throw error;
-      toast.success('Exercício eliminado com sucesso');
+      await deleteExercise(deletingItem.id);
+      
       setIsDeleteOpen(false);
       setDeletingItem(null);
-      fetchExercises();
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao eliminar exercício');
+    } catch (error) {
+      // Toast is already handled by the hook
     } finally {
       setIsSubmitting(false);
     }

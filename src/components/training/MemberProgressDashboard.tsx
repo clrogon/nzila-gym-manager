@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useGym } from '@/contexts/GymContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -17,7 +16,8 @@ import {
   Trophy,
   User,
 } from 'lucide-react';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format } from 'date-fns';
+import { useMemberProgressData, Member, WorkoutAssignment, RankPromotion, PerformanceRecord } from '@/hooks/useMemberProgressData.tanstack';
 
 interface Member {
   id: string;
@@ -55,92 +55,25 @@ interface PerformanceRecord {
 
 export function MemberProgressDashboard() {
   const { currentGym } = useGym();
-  const [members, setMembers] = useState<Member[]>([]);
+  
+  // Use TanStack Query hook for member progress data
+  const {
+    members,
+    assignments,
+    promotions,
+    performanceRecords,
+    loadingProgress,
+  } = useMemberProgressData(currentGym?.id, selectedMember, dateRange);
+  
   const [selectedMember, setSelectedMember] = useState<string>('');
-  const [assignments, setAssignments] = useState<WorkoutAssignment[]>([]);
-  const [promotions, setPromotions] = useState<RankPromotion[]>([]);
-  const [performanceRecords, setPerformanceRecords] = useState<PerformanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('month');
 
-  const fetchMembers = async () => {
-    if (!currentGym?.id) return;
-    const { data } = await supabase
-      .from('members')
-      .select('id, full_name, email')
-      .eq('gym_id', currentGym.id)
-      .eq('status', 'active')
-      .order('full_name');
-    setMembers(data || []);
-    setLoading(false);
-  };
-
-  const fetchMemberProgress = async () => {
-    if (!selectedMember) return;
-    setLoading(true);
-
-    let dateFilter = new Date(0);
-    if (dateRange === 'week') dateFilter = subDays(new Date(), 7);
-    if (dateRange === 'month') dateFilter = startOfMonth(new Date());
-
-    const [assignmentsRes, promotionsRes, performanceRes] = await Promise.all([
-      supabase
-        .from('member_workouts')
-        .select(`
-          id,
-          assigned_date,
-          completed_at,
-          workout_template:workout_templates(name, category)
-        `)
-        .eq('member_id', selectedMember)
-        .gte('assigned_date', dateFilter.toISOString().split('T')[0])
-        .order('assigned_date', { ascending: false }),
-      supabase
-        .from('rank_promotions')
-        .select(`
-          id,
-          promotion_date,
-          notes,
-          discipline:disciplines(name),
-          from_rank:discipline_ranks!rank_promotions_from_rank_id_fkey(name, color),
-          to_rank:discipline_ranks!rank_promotions_to_rank_id_fkey(name, color)
-        `)
-        .eq('member_id', selectedMember)
-        .order('promotion_date', { ascending: false })
-        .limit(10),
-      supabase
-        .from('performance_records')
-        .select('*')
-        .eq('member_id', selectedMember)
-        .gte('recorded_at', dateFilter.toISOString())
-        .order('recorded_at', { ascending: false })
-        .limit(50),
-    ]);
-
-    setAssignments((assignmentsRes.data || []) as WorkoutAssignment[]);
-    setPromotions((promotionsRes.data || []) as RankPromotion[]);
-    setPerformanceRecords(performanceRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchMembers();
-    }
-  }, [currentGym?.id]);
-
-  useEffect(() => {
-    if (selectedMember) {
-      fetchMemberProgress();
-    }
-  }, [selectedMember, dateRange]);
-
-  const completedWorkouts = assignments.filter(a => a.completed_at).length;
+  const completedWorkouts = useMemo(() => assignments.filter(a => a.completed_at).length, [assignments]);
   const totalWorkouts = assignments.length;
-  const completionRate = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
-  const personalRecords = performanceRecords.filter(p => p.is_pr).length;
+  const completionRate = useMemo(() => totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0, [totalWorkouts, completedWorkouts]);
+  const personalRecords = useMemo(() => performanceRecords.filter(p => p.is_pr).length, [performanceRecords]);
 
-  const selectedMemberData = members.find(m => m.id === selectedMember);
+  const selectedMemberData = useMemo(() => members.find(m => m.id === selectedMember), [members, selectedMember]);
 
   if (!currentGym) {
     return (
