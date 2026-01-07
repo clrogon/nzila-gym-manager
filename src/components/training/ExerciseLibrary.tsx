@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,26 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { getCategoryNames } from '@/lib/seedData';
-import { useExercisesData, GymExercise, ExerciseFormData } from '@/hooks/useExercisesData.tanstack';
+import { useExercisesData } from '@/hooks/useExercisesData.tanstack';
+import type { GymExercise, ExerciseFormData } from '@/hooks/useExercisesData.tanstack';
 import {
-  Plus, Search, Loader2, Edit2, Trash2, Dumbbell, Play, X, Filter
+  Plus, Search, Loader2, Edit2, Trash2, Dumbbell, Play, Filter
 } from 'lucide-react';
-
-interface GymExercise {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string | null;
-  equipment: string | null;
-  instructions: string | null;
-  muscle_groups: string[] | null;
-  video_url: string | null;
-  is_active: boolean;
-}
 
 const CATEGORIES = getCategoryNames();
 
@@ -46,7 +35,6 @@ const EQUIPMENT_OPTIONS = [
 
 export function ExerciseLibrary() {
   const { currentGym } = useGym();
-  const { user } = useAuth();
   
   // Use TanStack Query hook for exercise data
   const {
@@ -105,7 +93,7 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      await createExercise({
+      await createExercise.mutateAsync({
         name: formData.name.trim(),
         description: formData.description.trim() || '',
         category: formData.category,
@@ -130,7 +118,7 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      await updateExercise({
+      await updateExercise.mutateAsync({
         id: editingItem.id,
         name: formData.name.trim(),
         description: formData.description.trim() || '',
@@ -157,7 +145,7 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      await deleteExercise(deletingItem.id);
+      await deleteExercise.mutateAsync(deletingItem.id);
       
       setIsDeleteOpen(false);
       setDeletingItem(null);
@@ -458,8 +446,8 @@ export function ExerciseLibrary() {
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Descrição breve do exercício..."
-                rows={2}
+                placeholder="Descrição do exercício"
+                rows={3}
               />
             </div>
 
@@ -468,7 +456,7 @@ export function ExerciseLibrary() {
               <Textarea
                 value={formData.instructions}
                 onChange={(e) => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
-                placeholder="Instruções passo a passo para execução correta..."
+                placeholder="Instruções de execução"
                 rows={4}
               />
             </div>
@@ -478,84 +466,63 @@ export function ExerciseLibrary() {
               <Input
                 value={formData.video_url}
                 onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                placeholder="https://youtube.com/watch?v=..."
+                placeholder="https://youtube.com/..."
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div>
-                <Label>Estado ativo</Label>
-                <p className="text-xs text-muted-foreground">Exercício disponível para uso</p>
-              </div>
+            <div className="flex items-center space-x-2">
               <Switch
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
               />
+              <Label>Ativo</Label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); }}>
+                Cancelar
+              </Button>
+              <Button onClick={editingItem ? handleUpdate : handleCreate} disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {editingItem ? 'Salvar' : 'Criar'}
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); }}>
-              Cancelar
-            </Button>
-            <Button onClick={editingItem ? handleUpdate : handleCreate} disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {editingItem ? 'Guardar Alterações' : 'Criar Exercício'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Exercício</DialogTitle>
-            <DialogDescription>
-              Tem a certeza que deseja eliminar "{deletingItem?.name}"? Esta ação não pode ser revertida.
-            </DialogDescription>
+            <DialogTitle>Confirmar Exclusão</DialogTitle>
           </DialogHeader>
-          <DialogFooter>
+          <p className="py-4">
+            Tem certeza que deseja excluir o exercício "{deletingItem?.name}"?
+          </p>
+          <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Eliminar
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Excluir
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Video Preview */}
+      {/* Video Dialog */}
       <Dialog open={isVideoOpen} onOpenChange={setIsVideoOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Demonstração do Exercício</DialogTitle>
+            <DialogTitle>Vídeo do Exercício</DialogTitle>
           </DialogHeader>
           {viewingVideo && (
             <div className="aspect-video">
               <iframe
-                src={(() => {
-                  try {
-                    const url = new URL(viewingVideo);
-                    const host = url.hostname.toLowerCase();
-                    const isYouTubeHost =
-                      host === 'youtube.com' ||
-                      host === 'www.youtube.com' ||
-                      host === 'm.youtube.com';
-
-                    if (isYouTubeHost && url.pathname === '/watch') {
-                      const videoId = url.searchParams.get('v');
-                      if (videoId) {
-                        return `https://www.youtube.com/embed/${videoId}`;
-                      }
-                    }
-                  } catch {
-                    // Invalid URL or relative path; fall through to default
-                  }
-                  return viewingVideo;
-                })()}
-                className="w-full h-full rounded-lg"
+                src={viewingVideo}
+                className="w-full h-full"
                 allowFullScreen
               />
             </div>

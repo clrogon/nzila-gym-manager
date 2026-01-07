@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MemberFilters } from '@/hooks/useMembersData';
+import type { MemberFilters as MemberFiltersType } from '@/hooks/useMembersData';
 
 interface MemberFiltersProps {
-  filters: MemberFilters;
-  onFilterChange: (filters: MemberFilters) => void;
+  filters: MemberFiltersType;
+  onFilterChange: (filters: MemberFiltersType) => void;
   memberCount: number;
 }
 

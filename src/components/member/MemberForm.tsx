@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { MemberFormData, useMemberForm } from '@/hooks/useMemberForm';
+import { useToast } from '@/hooks/use-toast';
+
+export interface MemberFormData {
+  full_name: string;
+  email: string;
+  phone: string;
+  date_of_birth: string;
+  address: string;
+  status: string;
+  is_dependent: boolean;
+  notes: string;
+}
 
 interface MemberFormProps {
   memberData?: MemberFormData;
@@ -13,25 +24,48 @@ interface MemberFormProps {
   isEditing?: boolean;
 }
 
+const defaultFormData: MemberFormData = {
+  full_name: '',
+  email: '',
+  phone: '',
+  date_of_birth: '',
+  address: '',
+  status: 'active',
+  is_dependent: false,
+  notes: '',
+};
+
 /**
  * Member Form Component
  * Handles member data input with proper typing and error handling
  */
 export function MemberForm({ memberData, onCancel, onSave, isEditing }: MemberFormProps) {
-  const { formData, updateField, resetForm, populateFromMember } = useMemberForm(memberData);
+  const [formData, setFormData] = useState<MemberFormData>(defaultFormData);
   const { toast } = useToast();
 
   useEffect(() => {
     if (memberData) {
-      populateFromMember(memberData as any);
+      setFormData(memberData);
     } else {
-      resetForm();
+      setFormData(defaultFormData);
     }
-  }, [memberData, resetForm, populateFromMember]);
+  }, [memberData]);
+
+  const updateField = <K extends keyof MemberFormData>(key: K, value: MemberFormData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave(formData);
+    try {
+      await onSave(formData);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save member data',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
