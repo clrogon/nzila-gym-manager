@@ -11,7 +11,7 @@ import { pt } from 'date-fns/locale'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useGym } from '@/contexts/GymContext'
 import { useRBAC } from '@/hooks/useRBAC'
-import { useCalendarData, ClassEvent, Discipline, Location, Coach } from '@/hooks/useCalendarData.tanstack'
+import { useCalendarData, type ClassEvent as CalendarClassEvent, type Discipline as CalendarDiscipline, type Location as CalendarLocation, type Coach as CalendarCoach } from '@/hooks/useCalendarData.tanstack'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'

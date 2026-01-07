@@ -1,5 +1,4 @@
 import SaaSAdminDashboard from './pages/SaaSAdminDashboard';
-import GymManagement from './pages/GymManagementEnhanced';
-import SaaSAdminSettings from './pages/SaaSAdminSettings';
+import GymManagement from './pages/GymManagement';
 
-export { SaaSAdminDashboard, GymManagement, SaaSAdminSettings };
+export { SaaSAdminDashboard, GymManagement };
