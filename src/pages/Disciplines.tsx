@@ -44,7 +44,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { useDisciplinesData, Discipline, Rank, DisciplineFormData, RankFormData } from '@/hooks/useDisciplinesData';
+import { useDisciplinesData, Discipline, Rank, DisciplineFormData, RankFormData } from '@/hooks/useDisciplinesData.tanstack';
 
 /**
  * Discipline Form Component

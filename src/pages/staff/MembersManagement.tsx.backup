@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,27 +55,51 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { 
-  useMembersData, 
-  Member, 
-  MembershipPlan, 
-  MemberFormData 
-} from '@/hooks/useMembersData.tanstack';
+
+interface Member {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  address: string | null;
+  date_of_birth: string | null;
+  emergency_contact: string | null;
+  emergency_phone: string | null;
+  photo_url: string | null;
+  notes: string | null;
+  membership_plan_id: string | null;
+  membership_start_date: string | null;
+  membership_end_date: string | null;
+  created_at: string;
+  is_dependent: boolean | null;
+  tutor_id: string | null;
+}
+
+interface MemberSensitiveData {
+  id: string;
+  member_id: string;
+  health_conditions: string | null;
+  medical_notes: string | null;
+  allergies: string | null;
+}
+
+interface MembershipPlan {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
+}
 
 export default function Members() {
   const { currentGym } = useGym();
   const { hasPermission, loading: rbacLoading } = useRBAC();
   const { toast } = useToast();
   
-  const {
-    members,
-    plans,
-    loading,
-    createMember,
-    updateMember,
-    deleteMember,
-  } = useMembersData(currentGym?.id);
-  
+  const [members, setMembers] = useState<Member[]>([]);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [sensitiveDataMap, setSensitiveDataMap] = useState<Record<string, MemberSensitiveData>>({});
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -110,6 +135,64 @@ export default function Members() {
   const canUpdateMembers = hasPermission('members:update');
   const canDeleteMembers = hasPermission('members:delete');
 
+  useEffect(() => {
+    if (currentGym && !rbacLoading && canViewMembers) {
+      fetchMembers();
+      fetchPlans();
+    } else if (!rbacLoading) {
+      setLoading(false);
+    }
+  }, [currentGym, rbacLoading, canViewMembers]);
+
+  const fetchMembers = async () => {
+    if (!currentGym) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('*')
+        .eq('gym_id', currentGym.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setMembers(data || []);
+      
+      // Fetch sensitive data for all members (admins only)
+      if (data && data.length > 0) {
+        const memberIds = data.map(m => m.id);
+        const { data: sensitiveData } = await supabase
+          .from('member_sensitive_data')
+          .select('*')
+          .in('member_id', memberIds);
+        
+        if (sensitiveData) {
+          const dataMap: Record<string, MemberSensitiveData> = {};
+          sensitiveData.forEach(sd => {
+            dataMap[sd.member_id] = sd as MemberSensitiveData;
+          });
+          setSensitiveDataMap(dataMap);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar membros:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPlans = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('membership_plans')
+      .select('id, name, price, duration_days')
+      .eq('gym_id', currentGym.id)
+      .eq('is_active', true)
+      .order('price');
+
+    setPlans(data || []);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGym) {
@@ -117,45 +200,82 @@ export default function Members() {
       return;
     }
 
-      if (membershipPlanId && membershipStartDate) {
-        const plan = plans.find(p => p.id === membershipPlanId);
-        if (plan) {
-          const start = new Date(membershipStartDate);
-          start.setDate(start.getDate() + plan.duration_days);
-        }
+    let endDate = null;
+    if (membershipPlanId && membershipStartDate) {
+      const plan = plans.find(p => p.id === membershipPlanId);
+      if (plan) {
+        const start = new Date(membershipStartDate);
+        start.setDate(start.getDate() + plan.duration_days);
+        endDate = start.toISOString().split('T')[0];
       }
+    }
 
-    const memberData: MemberFormData = {
+    const memberData = {
       full_name: fullName,
-      email: email || '',
-      phone: phone || '',
-      date_of_birth: dateOfBirth || '',
-      address: address || '',
-      photo_url: photoUrl || '',
-      emergency_contact: emergencyContact || '',
-      emergency_phone: emergencyPhone || '',
+      email: email || null,
+      phone: phone || null,
+      date_of_birth: dateOfBirth || null,
+      address: address || null,
+      photo_url: photoUrl || null,
+      emergency_contact: emergencyContact || null,
+      emergency_phone: emergencyPhone || null,
       status: status as 'active' | 'inactive' | 'pending' | 'suspended',
-      membership_plan_id: membershipPlanId || '',
-      notes: notes || '',
+      membership_plan_id: membershipPlanId || null,
+      membership_start_date: membershipStartDate || null,
+      membership_end_date: endDate,
+      notes: notes || null,
       is_dependent: isDependent,
-      tutor_id: tutorId || '',
+      tutor_id: isDependent && tutorId ? tutorId : null,
     };
 
     try {
+      let memberId: string;
+      
       if (editingMember) {
-        await updateMember({ id: editingMember.id, ...memberData });
+        const { error } = await supabase
+          .from('members')
+          .update(memberData)
+          .eq('id', editingMember.id);
+
+        if (error) throw error;
+        memberId = editingMember.id;
+        toast({ title: 'Membro Atualizado', description: 'Os detalhes do membro foram atualizados.' });
       } else {
-        await createMember(memberData);
+        const { data, error } = await supabase
+          .from('members')
+          .insert([{ ...memberData, gym_id: currentGym.id }])
+          .select('id')
+          .single();
+
+        if (error) throw error;
+        memberId = data.id;
+        toast({ title: 'Membro Adicionado', description: 'Novo membro foi registado.' });
+      }
+
+      // Save sensitive data (health conditions) to separate table
+      if (healthConditions) {
+        const { error: sensitiveError } = await supabase
+          .from('member_sensitive_data')
+          .upsert({
+            member_id: memberId,
+            health_conditions: healthConditions,
+          }, { onConflict: 'member_id' });
+        
+        if (sensitiveError) {
+          console.error('Erro ao guardar dados sensíveis:', sensitiveError);
+        }
       }
 
       resetForm();
       setDialogOpen(false);
+      fetchMembers();
     } catch (error) {
       console.error('Erro ao guardar membro:', error);
+      toast({ title: 'Erro', description: 'Falha ao guardar membro.', variant: 'destructive' });
     }
   };
 
-  const handleEdit = useCallback((member: Member) => {
+  const handleEdit = (member: Member) => {
     setEditingMember(member);
     setFullName(member.full_name);
     setEmail(member.email || '');
@@ -171,23 +291,30 @@ export default function Members() {
     setNotes(member.notes || '');
     setIsDependent(member.is_dependent || false);
     setTutorId(member.tutor_id || '');
+    // Get health conditions from sensitive data map
+    const sensitiveData = sensitiveDataMap[member.id];
+    setHealthConditions(sensitiveData?.health_conditions || '');
     setDialogOpen(true);
-  }, []);
+  };
 
-  const handleViewDetails = useCallback((member: Member) => {
+  const handleViewDetails = (member: Member) => {
     setViewingMember(member);
     setDetailsOpen(true);
-  }, []);
+  };
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Tem a certeza que deseja eliminar este membro? Esta ação não pode ser revertida.')) return;
 
     try {
-      await deleteMember(id);
+      const { error } = await supabase.from('members').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Membro Eliminado' });
+      fetchMembers();
     } catch (error) {
       console.error('Erro ao eliminar membro:', error);
+      toast({ title: 'Erro', description: 'Falha ao eliminar membro.', variant: 'destructive' });
     }
-  }, [deleteMember]);
+  };
 
   const resetForm = () => {
     setEditingMember(null);
@@ -208,6 +335,7 @@ export default function Members() {
     setHealthConditions('');
   };
 
+  // Get potential tutors (non-dependent members)
   const potentialTutors = members.filter(m => !m.is_dependent && m.id !== editingMember?.id);
 
   const filteredMembers = members.filter((m) => {
@@ -310,7 +438,7 @@ export default function Members() {
           </div>
 
           {canCreateMembers && (
-            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) { resetForm(); setEditingMember(null); } }}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary">
                   <Plus className="w-4 h-4 mr-2" />
