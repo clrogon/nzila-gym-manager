@@ -31,6 +31,8 @@ export interface DisciplineFormData {
   name: string;
   description: string;
   category: string;
+  equipment: string;
+  instructor_profile: string;
 }
 
 export interface RankFormData {

@@ -342,11 +342,11 @@ export default function DisciplinesPage() {
   // Fetch data when gym is ready
   useEffect(() => {
     if (currentGym && !rbacLoading && canView) {
-      fetchDisciplines();
+      refetchAll();
     } else if (!rbacLoading) {
       // Don't fetch if no permission
     }
-  }, [currentGym?.id, rbacLoading, canView, fetchDisciplines]);
+  }, [currentGym?.id, rbacLoading, canView, refetchAll]);
 
   // Loading state
   if (rbacLoading || loading) {
