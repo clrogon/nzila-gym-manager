@@ -12,6 +12,7 @@ import { GymProvider, useGym } from "@/contexts/GymContext";
  
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ModuleLoader } from "@/components/common/ModuleLoader";
+import { MaintenanceGuard } from "./components/auth/MaintenanceGuard";
  
 // Import small pages directly (not lazy loaded)
 import Index from "./pages/Index";
@@ -39,6 +40,7 @@ const OnboardingPage = lazy(() => import("./modules/onboarding").then(m => ({ de
 const SuperAdminPage = lazy(() => import("./modules/superadmin").then(m => ({ default: m.SuperAdminPage })));
 const SaaSAdminDashboard = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminDashboard })));
 const GymManagement = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.GymManagement })));
+const SaaSAdminSettings = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminSettings })));
 const StaffPage = lazy(() => import("./modules/staff").then(m => ({ default: m.StaffPage })));
 const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ default: m.CalendarPage })));
 const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
@@ -182,6 +184,7 @@ function AppRoutes() {
       <Route element={<SaaSAdminGuard />}>
         <Route path="/saas-admin" element={<SaaSAdminDashboard />} />
         <Route path="/saas-admin/gyms" element={<GymManagement />} />
+        <Route path="/saas-admin/settings" element={<SaaSAdminSettings />} />
       </Route>
  
       {/* Error Pages */}
@@ -220,7 +223,9 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <GymProvider>
-                <AppRoutes />
+                <MaintenanceGuard>
+                  <AppRoutes />
+                </MaintenanceGuard>
               </GymProvider>
             </AuthProvider>
           </BrowserRouter>
