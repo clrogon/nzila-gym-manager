@@ -675,7 +675,7 @@ export function useDisciplinesData(gymId: string | undefined) {
     loadingDisciplines,
     loadingRanks,
     loading,
-    
+
     // Mutations
     createDiscipline,
     updateDiscipline,
@@ -685,14 +685,15 @@ export function useDisciplinesData(gymId: string | undefined) {
     deleteRank,
     toggleDisciplineStatus,
     seedRanks,
-    
+
     // Error states
     disciplinesError,
     ranksError,
-    
-    // Cache utilities
+
+    // Cache utilities (aliases for backward compatibility)
+    fetchDisciplines: refetchDisciplines,
     refetchAll,
-    
+
     // Cache key exposure (for advanced use cases)
     cacheKeys: {
       disciplines: disciplinesQueryKey,
