@@ -44,7 +44,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { useDisciplinesData, Discipline, Rank, DisciplineFormData, RankFormData } from '@/hooks/useDisciplinesData.tanstack';
+import { useDisciplinesData, type Discipline, type DisciplineRank, type DisciplineFormData, type RankFormData } from '@/hooks/useDisciplinesData.tanstack';
 
 /**
  * Discipline Form Component
@@ -58,7 +58,7 @@ export function DisciplineForm({
   isEditing 
 }: { 
   discipline: Discipline | null;
-  ranks: Rank[];
+  ranks: DisciplineRank[];
   onSave: (data: DisciplineFormData) => Promise<void>;
   onCancel: () => void;
   isEditing: boolean;
@@ -265,15 +265,16 @@ export default function DisciplinesPage() {
   
   const {
     disciplines,
-    ranks,
+    disciplineRanks,
     ranksByDiscipline,
     loading,
-    fetchDisciplines,
     createDiscipline,
     updateDiscipline,
     deleteDiscipline,
     toggleDisciplineStatus,
     seedRanks,
+    seedAllDisciplines,
+    refetchAll,
   } = useDisciplinesData(currentGym?.id);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -412,40 +413,17 @@ export default function DisciplinesPage() {
               </DialogContent>
             </Dialog>
           )}
-        </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Search disciplines..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-3 py-2 border rounded-md"
-              >
-                <option value="all">All Categories</option>
-                <option value="Combat Sports / Martial Arts">Combat Sports / Martial Arts</option>
-                <option value="Strength & Conditioning">Strength & Conditioning</option>
-                <option value="Mind-Body Practices">Mind-Body Practices</option>
-                <option value="Cardiovascular Training">Cardiovascular Training</option>
-                <option value="Group Fitness Classes">Group Fitness Classes</option>
-                <option value="Aquatic Activities">Aquatic Activities</option>
-              </select>
-              <div className="text-sm text-gray-500 ml-4">
-                {filteredDisciplines().length} disciplines
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Button
+            onClick={() => seedAllDisciplines.mutateAsync()}
+            disabled={loading || disciplines.length > 0}
+            variant="outline"
+            className="ml-2"
+          >
+            <Database className="w-4 h-4 mr-2" />
+            Seed Default Disciplines
+          </Button>
+        </div>
 
         {/* Disciplines List */}
         <Card>
