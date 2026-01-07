@@ -1,11 +1,11 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
+import { Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Member } from '@/hooks/useMembersData';
+import type { Member } from '@/hooks/useMembersData';
 
 interface MemberListProps {
   members: Member[];
@@ -14,6 +14,16 @@ interface MemberListProps {
   onDelete: (memberId: string) => void;
   loading?: boolean;
 }
+
+const getStatusColor = (status: string): string => {
+  const colors: Record<string, string> = {
+    active: 'bg-green-100 text-green-800',
+    inactive: 'bg-gray-100 text-gray-800',
+    suspended: 'bg-red-100 text-red-800',
+    pending: 'bg-yellow-100 text-yellow-800'
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
+};
 
 /**
  * Member List Item (memoized)
@@ -30,16 +40,6 @@ export const MemberListItem = React.memo(function MemberListItem({
   onView: (member: Member) => void;
   onDelete: (memberId: string) => void;
 }) {
-  const getStatusColor = useCallback((status: string): string => {
-    const colors: Record<string, string> = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
-      suspended: 'bg-red-100 text-red-800',
-      pending: 'bg-yellow-100 text-yellow-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  }, []);
-
   const handleEdit = useCallback(() => {
     onEdit(member);
   }, [member, onEdit]);
@@ -150,27 +150,27 @@ export function MemberList({ members, onEdit, onView, onDelete, loading }: Membe
         }}
         className="border rounded-md"
       >
-        <div style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%' }}>
-          <TableBody>
-            {virtualizer.getVirtualItems().map((virtualItem) => {
-              const member = members[virtualItem.index];
-              if (!member) return null;
+        <div style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const member = members[virtualItem.index];
+            if (!member) return null;
 
-              return (
-                <div
-                  key={virtualItem.key}
-                  data-index={virtualItem.index}
-                  ref={virtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: `${virtualItem.size}px`,
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  <Table style={{ borderSpacing: 0 }}>
+            return (
+              <div
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualItem.size}px`,
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <Table style={{ borderSpacing: 0 }}>
+                  <TableBody>
                     <TableRow>
                       <TableCell>
                         <div className="flex items-center space-x-3">
@@ -187,22 +187,22 @@ export function MemberList({ members, onEdit, onView, onDelete, loading }: Membe
                       <TableCell>{member.email || '-'}</TableCell>
                       <TableCell>{member.phone || '-'}</TableCell>
                       <TableCell>
-                        <Badge className={virtualizer.getStatusColor(member.status)}>
+                        <Badge className={getStatusColor(member.status)}>
                           {member.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="sm" onClick={virtualItem.handleView}>
+                          <Button variant="ghost" size="sm" onClick={() => onView(member)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={virtualItem.handleEdit}>
+                          <Button variant="ghost" size="sm" onClick={() => onEdit(member)}>
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            onClick={virtualItem.handleDelete}
+                            onClick={() => onDelete(member.id)}
                             className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -210,11 +210,11 @@ export function MemberList({ members, onEdit, onView, onDelete, loading }: Membe
                         </div>
                       </TableCell>
                     </TableRow>
-                  </Table>
-                </div>
-              );
-            })}
-          </TableBody>
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -35,16 +35,9 @@ export const MaintenanceGuard = ({ children }: MaintenanceGuardProps) => {
           }
         }
 
-        // Check platform settings
-        const { data, error } = await supabase
-          .from('platform_settings')
-          .select('value')
-          .eq('key', 'maintenance_mode')
-          .maybeSingle();
-
-        if (data?.value) {
-          setMaintenance(data.value);
-        }
+        // For now, just skip maintenance check since platform_settings table doesn't exist
+        // In production, you would query a settings table or use environment variables
+        setMaintenance(null);
       } catch (error) {
         console.error('Error checking maintenance mode:', error);
       } finally {

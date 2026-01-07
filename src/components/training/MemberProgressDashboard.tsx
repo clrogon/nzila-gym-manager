@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,10 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  BarChart3,
   TrendingUp,
-  Award,
-  Calendar,
   CheckCircle2,
   Clock,
   Target,
@@ -17,44 +14,13 @@ import {
   User,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useMemberProgressData, Member, WorkoutAssignment, RankPromotion, PerformanceRecord } from '@/hooks/useMemberProgressData.tanstack';
-
-interface Member {
-  id: string;
-  full_name: string;
-  email: string | null;
-}
-
-interface WorkoutAssignment {
-  id: string;
-  assigned_date: string;
-  completed_at: string | null;
-  workout_template: {
-    name: string;
-    category: string | null;
-  } | null;
-}
-
-interface RankPromotion {
-  id: string;
-  promotion_date: string;
-  notes: string | null;
-  discipline: { name: string } | null;
-  from_rank: { name: string; color: string | null } | null;
-  to_rank: { name: string; color: string | null } | null;
-}
-
-interface PerformanceRecord {
-  id: string;
-  exercise_name: string;
-  value: number;
-  unit: string;
-  is_pr: boolean;
-  recorded_at: string;
-}
+import { useMemberProgressData } from '@/hooks/useMemberProgressData.tanstack';
 
 export function MemberProgressDashboard() {
   const { currentGym } = useGym();
+  
+  const [selectedMember, setSelectedMember] = useState<string>('');
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('month');
   
   // Use TanStack Query hook for member progress data
   const {
@@ -64,16 +30,11 @@ export function MemberProgressDashboard() {
     performanceRecords,
     loadingProgress,
   } = useMemberProgressData(currentGym?.id, selectedMember, dateRange);
-  
-  const [selectedMember, setSelectedMember] = useState<string>('');
-  const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('month');
 
   const completedWorkouts = useMemo(() => assignments.filter(a => a.completed_at).length, [assignments]);
   const totalWorkouts = assignments.length;
   const completionRate = useMemo(() => totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0, [totalWorkouts, completedWorkouts]);
   const personalRecords = useMemo(() => performanceRecords.filter(p => p.is_pr).length, [performanceRecords]);
-
-  const selectedMemberData = useMemo(() => members.find(m => m.id === selectedMember), [members, selectedMember]);
 
   if (!currentGym) {
     return (
@@ -252,7 +213,7 @@ export function MemberProgressDashboard() {
                     <p className="text-muted-foreground text-center py-8">No rank promotions yet</p>
                   ) : (
                     <div className="relative space-y-4 pl-6 border-l-2 border-muted">
-                      {promotions.map((promotion, index) => (
+                      {promotions.map((promotion) => (
                         <div key={promotion.id} className="relative">
                           <div
                             className="absolute -left-[25px] w-4 h-4 rounded-full border-2 border-background"

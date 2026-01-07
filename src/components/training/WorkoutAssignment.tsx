@@ -1,55 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { format, addDays, addWeeks } from 'date-fns';
-import { useMemberProgressData, Member, WorkoutTemplate, WorkoutAssignment } from '@/hooks/useMemberProgressData.tanstack';
+import { useMemberProgressData } from '@/hooks/useMemberProgressData.tanstack';
 import { useWorkoutsData } from '@/hooks/useWorkoutsData.tanstack';
 import {
   Plus, Calendar as CalendarIcon, Loader2, CheckCircle2,
   Clock, User, Dumbbell, Repeat
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface Member {
-  id: string;
-  full_name: string;
-  email: string | null;
-  status: string | null;
-}
-
-interface WorkoutTemplate {
-  id: string;
-  name: string;
-  category: string | null;
-  difficulty: string | null;
-  estimated_duration: number | null;
-  
-}
-
-interface MemberWorkout {
-  id: string;
-  member_id: string;
-  workout_template_id: string | null;
-  assigned_date: string;
-  completed_at: string | null;
-  notes: string | null;
-  results: any;
-  member?: Member;
-  workout_template?: WorkoutTemplate;
-}
 
 type RecurrenceType = 'none' | 'daily' | 'weekly' | 'custom';
 
@@ -70,9 +41,9 @@ export function WorkoutAssignment() {
   // Use TanStack Query hooks for data
   const { 
     assignments, 
-    loading: loadingAssignments,
+    loadingAssignments,
     members, 
-    loading: loadingMembers,
+    loadingMembers,
     refetchAll: refetchMemberProgress,
   } = useMemberProgressData(currentGym?.id, undefined, 'all');
   
@@ -83,8 +54,9 @@ export function WorkoutAssignment() {
   
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<WorkoutAssignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<typeof assignments[0] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completionData, setCompletionData] = useState({ results: '', notes: '' });
 
   const [formData, setFormData] = useState({
     member_id: '',
@@ -145,7 +117,7 @@ export function WorkoutAssignment() {
     setIsSubmitting(true);
     try {
       const dates = generateRecurringDates();
-      const assignments = dates.map(date => ({
+      const newAssignments = dates.map(date => ({
         member_id: formData.member_id,
         workout_template_id: formData.workout_template_id,
         assigned_date: format(date, 'yyyy-MM-dd'),
@@ -153,11 +125,11 @@ export function WorkoutAssignment() {
         notes: formData.notes || null,
       }));
 
-      const { error } = await supabase.from('member_workouts').insert(assignments);
+      const { error } = await supabase.from('member_workouts').insert(newAssignments);
 
       if (error) throw error;
       
-      toast.success(`${assignments.length} workout${assignments.length > 1 ? 's' : ''} assigned successfully`);
+      toast.success(`${newAssignments.length} workout${newAssignments.length > 1 ? 's' : ''} assigned successfully`);
       setIsAssignDialogOpen(false);
       setFormData({ member_id: '', workout_template_id: '', assigned_date: new Date(), notes: '' });
       setRecurrence({ enabled: false, type: 'weekly', selectedDays: [1, 3, 5], weeks: 4 });
@@ -179,7 +151,6 @@ export function WorkoutAssignment() {
         .update({
           completed_at: new Date().toISOString(),
           results: completionData.results ? { notes: completionData.results } : null,
-          notes: completionData.notes || selectedAssignment.notes,
         })
         .eq('id', selectedAssignment.id);
 
@@ -188,17 +159,17 @@ export function WorkoutAssignment() {
       setIsCompleteDialogOpen(false);
       setSelectedAssignment(null);
       setCompletionData({ results: '', notes: '' });
-      fetchData();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update workout');
+      refetchMemberProgress();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update workout');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const openCompleteDialog = (assignment: MemberWorkout) => {
+  const openCompleteDialog = (assignment: typeof assignments[0]) => {
     setSelectedAssignment(assignment);
-    setCompletionData({ results: '', notes: assignment.notes || '' });
+    setCompletionData({ results: '', notes: '' });
     setIsCompleteDialogOpen(true);
   };
 
@@ -315,7 +286,7 @@ export function WorkoutAssignment() {
                       <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium">{assignment.member?.full_name || 'Unknown'}</p>
+                      <p className="font-medium">Member</p>
                       <p className="text-sm text-muted-foreground">
                         {assignment.workout_template?.name || 'Custom Workout'}
                       </p>
@@ -323,7 +294,7 @@ export function WorkoutAssignment() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <Badge variant="outline">{assignment.workout_template?.difficulty || 'N/A'}</Badge>
+                      <Badge variant="outline">N/A</Badge>
                       <p className="text-xs text-muted-foreground mt-1">
                         {format(new Date(assignment.assigned_date), 'MMM d, yyyy')}
                       </p>
@@ -359,7 +330,7 @@ export function WorkoutAssignment() {
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
                     </div>
                     <div>
-                      <p className="font-medium">{assignment.member?.full_name || 'Unknown'}</p>
+                      <p className="font-medium">Member</p>
                       <p className="text-sm text-muted-foreground">
                         {assignment.workout_template?.name || 'Custom Workout'}
                       </p>
@@ -478,37 +449,36 @@ export function WorkoutAssignment() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {[1, 2, 4, 6, 8, 12].map((w) => (
+                        {[1, 2, 4, 8, 12].map(w => (
                           <SelectItem key={w} value={String(w)}>{w} week{w > 1 ? 's' : ''}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    This will create {generateRecurringDates().length} workout assignments
-                  </p>
                 </>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
+              <Label>Notes</Label>
               <Textarea
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Any special instructions..."
+                placeholder="Optional notes..."
                 rows={3}
               />
             </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAssign} disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Assign
+              </Button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAssign} disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Assign {recurrence.enabled ? `(${generateRecurringDates().length})` : ''}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -519,38 +489,26 @@ export function WorkoutAssignment() {
             <DialogTitle>Complete Workout</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="p-4 rounded-lg bg-muted">
-              <p className="font-medium">{selectedAssignment?.member?.full_name}</p>
-              <p className="text-sm text-muted-foreground">{selectedAssignment?.workout_template?.name}</p>
-            </div>
-
             <div className="space-y-2">
-              <Label>Results / Performance Notes</Label>
+              <Label>Results/Notes</Label>
               <Textarea
                 value={completionData.results}
                 onChange={(e) => setCompletionData(prev => ({ ...prev, results: e.target.value }))}
-                placeholder="e.g., Completed all sets, PR on deadlift..."
-                rows={3}
+                placeholder="Add any results or notes..."
+                rows={4}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Additional Notes</Label>
-              <Textarea
-                value={completionData.notes}
-                onChange={(e) => setCompletionData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Any other observations..."
-                rows={2}
-              />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleComplete} disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Mark Complete
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCompleteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleComplete} disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Mark Complete
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

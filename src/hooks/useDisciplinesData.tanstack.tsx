@@ -2,76 +2,18 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRBAC } from '@/hooks/useRBAC';
 import { supabase } from '@/integrations/supabase/client';
-import { AppError, handleError, logError, getUserErrorMessage } from '@/types/errors';
+import { handleError, logError, getUserErrorMessage } from '@/types/errors';
 import { useToast } from '@/hooks/use-toast';
-import { getAllDisciplines, getDisciplineRanks } from '@/lib/seedData';
 import type { Json } from '@/integrations/supabase/types';
 
 export interface Discipline {
   id: string;
   name: string;
-  description: string;
-  category: string;
-  equipment: string | null;
-  instructor_profile: string | null;
+  description: string | null;
+  category: string | null;
   gym_id: string;
-  is_active: boolean;
+  is_active: boolean | null;
   created_at: string;
-  updated_at: string;
-}
-
-export type DisciplineRank = {
-  id: string;
-  discipline_id: string;
-  name: string;
-  level: number;
-  color: string;
-  requirements: string | null;
-  criteria: Json | null;
-  created_at: string;
-}
-
-export interface DisciplineFormData {
-  name: string;
-  description: string;
-  category: string;
-  equipment: string;
-  instructor_profile: string;
-}
-
-export interface RankFormData {
-  discipline_id: string;
-  name: string;
-  level: number;
-  color: string;
-  requirements: string;
-}
-
-export type DisciplineRank = {
-  id: string;
-  discipline_id: string;
-  name: string;
-  level: number;
-  color: string;
-  requirements: string | null;
-  criteria: Json | null;
-  created_at: string;
-};
-
-export interface DisciplineFormData {
-  name: string;
-  description: string;
-  category: string;
-  equipment: string;
-  instructor_profile: string;
-}
-
-export interface RankFormData {
-  discipline_id: string;
-  name: string;
-  level: number;
-  color: string;
-  requirements: string;
 }
 
 export interface DisciplineRank {
@@ -79,7 +21,7 @@ export interface DisciplineRank {
   discipline_id: string;
   name: string;
   level: number;
-  color: string;
+  color: string | null;
   requirements: string | null;
   criteria: Json | null;
   created_at: string;
@@ -89,8 +31,6 @@ export interface DisciplineFormData {
   name: string;
   description: string;
   category: string;
-  equipment: string;
-  instructor_profile: string;
 }
 
 export interface RankFormData {
@@ -112,7 +52,6 @@ export function useDisciplinesData(gymId: string | undefined) {
 
   const disciplinesQueryKey = ['disciplines', gymId] as const;
   const disciplineRanksQueryKey = ['discipline_ranks', gymId] as const;
-  const ranksByDisciplineQueryKey = (disciplineId: string) => ['discipline_ranks', gymId, disciplineId] as const;
 
   const {
     data: disciplines,
@@ -132,7 +71,7 @@ export function useDisciplinesData(gymId: string | undefined) {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Discipline[];
     },
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -154,46 +93,11 @@ export function useDisciplinesData(gymId: string | undefined) {
       const { data, error } = await supabase
         .from('discipline_ranks')
         .select('*')
-        .eq('gym_id', gymId)
         .order('discipline_id')
         .order('level');
 
       if (error) throw error;
-      return data || [];
-    },
-    staleTime: 15 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    retry: 1,
-    enabled: !!gymId,
-  });
-
-  const {
-    data: ranksByDisciplineData,
-    isLoading: loadingRanksByDiscipline,
-  } = useQuery({
-    queryKey: ranksByDisciplineQueryKey(gymId || 'all'),
-    queryFn: async () => {
-      if (!gymId) return {};
-
-      const { data, error } = await supabase
-        .from('discipline_ranks')
-        .select('*')
-        .eq('gym_id', gymId)
-        .order('discipline_id')
-        .order('level');
-
-      if (error) throw error;
-
-      const map: Record<string, DisciplineRank[]> = {};
-      (data || []).forEach((rank) => {
-        if (!map[rank.discipline_id]) {
-          map[rank.discipline_id] = [];
-        }
-        map[rank.discipline_id].push(rank);
-      });
-
-      return map;
+      return (data || []) as DisciplineRank[];
     },
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
@@ -232,19 +136,13 @@ export function useDisciplinesData(gymId: string | undefined) {
       if (error) throw error;
       return data as Discipline;
     },
-    onMutate: async (newDiscipline) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: disciplinesQueryKey });
       const previousDisciplines = queryClient.getQueryData(disciplinesQueryKey) || [];
-
-      queryClient.setQueryData(disciplinesQueryKey, (old: Discipline[] = []) => {
-        return [...old, newDiscipline];
-      });
-
       return { previousDisciplines };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
-
       toast({
         title: 'Success',
         description: 'Discipline created successfully',
@@ -253,7 +151,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.createDiscipline');
       logError(appError);
-
       toast({
         title: 'Error Creating Discipline',
         description: getUserErrorMessage(appError),
@@ -286,9 +183,8 @@ export function useDisciplinesData(gymId: string | undefined) {
 
       return { previousDisciplines };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
-
       toast({
         title: 'Success',
         description: 'Discipline updated successfully',
@@ -297,7 +193,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.updateDiscipline');
       logError(appError);
-
       toast({
         title: 'Error Updating Discipline',
         description: getUserErrorMessage(appError),
@@ -327,7 +222,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
-
       toast({
         title: 'Success',
         description: 'Discipline deleted successfully',
@@ -336,7 +230,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.deleteDiscipline');
       logError(appError);
-
       toast({
         title: 'Error Deleting Discipline',
         description: getUserErrorMessage(appError),
@@ -347,17 +240,17 @@ export function useDisciplinesData(gymId: string | undefined) {
 
   const toggleDisciplineStatus = useMutation({
     mutationFn: async (id: string) => {
-      const { data: disciplines } = await supabase
+      const { data: discipline } = await supabase
         .from('disciplines')
         .select('id, is_active')
         .eq('id', id)
         .maybeSingle();
 
-      if (!disciplines) throw new Error('Discipline not found');
+      if (!discipline) throw new Error('Discipline not found');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('disciplines')
-        .update({ is_active: !disciplines.is_active })
+        .update({ is_active: !discipline.is_active })
         .eq('id', id)
         .select()
         .single();
@@ -365,13 +258,13 @@ export function useDisciplinesData(gymId: string | undefined) {
       if (error) throw error;
       return data as Discipline;
     },
-    onMutate: async (toggledDiscipline) => {
+    onMutate: async (toggledDisciplineId) => {
       await queryClient.cancelQueries({ queryKey: disciplinesQueryKey });
       const previousDisciplines = queryClient.getQueryData(disciplinesQueryKey) || [];
 
       queryClient.setQueryData(disciplinesQueryKey, (old: Discipline[] = []) => {
         return old.map(d => 
-          d.id === toggledDiscipline.id 
+          d.id === toggledDisciplineId 
             ? { ...d, is_active: !d.is_active }
             : d
         );
@@ -381,7 +274,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
-
       toast({
         title: 'Success',
         description: 'Discipline status updated',
@@ -390,7 +282,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.toggleDisciplineStatus');
       logError(appError);
-
       toast({
         title: 'Error Updating Status',
         description: getUserErrorMessage(appError),
@@ -401,32 +292,17 @@ export function useDisciplinesData(gymId: string | undefined) {
 
   const createRank = useMutation({
     mutationFn: async (rankData: RankFormData) => {
-      if (!gymId) {
-        throw new Error('Gym ID is required');
-      }
-
       const { data, error } = await supabase
         .from('discipline_ranks')
-        .insert([{
-          ...rankData,
-        }])
+        .insert([rankData])
         .select()
         .single();
 
       if (error) throw error;
       return data as DisciplineRank;
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: disciplineRanksQueryKey });
-      const previousRanks = queryClient.getQueryData(disciplineRanksQueryKey) || [];
-
-      return { previousRanks };
-    },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplineRanksQueryKey });
-      const disciplineId = variables.discipline_id;
-      queryClient.invalidateQueries({ queryKey: ranksByDisciplineQueryKey(disciplineId) });
-
       toast({
         title: 'Success',
         description: 'Rank created successfully',
@@ -435,7 +311,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.createRank');
       logError(appError);
-
       toast({
         title: 'Error Creating Rank',
         description: getUserErrorMessage(appError),
@@ -468,11 +343,8 @@ export function useDisciplinesData(gymId: string | undefined) {
 
       return { previousRanks };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplineRanksQueryKey });
-      const disciplineId = variables.discipline_id;
-      queryClient.invalidateQueries({ queryKey: ranksByDisciplineQueryKey(disciplineId) });
-
       toast({
         title: 'Success',
         description: 'Rank updated successfully',
@@ -481,7 +353,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.updateRank');
       logError(appError);
-
       toast({
         title: 'Error Updating Rank',
         description: getUserErrorMessage(appError),
@@ -511,7 +382,6 @@ export function useDisciplinesData(gymId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplineRanksQueryKey });
-
       toast({
         title: 'Success',
         description: 'Rank deleted successfully',
@@ -520,144 +390,8 @@ export function useDisciplinesData(gymId: string | undefined) {
     onError: (error: Error) => {
       const appError = handleError(error, 'useDisciplinesData.deleteRank');
       logError(appError);
-
       toast({
         title: 'Error Deleting Rank',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      });
-    },
-  });
-
-  const seedRanks = useMutation({
-    mutationFn: async (disciplineId: string) => {
-      if (!gymId) {
-        throw new Error('Gym ID is required');
-      }
-
-      const defaultRanks = getDisciplineRanks(disciplineId);
-      const ranksToInsert = defaultRanks.map((rank) => ({
-        ...rank,
-        discipline_id: disciplineId,
-      }));
-
-      const { data, error } = await supabase
-        .from('discipline_ranks')
-        .insert(ranksToInsert)
-        .select();
-
-      if (error) throw error;
-      return data as DisciplineRank[];
-    },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: disciplineRanksQueryKey });
-      const previousRanks = queryClient.getQueryData(disciplineRanksQueryKey) || [];
-      return { previousRanks };
-    },
-    onSuccess: (createdRanks) => {
-      queryClient.invalidateQueries({ queryKey: disciplineRanksQueryKey });
-
-      toast({
-        title: 'Success',
-        description: `Seeded ${createdRanks.length} default ranks`,
-      });
-    },
-    onError: (error: Error) => {
-      const appError = handleError(error, 'useDisciplinesData.seedRanks');
-      logError(appError);
-
-      toast({
-        title: 'Error Seeding Ranks',
-        description: getUserErrorMessage(appError),
-        variant: 'destructive'
-      });
-    },
-  });
-
-  const seedAllDisciplines = useMutation({
-    mutationFn: async () => {
-      if (!gymId) {
-        throw new Error('Gym ID is required');
-      }
-
-      const defaultDisciplines = getAllDisciplines();
-
-      const { data: existing } = await supabase
-        .from('disciplines')
-        .select('name')
-        .eq('gym_id', gymId);
-
-      const existingNames = new Set(existing?.map(d => d.name) || []);
-
-      const disciplinesToInsert = defaultDisciplines
-        .filter(d => !existingNames.has(d.name))
-        .map(d => ({
-          gym_id: gymId,
-          name: d.name,
-          description: d.description,
-          category: d.category,
-          equipment: d.equipment,
-          instructor_profile: d.instructorProfile,
-          is_active: true,
-        }));
-
-      if (disciplinesToInsert.length === 0) {
-        return { inserted: 0, seeded: 0 };
-      }
-
-      const { data: insertedDisciplines, error: disciplinesError } = await supabase
-        .from('disciplines')
-        .insert(disciplinesToInsert)
-        .select();
-
-      if (disciplinesError) throw disciplinesError;
-
-      const disciplinesWithRanks = defaultDisciplines.filter(d =>
-        Object.keys(getDisciplineRanks(d.name)).includes(d.name)
-      );
-
-      for (const discipline of disciplinesWithRanks) {
-        const createdDiscipline = insertedDisciplines?.find(
-          d => d.name === discipline.name
-        );
-
-        if (createdDiscipline) {
-          const defaultRanks = getDisciplineRanks(discipline.name);
-          const ranksToInsert = defaultRanks.map((rank) => ({
-            ...rank,
-            discipline_id: createdDiscipline.id,
-          }));
-
-          await supabase
-            .from('discipline_ranks')
-            .insert(ranksToInsert);
-        }
-      }
-
-      return { inserted: disciplinesToInsert.length, seeded: disciplinesWithRanks.length };
-    },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: disciplinesQueryKey });
-      await queryClient.cancelQueries({ queryKey: disciplineRanksQueryKey });
-      const previousDisciplines = queryClient.getQueryData(disciplinesQueryKey) || [];
-      const previousRanks = queryClient.getQueryData(disciplineRanksQueryKey) || [];
-      return { previousDisciplines, previousRanks };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
-      queryClient.invalidateQueries({ queryKey: disciplineRanksQueryKey });
-
-      toast({
-        title: 'Disciplines Seeded',
-        description: 'Default disciplines have been added successfully',
-      });
-    },
-    onError: (error: Error) => {
-      const appError = handleError(error, 'useDisciplinesData.seedAllDisciplines');
-      logError(appError);
-
-      toast({
-        title: 'Error Seeding Disciplines',
         description: getUserErrorMessage(appError),
         variant: 'destructive'
       });
@@ -672,30 +406,41 @@ export function useDisciplinesData(gymId: string | undefined) {
   }, [refetchDisciplines, refetchRanks]);
 
   return {
+    // Data
     disciplines: disciplines || [],
     disciplineRanks: disciplineRanks || [],
-    ranks: disciplineRanks || [],
     ranksByDiscipline,
+
+    // Loading states
     loadingDisciplines,
     loadingRanks,
     loading,
-    canCreate,
-    canUpdate,
-    canDelete,
+
+    // Mutations
     createDiscipline,
     updateDiscipline,
     deleteDiscipline,
+    toggleDisciplineStatus,
     createRank,
     updateRank,
     deleteRank,
-    toggleDisciplineStatus,
-    seedRanks,
-    seedAllDisciplines,
+
+    // Error states
+    disciplinesError,
+    ranksError,
+
+    // Permissions
+    canCreate,
+    canUpdate,
+    canDelete,
+
+    // Utilities
     refetchAll,
+
+    // Cache keys
     cacheKeys: {
       disciplines: disciplinesQueryKey,
-      ranks: disciplineRanksQueryKey,
-      ranksByDiscipline: (disciplineId: string) => ['discipline_ranks', gymId, disciplineId],
+      disciplineRanks: disciplineRanksQueryKey,
     },
   };
 }
