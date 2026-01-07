@@ -63,18 +63,6 @@ export function MemberProgressDashboard() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'week' | 'month' | 'all'>('month');
 
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchMembers();
-    }
-  }, [currentGym?.id]);
-
-  useEffect(() => {
-    if (selectedMember) {
-      fetchMemberProgress();
-    }
-  }, [selectedMember, dateRange]);
-
   const fetchMembers = async () => {
     if (!currentGym?.id) return;
     const { data } = await supabase
@@ -134,6 +122,18 @@ export function MemberProgressDashboard() {
     setPerformanceRecords(performanceRes.data || []);
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchMembers();
+    }
+  }, [currentGym?.id]);
+
+  useEffect(() => {
+    if (selectedMember) {
+      fetchMemberProgress();
+    }
+  }, [selectedMember, dateRange]);
 
   const completedWorkouts = assignments.filter(a => a.completed_at).length;
   const totalWorkouts = assignments.length;

@@ -12,6 +12,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { useGym } from '@/contexts/GymContext'
 import { useRBAC } from '@/hooks/useRBAC'
 import { supabase } from '@/integrations/supabase/client'
+import { useToast } from '@/hooks/use-toast'
+import { handleError, logError, getUserErrorMessage } from '@/types/errors'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -75,6 +77,11 @@ interface Coach {
   full_name: string
 }
 
+interface UserRoleWithProfile {
+  user_id: string
+  profiles: { full_name: string }
+}
+
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 6)
 
 /* =========================
@@ -84,6 +91,7 @@ const HOURS = Array.from({ length: 16 }, (_, i) => i + 6)
 export default function Calendar() {
   const { currentGym } = useGym()
   const { hasPermission, loading: rbacLoading } = useRBAC()
+  const { toast } = useToast()
 
   const gymTimezone = currentGym?.timezone || 'Africa/Luanda'
 
@@ -169,7 +177,13 @@ export default function Calendar() {
       const { data, error } = await query
 
       if (error) {
-        console.error('Failed to fetch classes:', error.message)
+        const appError = handleError(error, 'Calendar.fetchClasses')
+        logError(appError)
+        toast({
+          title: 'Error Loading Classes',
+          description: getUserErrorMessage(appError),
+          variant: 'destructive'
+        })
         return
       }
 
@@ -181,7 +195,13 @@ export default function Calendar() {
 
       setClasses(activeClasses)
     } catch (error) {
-      console.error('Error in fetchClasses:', error)
+      const appError = handleError(error, 'Calendar.fetchClasses')
+      logError(appError)
+      toast({
+        title: 'Error Loading Classes',
+        description: getUserErrorMessage(appError),
+        variant: 'destructive'
+      })
     }
   }
 
@@ -197,7 +217,13 @@ export default function Calendar() {
       if (error) throw error
       setDisciplines(data || [])
     } catch (error) {
-      console.error('Error fetching disciplines:', error)
+      const appError = handleError(error, 'Calendar.fetchDisciplines')
+      logError(appError)
+      toast({
+        title: 'Error Loading Disciplines',
+        description: getUserErrorMessage(appError),
+        variant: 'destructive'
+      })
     }
   }
 
@@ -213,7 +239,13 @@ export default function Calendar() {
       if (error) throw error
       setLocations(data || [])
     } catch (error) {
-      console.error('Error fetching locations:', error)
+      const appError = handleError(error, 'Calendar.fetchLocations')
+      logError(appError)
+      toast({
+        title: 'Error Loading Locations',
+        description: getUserErrorMessage(appError),
+        variant: 'destructive'
+      })
     }
   }
 
@@ -228,14 +260,20 @@ export default function Calendar() {
       if (error) throw error
 
       const list =
-        data?.map((r: any) => ({
+        data?.map((r: UserRoleWithProfile) => ({
           id: r.user_id,
           full_name: r.profiles.full_name,
         })) || []
 
       setCoaches(list)
     } catch (error) {
-      console.error('Error fetching coaches:', error)
+      const appError = handleError(error, 'Calendar.fetchCoaches')
+      logError(appError)
+      toast({
+        title: 'Error Loading Coaches',
+        description: getUserErrorMessage(appError),
+        variant: 'destructive'
+      })
     }
   }
 
