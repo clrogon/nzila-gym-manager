@@ -1,6 +1,7 @@
 // src/pages/CheckIns.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,29 +26,98 @@ import { useToast } from '@/hooks/use-toast';
 import { UserCheck, Clock, LogOut } from 'lucide-react';
 import { RequirePermission } from '@/components/common/RequirePermission';
 import { useRBAC } from '@/hooks/useRBAC';
-import { useCheckInsData, type Member, type CheckIn } from '@/hooks/useCheckInsData.tanstack';
+
+interface Member {
+  id: string;
+  full_name: string;
+}
+
+interface CheckIn {
+  id: string;
+  member_id: string;
+  member_name: string;
+  checked_in_at: string;
+  checked_out_at: string | null;
+}
 
 export default function CheckIns() {
   const { currentGym } = useGym();
   const { toast } = useToast();
   const { hasPermission } = useRBAC();
-
-  const {
-    members,
-    checkIns,
-    loading,
-    checkIn,
-    checkOut,
-  } = useCheckInsData(currentGym?.id);
-
+  const [members, setMembers] = useState<Member[]>([]);
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleCheckIn = async () => {
-    if (!selectedMember) return;
+  useEffect(() => {
+    if (currentGym) {
+      fetchMembers();
+      fetchTodayCheckIns();
+    }
+  }, [currentGym]);
+
+  const fetchMembers = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('members')
+      .select('id, full_name')
+      .eq('gym_id', currentGym.id)
+      .eq('status', 'active')
+      .order('full_name');
+
+    setMembers(data || []);
+  };
+
+  const fetchTodayCheckIns = async () => {
+    if (!currentGym) return;
+
+    const today = new Date().toISOString().split('T')[0];
 
     try {
-      await checkIn.mutateAsync(selectedMember.id);
+      const { data: checkInsData } = await supabase
+        .from('check_ins')
+        .select('id, member_id, checked_in_at, checked_out_at')
+        .eq('gym_id', currentGym.id)
+        .gte('checked_in_at', today)
+        .order('checked_in_at', { ascending: false });
+
+      if (checkInsData && checkInsData.length > 0) {
+        const memberIds = [...new Set(checkInsData.map(c => c.member_id))];
+        const { data: membersData } = await supabase
+          .from('members')
+          .select('id, full_name')
+          .in('id', memberIds);
+
+        const memberMap = new Map(membersData?.map(m => [m.id, m.full_name]));
+
+        setCheckIns(
+          checkInsData.map(c => ({
+            ...c,
+            member_name: memberMap.get(c.member_id) || 'Desconhecido',
+          }))
+        );
+      } else {
+        setCheckIns([]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar check-ins:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!currentGym || !selectedMember) return;
+
+    try {
+      const { error } = await supabase.from('check_ins').insert({
+        gym_id: currentGym.id,
+        member_id: selectedMember.id,
+      });
+
+      if (error) throw error;
 
       toast({
         title: 'Check-in efetuado',
@@ -56,21 +126,31 @@ export default function CheckIns() {
 
       setSelectedMember(null);
       setSearchQuery('');
+      fetchTodayCheckIns();
     } catch (error) {
       console.error('Erro ao efetuar check-in:', error);
+      toast({ title: 'Erro', description: 'Falha ao registar check-in.', variant: 'destructive' });
     }
   };
 
   const handleCheckOut = async (checkInId: string, memberName: string) => {
     try {
-      await checkOut.mutateAsync(checkInId);
+      const { error } = await supabase
+        .from('check_ins')
+        .update({ checked_out_at: new Date().toISOString() })
+        .eq('id', checkInId);
+
+      if (error) throw error;
 
       toast({
         title: 'Check-out efetuado',
         description: `${memberName} saiu do Nzila.`,
       });
+
+      fetchTodayCheckIns();
     } catch (error) {
       console.error('Erro ao efetuar check-out:', error);
+      toast({ title: 'Erro', description: 'Falha ao registar check-out.', variant: 'destructive' });
     }
   };
 

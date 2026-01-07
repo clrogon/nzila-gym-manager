@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGym } from '@/contexts/GymContext';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +39,6 @@ import {
 } from 'lucide-react';
 import { RequirePermission } from '@/components/common/RequirePermission';
 import { useRBAC } from '@/hooks/useRBAC';
-import { usePaymentsData, type PaymentFormData, type Invoice } from '@/hooks/usePaymentsData.tanstack';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,23 +46,52 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface Member {
+  id: string;
+  full_name: string;
+}
+
+interface MembershipPlan {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
+}
+
+interface Payment {
+  id: string;
+  member_id: string;
+  member_name: string;
+  amount: number;
+  payment_method: string;
+  payment_status: string;
+  multicaixa_reference: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+interface Invoice {
+  id: string;
+  member_name: string;
+  amount: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  due_date: string;
+  created_at: string;
+}
+
 export default function Payments() {
   const { currentGym } = useGym();
   const { toast } = useToast();
   const { hasPermission, hasMinimumRole } = useRBAC();
-
-  const { 
-    members, 
-    plans, 
-    payments, 
-    loading, 
-    createPayment 
-  } = usePaymentsData(currentGym?.id);
-
+  const [members, setMembers] = useState<Member[]>([]);
+  const [plans, setPlans] = useState<MembershipPlan[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
 
   // Payment method settings
   const [multicaixaEnabled, setMulticaixaEnabled] = useState(true);
@@ -92,27 +121,104 @@ export default function Payments() {
     { id: '3', member_name: 'Pedro Costa', amount: 15000, status: 'overdue', due_date: '2024-01-10', created_at: '2024-01-01' },
   ]);
 
+  useEffect(() => {
+    if (currentGym) {
+      fetchMembers();
+      fetchPayments();
+      fetchPlans();
+    }
+  }, [currentGym]);
+
+  const fetchMembers = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('members')
+      .select('id, full_name')
+      .eq('gym_id', currentGym.id)
+      .order('full_name');
+
+    setMembers(data || []);
+  };
+
+  const fetchPlans = async () => {
+    if (!currentGym) return;
+
+    const { data } = await supabase
+      .from('membership_plans')
+      .select('id, name, price, duration_days')
+      .eq('gym_id', currentGym.id)
+      .eq('is_active', true)
+      .order('price');
+
+    setPlans(data || []);
+  };
+
+  const fetchPayments = async () => {
+    if (!currentGym) return;
+
+    try {
+      const { data: paymentsData } = await supabase
+        .from('payments')
+        .select('id, member_id, amount, payment_method, payment_status, multicaixa_reference, description, created_at')
+        .eq('gym_id', currentGym.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (paymentsData && paymentsData.length > 0) {
+        const memberIds = [...new Set(paymentsData.map(p => p.member_id))];
+        const { data: membersData } = await supabase
+          .from('members')
+          .select('id, full_name')
+          .in('id', memberIds);
+
+        const memberMap = new Map(membersData?.map(m => [m.id, m.full_name]));
+
+        setPayments(
+          paymentsData.map(p => ({
+            ...p,
+            member_name: memberMap.get(p.member_id) || 'Unknown',
+          }))
+        );
+      } else {
+        setPayments([]);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGym || !memberId) return;
 
     try {
-      const finalAmount = selectedPlanId
+      const finalAmount = selectedPlanId 
         ? plans.find(p => p.id === selectedPlanId)?.price || parseFloat(amount)
         : parseFloat(amount);
 
-      await createPayment.mutateAsync({
+      const { error } = await supabase.from('payments').insert([{
+        gym_id: currentGym.id,
         member_id: memberId,
         amount: finalAmount,
         payment_method: paymentMethod as 'multicaixa' | 'cash' | 'bank_transfer' | 'other',
-        multicaixa_reference: paymentMethod === 'multicaixa' ? multicaixaRef : undefined,
-        description: description || (selectedPlanId ? `Plan: ${plans.find(p => p.id === selectedPlanId)?.name}` : undefined),
-      });
+        payment_status: 'completed' as const,
+        multicaixa_reference: paymentMethod === 'multicaixa' ? multicaixaRef : null,
+        description: description || (selectedPlanId ? `Plan: ${plans.find(p => p.id === selectedPlanId)?.name}` : null),
+        paid_at: new Date().toISOString(),
+      }]);
 
+      if (error) throw error;
+
+      toast({ title: 'Payment Recorded', description: 'The payment has been recorded successfully.' });
       resetForm();
       setDialogOpen(false);
+      fetchPayments();
     } catch (error) {
       console.error('Error recording payment:', error);
+      toast({ title: 'Error', description: 'Failed to record payment.', variant: 'destructive' });
     }
   };
 
