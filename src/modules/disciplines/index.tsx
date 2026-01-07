@@ -1,5 +1,3 @@
-import { lazy } from 'react';
-
-const DisciplinesPage = lazy(() => import('@/pages/Disciplines'));
+import DisciplinesPage from '@/pages/Disciplines';
 
 export { DisciplinesPage };

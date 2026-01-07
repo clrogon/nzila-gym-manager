@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
 import DashboardLayout from '@/components/layout/DashboardLayout';
