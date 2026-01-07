@@ -119,6 +119,11 @@ export function useDisciplinesData(gymId: string | undefined) {
     return map;
   }, [disciplineRanks]);
 
+  // Only active disciplines - use this in all modules except Disciplines management page
+  const activeDisciplines = useMemo(() => {
+    return (disciplines || []).filter(d => d.is_active === true);
+  }, [disciplines]);
+
   const createDiscipline = useMutation({
     mutationFn: async (disciplineData: DisciplineFormData) => {
       if (!gymId) {
@@ -409,7 +414,8 @@ export function useDisciplinesData(gymId: string | undefined) {
 
   return {
     // Data
-    disciplines: disciplines || [],
+    disciplines: disciplines || [],  // All disciplines (for management page)
+    activeDisciplines,               // Only active disciplines (for other modules)
     disciplineRanks: disciplineRanks || [],
     ranksByDiscipline,
 
