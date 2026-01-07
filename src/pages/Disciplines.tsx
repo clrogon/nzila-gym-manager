@@ -32,10 +32,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock, 
-  ShieldAlert, Mail, Phone, MapPin, Calendar, CreditCard, 
-  Activity, MoreHorizontal, Eye, AlertTriangle
+import {
+  Plus, Search, Edit, Trash2, Users, UserCheck, UserX, Clock,
+  ShieldAlert, Mail, Phone, MapPin, Calendar, CreditCard,
+  Activity, MoreHorizontal, Eye, AlertTriangle, Award
 } from 'lucide-react';
 import {
   DropdownMenu,
