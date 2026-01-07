@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 import { useGym } from '@/contexts/GymContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +17,7 @@ import {
   Dumbbell, Edit2, Save, Loader2 
 } from 'lucide-react';
 import { DisciplineStatusBadge } from '@/components/common/DisciplineStatusBadge';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ClassEvent {
   id: string;
@@ -80,7 +80,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
   const [workoutTemplates, setWorkoutTemplates] = useState<WorkoutTemplate[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  
+
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -100,7 +100,6 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Prop
         capacity: classEvent.capacity,
         workout_template_id: classEvent.workout_template_id || '',
       });
-      setIsEditing(false);
     }
   }, [open, classEvent?.id]);
 

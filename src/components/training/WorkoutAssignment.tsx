@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useGym } from '@/contexts/GymContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,8 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { format, addDays, addWeeks } from 'date-fns';
+import { useMemberProgressData, Member, WorkoutTemplate, WorkoutAssignment } from '@/hooks/useMemberProgressData.tanstack';
+import { useWorkoutsData } from '@/hooks/useWorkoutsData.tanstack';
 import {
   Plus, Calendar as CalendarIcon, Loader2, CheckCircle2,
   Clock, User, Dumbbell, Repeat
@@ -65,13 +66,24 @@ const DAYS_OF_WEEK = [
 export function WorkoutAssignment() {
   const { currentGym } = useGym();
   const { user } = useAuth();
-  const [assignments, setAssignments] = useState<MemberWorkout[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use TanStack Query hooks for data
+  const { 
+    assignments, 
+    loading: loadingAssignments,
+    members, 
+    loading: loadingMembers,
+    refetchAll: refetchMemberProgress,
+  } = useMemberProgressData(currentGym?.id, undefined, 'all');
+  
+  const { 
+    templates, 
+    loading: loadingTemplates,
+  } = useWorkoutsData(currentGym?.id);
+  
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
-  const [selectedAssignment, setSelectedAssignment] = useState<MemberWorkout | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<WorkoutAssignment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -81,65 +93,14 @@ export function WorkoutAssignment() {
     notes: '',
   });
 
+  const loading = loadingAssignments || loadingMembers || loadingTemplates;
+
   const [recurrence, setRecurrence] = useState({
     enabled: false,
     type: 'weekly' as RecurrenceType,
     selectedDays: [1, 3, 5], // Mon, Wed, Fri default
     weeks: 4,
   });
-
-  const [completionData, setCompletionData] = useState({
-    results: '',
-    notes: '',
-  });
-
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchData();
-    }
-  }, [currentGym?.id]);
-
-  const fetchData = async () => {
-    if (!currentGym?.id) return;
-    setLoading(true);
-    try {
-      const [assignmentsRes, membersRes, templatesRes] = await Promise.all([
-        supabase
-          .from('member_workouts')
-          .select(`
-            *,
-            member:members(id, full_name, email, status),
-            workout_template:workout_templates(id, name, category, difficulty, estimated_duration)
-          `)
-          .order('assigned_date', { ascending: false })
-          .limit(50),
-        supabase
-          .from('members')
-          .select('id, full_name, email, status')
-          .eq('gym_id', currentGym.id)
-          .eq('status', 'active')
-          .order('full_name'),
-        supabase
-          .from('workout_templates')
-          .select('id, name, category, difficulty, estimated_duration')
-          .eq('gym_id', currentGym.id)
-          .order('name'),
-      ]);
-
-      if (assignmentsRes.error) throw assignmentsRes.error;
-      if (membersRes.error) throw membersRes.error;
-      if (templatesRes.error) throw templatesRes.error;
-
-      setAssignments(assignmentsRes.data || []);
-      setMembers(membersRes.data || []);
-      setTemplates(templatesRes.data || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const generateRecurringDates = (): Date[] => {
     const dates: Date[] = [];
@@ -195,13 +156,14 @@ export function WorkoutAssignment() {
       const { error } = await supabase.from('member_workouts').insert(assignments);
 
       if (error) throw error;
+      
       toast.success(`${assignments.length} workout${assignments.length > 1 ? 's' : ''} assigned successfully`);
       setIsAssignDialogOpen(false);
       setFormData({ member_id: '', workout_template_id: '', assigned_date: new Date(), notes: '' });
       setRecurrence({ enabled: false, type: 'weekly', selectedDays: [1, 3, 5], weeks: 4 });
-      fetchData();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to assign workout');
+      refetchMemberProgress();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to assign workouts');
     } finally {
       setIsSubmitting(false);
     }
