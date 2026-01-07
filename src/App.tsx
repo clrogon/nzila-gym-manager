@@ -40,7 +40,7 @@ const OnboardingPage = lazy(() => import("./modules/onboarding").then(m => ({ de
 const SuperAdminPage = lazy(() => import("./modules/superadmin").then(m => ({ default: m.SuperAdminPage })));
 const SaaSAdminDashboard = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminDashboard })));
 const GymManagement = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.GymManagement })));
-const SaaSAdminSettings = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminSettings })));
+// SaaSAdminSettings removed - tables don't exist
 const StaffPage = lazy(() => import("./modules/staff").then(m => ({ default: m.StaffPage })));
 const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ default: m.CalendarPage })));
 const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
@@ -184,7 +184,6 @@ function AppRoutes() {
       <Route element={<SaaSAdminGuard />}>
         <Route path="/saas-admin" element={<SaaSAdminDashboard />} />
         <Route path="/saas-admin/gyms" element={<GymManagement />} />
-        <Route path="/saas-admin/settings" element={<SaaSAdminSettings />} />
       </Route>
  
       {/* Error Pages */}

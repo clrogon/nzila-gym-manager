@@ -143,9 +143,9 @@ export default function Members() {
 
     try {
       if (editingMember) {
-        await updateMember({ id: editingMember.id, ...memberData });
+        await updateMember.mutateAsync({ id: editingMember.id, ...memberData });
       } else {
-        await createMember(memberData);
+        await createMember.mutateAsync(memberData);
       }
 
       resetForm();
@@ -183,7 +183,7 @@ export default function Members() {
     if (!confirm('Tem a certeza que deseja eliminar este membro? Esta ação não pode ser revertida.')) return;
 
     try {
-      await deleteMember(id);
+      await deleteMember.mutateAsync(id);
     } catch (error) {
       console.error('Erro ao eliminar membro:', error);
     }

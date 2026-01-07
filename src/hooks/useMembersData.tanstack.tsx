@@ -51,6 +51,11 @@ export interface MembershipPlan {
 }
 
 /**
+ * Valid member status values
+ */
+export type MemberStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+
+/**
  * Member form data type (basic info only)
  */
 export interface MemberFormData {
@@ -59,7 +64,7 @@ export interface MemberFormData {
   phone: string;
   date_of_birth: string;
   address: string;
-  status: string;
+  status: MemberStatus;
   membership_plan_id: string;
   notes: string;
   is_dependent: boolean;

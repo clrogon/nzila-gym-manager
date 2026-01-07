@@ -282,12 +282,30 @@ export function useCalendarData(gymId: string | undefined, weekStart: Date, week
         throw new Error('Gym ID is required');
       }
 
+      // Ensure required fields are present
+      if (!classData.title || !classData.start_time || !classData.end_time) {
+        throw new Error('Title, start_time, and end_time are required');
+      }
+
+      const insertData = {
+        title: classData.title,
+        start_time: classData.start_time,
+        end_time: classData.end_time,
+        description: classData.description ?? null,
+        capacity: classData.capacity ?? 20,
+        status: classData.status ?? 'scheduled',
+        discipline_id: classData.discipline_id ?? null,
+        coach_id: classData.coach_id ?? null,
+        location_id: classData.location_id ?? null,
+        workout_template_id: classData.workout_template_id ?? null,
+        is_recurring: classData.is_recurring ?? false,
+        recurrence_rule: classData.recurrence_rule ?? null,
+        gym_id: gymId,
+      };
+
       const { data, error } = await supabase
         .from('classes')
-        .insert([{
-          ...classData,
-          gym_id: gymId,
-        }])
+        .insert([insertData])
         .select()
         .single();
 

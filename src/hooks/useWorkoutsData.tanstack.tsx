@@ -103,11 +103,20 @@ export function useWorkoutsData(gymId: string | undefined) {
     enabled: !!gymId,
   });
 
+  // Transform raw data to WorkoutTemplate type
+  const typedTemplates: WorkoutTemplate[] = useMemo(() => {
+    if (!templates) return [];
+    return templates.map((t) => ({
+      ...t,
+      exercises: Array.isArray(t.exercises) ? t.exercises : [],
+    }));
+  }, [templates]);
+
   // Memoize templates by category for efficient lookups
   const templatesByCategory = useMemo(() => {
-    if (!templates) return {};
+    if (!typedTemplates.length) return {};
     const map: Record<string, WorkoutTemplate[]> = {};
-    (templates || []).forEach((template) => {
+    typedTemplates.forEach((template) => {
       const category = template.category || 'uncategorized';
       if (!map[category]) {
         map[category] = [];
@@ -115,7 +124,7 @@ export function useWorkoutsData(gymId: string | undefined) {
       map[category].push(template);
     });
     return map;
-  }, [templates]);
+  }, [typedTemplates]);
 
   // Create template mutation with optimistic update
   const createTemplate = useMutation({
@@ -290,7 +299,7 @@ export function useWorkoutsData(gymId: string | undefined) {
 
   return {
     // Data
-    templates: templates || [],
+    templates: typedTemplates,
     templatesByCategory,
 
     // Loading state

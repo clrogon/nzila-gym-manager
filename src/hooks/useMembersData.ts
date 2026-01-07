@@ -50,6 +50,11 @@ export interface MembershipPlan {
 }
 
 /**
+ * Valid member status values
+ */
+export type MemberStatus = 'active' | 'inactive' | 'pending' | 'suspended';
+
+/**
  * Member form data type (basic info only)
  */
 export interface MemberFormData {
@@ -58,7 +63,7 @@ export interface MemberFormData {
   phone: string;
   date_of_birth: string;
   address: string;
-  status: string;
+  status: MemberStatus;
   membership_plan_id: string;
   notes: string;
   is_dependent: boolean;
@@ -78,6 +83,11 @@ export interface MemberFilters {
  * Custom hook for member form state management
  */
 export function useMemberForm(initialMember?: Member) {
+  const getStatusValue = (status: string | null | undefined): MemberStatus => {
+    const validStatuses: MemberStatus[] = ['active', 'inactive', 'pending', 'suspended'];
+    return validStatuses.includes(status as MemberStatus) ? (status as MemberStatus) : 'active';
+  };
+
   const [formData, setFormData] = useState<MemberFormData>(
     initialMember ? {
       full_name: initialMember.full_name || '',
@@ -85,7 +95,7 @@ export function useMemberForm(initialMember?: Member) {
       phone: initialMember.phone || '',
       date_of_birth: initialMember.date_of_birth || '',
       address: initialMember.address || '',
-      status: initialMember.status || 'active',
+      status: getStatusValue(initialMember.status),
       membership_plan_id: initialMember.membership_plan_id || '',
       notes: initialMember.notes || '',
       is_dependent: initialMember.is_dependent || false,
@@ -127,13 +137,18 @@ export function useMemberForm(initialMember?: Member) {
   }, []);
 
   const populateFromMember = useCallback((member: Member) => {
+    const getStatusValue = (status: string | null | undefined): MemberStatus => {
+      const validStatuses: MemberStatus[] = ['active', 'inactive', 'pending', 'suspended'];
+      return validStatuses.includes(status as MemberStatus) ? (status as MemberStatus) : 'active';
+    };
+
     setFormData({
       full_name: member.full_name || '',
       email: member.email || '',
       phone: member.phone || '',
       date_of_birth: member.date_of_birth || '',
       address: member.address || '',
-      status: member.status || 'active',
+      status: getStatusValue(member.status),
       membership_plan_id: member.membership_plan_id || '',
       notes: member.notes || '',
       is_dependent: member.is_dependent || false,
