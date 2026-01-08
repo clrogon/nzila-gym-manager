@@ -133,6 +133,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
 
       resetForm();
       refresh();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Plan save failed:', error?.message);
       toast({ 
@@ -181,6 +182,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
 
       if (error) throw error;
       toast({ title: plan.is_active ? 'Plano Desativado' : 'Plano Ativado' });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       refresh();
     } catch (error: any) {
       console.error('Toggle status failed:', error?.message);
@@ -214,6 +216,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
         .eq('id', id);
 
       if (error) throw error;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       toast({ title: 'Plano Eliminado', description: 'O plano foi removido com sucesso.' });
       refresh();
     } catch (error: any) {

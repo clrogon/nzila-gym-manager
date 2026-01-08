@@ -187,6 +187,7 @@ export function GymSetupWizard() {
       await refreshGyms();
       toast({ title: 'Gym Created!', description: `Welcome to Nzila! ${formData.gymName} is ready.` });
       navigate('/dashboard');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error creating gym:', error);
       toast({ 

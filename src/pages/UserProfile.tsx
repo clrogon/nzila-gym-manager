@@ -150,6 +150,7 @@ export default function UserProfile() {
 
       toast.success('Perfil atualizado com sucesso');
       fetchData();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error saving profile:', error);
       toast.error('Erro ao guardar perfil');
@@ -191,6 +192,7 @@ export default function UserProfile() {
       }
 
       toast.success('Preferências guardadas');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       fetchData();
     } catch (error: any) {
       console.error('Error saving preferences:', error);

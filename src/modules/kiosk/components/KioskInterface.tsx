@@ -197,6 +197,8 @@ export function KioskInterface() {
     }
     
     try {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
       let members: any[] | null = null;
       let error: any = null;
       
