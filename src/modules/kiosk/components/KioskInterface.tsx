@@ -86,38 +86,62 @@ export function KioskInterface() {
 
   const pinCheckInMutation = useMutation({
     mutationFn: async (pin: string) => {
-      const { data, error } = await supabase.rpc('kiosk_check_in_with_pin', {
-        p_gym_id: currentGym!.id,
-        p_pin_input: pin,
-        p_staff_id: user?.id || null,
+      // Look up member by phone (using last digits as PIN)
+      const { data: members, error: memberError } = await supabase
+        .from('members')
+        .select('id, full_name, photo_url, status, membership_end_date, phone')
+        .eq('gym_id', currentGym!.id)
+        .ilike('phone', `%${pin}`)
+        .limit(1);
+
+      if (memberError) throw memberError;
+      
+      if (!members || members.length === 0) {
+        return { success: false, message: 'Member not found with this PIN' };
+      }
+
+      const member = members[0];
+
+      if (member.status !== 'active') {
+        return { success: false, message: 'Membership is not active' };
+      }
+
+      // Create check-in
+      const { error: checkInError } = await supabase.from('check_ins').insert({
+        gym_id: currentGym!.id,
+        member_id: member.id,
       });
 
-      if (error) throw error;
-      return data;
+      if (checkInError) throw checkInError;
+
+      return {
+        success: true,
+        member_id: member.id,
+        member_name: member.full_name,
+        member_photo: member.photo_url,
+      };
     },
-    onSuccess: (data: any) => {
-      if (data && data[0]) {
-        const result = data[0];
-        if (result.success) {
-          setResult({
-            status: 'success',
-            title: 'Welcome!',
-            message: 'Have a great workout!',
-            member: {
-              id: result.member_id,
-              full_name: result.member_name,
-              photo_url: result.member_photo,
-              status: 'active',
-              membership_end_date: null,
-            },
-          });
-        } else {
-          setResult({
-            status: 'error',
-            title: 'Access Denied',
-            message: result.message,
-          });
-        }
+    onSuccess: (data) => {
+      if (data.success) {
+        setResult({
+          status: 'success',
+          title: 'Welcome!',
+          message: 'Have a great workout!',
+          member: {
+            id: data.member_id!,
+            full_name: data.member_name!,
+            photo_url: data.member_photo || null,
+            status: 'active',
+            membership_end_date: null,
+          },
+        });
+        queryClient.invalidateQueries({ queryKey: ['check-ins'] });
+      } else {
+        setResult({
+          status: 'error',
+          title: 'Access Denied',
+          message: data.message || 'Check-in failed',
+        });
       }
     },
     onError: (error) => {
