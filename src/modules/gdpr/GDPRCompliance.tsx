@@ -70,7 +70,7 @@ export function ConsentManagement() {
       data?.forEach(c => consentMap[c.consent_type] = c.granted);
       setConsents(consentMap);
     } catch (error) {
-      console.error('Error fetching consents:', error);
+      if (import.meta.env.DEV) console.error('Error fetching consents:', error);
       toast.error('Failed to load privacy settings');
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ export function ConsentManagement() {
       setConsents(prev => ({ ...prev, [consentType]: granted }));
       toast.success(`Privacy setting ${granted ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('Error updating consent:', error);
+      if (import.meta.env.DEV) console.error('Error updating consent:', error);
       toast.error('Failed to update setting');
     } finally {
       setSaving(false);
@@ -169,7 +169,7 @@ export function DataExportRequest() {
       if (error) throw error;
       setRequests(data || []);
     } catch (error) {
-      console.error('Error fetching export requests:', error);
+      if (import.meta.env.DEV) console.error('Error fetching export requests:', error);
     } finally {
       setLoading(false);
     }
@@ -191,7 +191,7 @@ export function DataExportRequest() {
       toast.success('Data export requested. You will be notified when ready.');
       fetchRequests();
     } catch (error) {
-      console.error('Error requesting export:', error);
+      if (import.meta.env.DEV) console.error('Error requesting export:', error);
       toast.error('Failed to request data export');
     } finally {
       setRequesting(false);
@@ -281,7 +281,7 @@ export function DataDeletionRequest() {
       if (error) throw error;
       setRequest(data);
     } catch (error) {
-      console.error('Error fetching deletion request:', error);
+      if (import.meta.env.DEV) console.error('Error fetching deletion request:', error);
     } finally {
       setLoading(false);
     }
@@ -308,7 +308,7 @@ export function DataDeletionRequest() {
       toast.success('Account deletion requested. You have 30 days to cancel.');
       fetchRequest();
     } catch (error) {
-      console.error('Error requesting deletion:', error);
+      if (import.meta.env.DEV) console.error('Error requesting deletion:', error);
       toast.error('Failed to request account deletion');
     } finally {
       setRequesting(false);
@@ -332,7 +332,7 @@ export function DataDeletionRequest() {
       toast.success('Account deletion cancelled');
       setRequest(null);
     } catch (error) {
-      console.error('Error cancelling deletion:', error);
+      if (import.meta.env.DEV) console.error('Error cancelling deletion:', error);
       toast.error('Failed to cancel deletion');
     } finally {
       setRequesting(false);

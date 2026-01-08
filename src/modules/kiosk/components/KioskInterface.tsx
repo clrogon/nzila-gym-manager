@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useGym } from '@/contexts/GymContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dumbbell, CheckCircle2, XCircle, AlertTriangle, Clock, Keyboard, ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dumbbell, CheckCircle2, XCircle, AlertTriangle, Clock, Keyboard, ArrowLeft, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
@@ -26,22 +28,37 @@ type ScanResult = {
 
 export function KioskInterface() {
   const { currentGym } = useGym();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [scanInput, setScanInput] = useState('');
+  const [pinInput, setPinInput] = useState('');
+  const [checkInMode, setCheckInMode] = useState<'id' | 'pin'>('id');
   const [result, setResult] = useState<ScanResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-focus input
   useEffect(() => {
-    inputRef.current?.focus();
+    if (checkInMode === 'id') {
+      inputRef.current?.focus();
+    } else {
+      pinInputRef.current?.focus();
+    }
+
     const interval = setInterval(() => {
-      if (document.activeElement !== inputRef.current) {
-        inputRef.current?.focus();
+      if (checkInMode === 'id') {
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current?.focus();
+        }
+      } else {
+        if (document.activeElement !== pinInputRef.current) {
+          pinInputRef.current?.focus();
+        }
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [checkInMode]);
 
   // Clear result after 5 seconds
   useEffect(() => {
@@ -66,6 +83,73 @@ export function KioskInterface() {
       queryClient.invalidateQueries({ queryKey: ['check-ins'] });
     },
   });
+
+  const pinCheckInMutation = useMutation({
+    mutationFn: async (pin: string) => {
+      const { data, error } = await supabase.rpc('kiosk_check_in_with_pin', {
+        p_gym_id: currentGym!.id,
+        p_pin_input: pin,
+        p_staff_id: user?.id || null,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      if (data && data[0]) {
+        const result = data[0];
+        if (result.success) {
+          setResult({
+            status: 'success',
+            title: 'Welcome!',
+            message: 'Have a great workout!',
+            member: {
+              id: result.member_id,
+              full_name: result.member_name,
+              photo_url: result.member_photo,
+              status: 'active',
+              membership_end_date: null,
+            },
+          });
+        } else {
+          setResult({
+            status: 'error',
+            title: 'Access Denied',
+            message: result.message,
+          });
+        }
+      }
+    },
+    onError: (error) => {
+      setResult({
+        status: 'error',
+        title: 'Error',
+        message: error.message || 'Failed to process check-in',
+      });
+    },
+  });
+
+  const handlePinCheckIn = async (pin: string) => {
+    if (!pin.trim() || !currentGym?.id || isProcessing) return;
+
+    const sanitizedPin = pin.trim();
+
+    if (!/^\d{4,6}$/.test(sanitizedPin)) {
+      setResult({
+        status: 'error',
+        title: 'Invalid PIN',
+        message: 'PIN must be 4-6 digits',
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await pinCheckInMutation.mutateAsync(sanitizedPin);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleScan = async (input: string) => {
     if (!input.trim() || !currentGym?.id || isProcessing) return;
@@ -206,7 +290,11 @@ export function KioskInterface() {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleScan(scanInput);
+      if (checkInMode === 'id') {
+        handleScan(scanInput);
+      } else {
+        handlePinCheckIn(pinInput);
+      }
     }
   };
 
@@ -285,31 +373,82 @@ export function KioskInterface() {
               {result.message}
             </p>
           </div>
-        ) : (
-          // Scan Input
-          <Card className="w-full max-w-xl">
-            <CardContent className="p-12 text-center">
-              <div className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-8">
-                <Keyboard className="w-10 h-10 text-primary-foreground" />
+         ) : (
+          // Check-in Options
+          <Card className="w-full max-w-2xl">
+            <CardContent className="p-8">
+              <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Keyboard className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h1 className="text-3xl font-display font-bold mb-4">
-                Scan Your Card or Enter ID
-              </h1>
-              <p className="text-muted-foreground mb-8">
-                Use the scanner or type your member ID / email / phone
-              </p>
-              <Input
-                ref={inputRef}
-                value={scanInput}
-                onChange={(e) => setScanInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Scan or type here..."
-                className="text-center text-xl h-14 text-foreground"
-                autoFocus
-              />
-              <p className="text-sm text-muted-foreground mt-4">
-                Press Enter to check in
-              </p>
+
+              <Tabs value={checkInMode} onValueChange={(v) => setCheckInMode(v as 'id' | 'pin')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="id" className="text-base">
+                    Scan Card / Enter ID
+                  </TabsTrigger>
+                  <TabsTrigger value="pin" className="text-base">
+                    Enter PIN
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="id" className="mt-6">
+                  <div className="text-center">
+                    <h1 className="text-2xl font-display font-bold mb-4">
+                      Scan Card or Enter ID
+                    </h1>
+                    <p className="text-muted-foreground mb-6">
+                      Use scanner or type your member ID / email / phone
+                    </p>
+                    <Input
+                      ref={inputRef}
+                      value={scanInput}
+                      onChange={(e) => setScanInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Scan or type here..."
+                      className="text-center text-xl h-14 text-foreground"
+                      autoFocus={checkInMode === 'id'}
+                    />
+                    <p className="text-sm text-muted-foreground mt-4">
+                      Press Enter to check in
+                    </p>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="pin" className="mt-6">
+                  <div className="text-center">
+                    <h1 className="text-2xl font-display font-bold mb-4">
+                      Enter Your PIN
+                    </h1>
+                    <p className="text-muted-foreground mb-6">
+                      Use the 4-6 digit PIN assigned to your account
+                    </p>
+                    <Input
+                      ref={pinInputRef}
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="••••"
+                      className="text-center text-3xl h-16 text-foreground tracking-widest"
+                      maxLength={6}
+                      autoFocus={checkInMode === 'pin'}
+                    />
+                    <p className="text-sm text-muted-foreground mt-4">
+                      Press Enter to check in
+                    </p>
+                    {user && (
+                      <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                        <p className="text-sm">
+                          <User className="inline w-4 h-4 mr-1" />
+                          Staff member: <strong>{user.email}</strong>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         )}

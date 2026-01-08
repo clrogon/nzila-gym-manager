@@ -75,62 +75,37 @@ export function POSInterface() {
   const completeSale = useMutation({
     mutationFn: async () => {
       const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-      const tax = subtotal * 0.14; // 14% VAT
+      const tax = subtotal * 0.14;
       const total = subtotal + tax;
 
-      // Create sale
-      const { data: sale, error: saleError } = await supabase
-        .from('sales')
-        .insert({
-          gym_id: currentGym!.id,
-          member_id: selectedMember || null,
-          cashier_id: user!.id,
-          subtotal,
-          tax,
-          total,
-          payment_method: paymentMethod,
-        })
-        .select()
-        .single();
-      if (saleError) throw saleError;
-
-      // Create sale items and update stock
-      // NOTE: In a production environment, this should be handled by a database function (RPC)
-      // to ensure atomicity and prevent race conditions.
-      const saleItems = cart.map(item => ({
-        sale_id: sale.id,
+      const items = cart.map(item => ({
         product_id: item.product.id,
         quantity: item.quantity,
-        unit_price: item.product.price,
-        total: item.product.price * item.quantity,
+        price: item.product.price,
       }));
 
-      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems);
-      if (itemsError) throw itemsError;
+      const { data: result, error } = await supabase.rpc('complete_pos_sale_transaction', {
+        p_gym_id: currentGym!.id,
+        p_member_id: selectedMember || null,
+        p_cashier_id: user!.id,
+        p_payment_method: paymentMethod,
+        p_items: items,
+      });
 
-      // Update stock for each item
-      for (const item of cart) {
-        const { error: stockError } = await supabase
-          .from('products')
-          .update({ stock_quantity: item.product.stock_quantity - item.quantity })
-          .eq('id', item.product.id);
-        
-        if (stockError) {
-          console.error(`Failed to update stock for product ${item.product.id}:`, stockError);
-          // We continue with other items but log the error
-        }
-      }
-
-      return sale;
+      if (error) throw error;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['sales'] });
-      toast.success('Sale completed');
+      toast.success('Sale completed successfully');
       setCart([]);
       setSelectedMember(null);
     },
-    onError: () => toast.error('Failed to complete sale'),
+    onError: (error) => {
+      console.error('Sale error:', error);
+      toast.error(error.message || 'Failed to complete sale');
+    },
   });
 
   const addToCart = (product: Product) => {
