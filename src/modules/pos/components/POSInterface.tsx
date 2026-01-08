@@ -78,26 +78,42 @@ export function POSInterface() {
       const tax = subtotal * 0.14;
       const total = subtotal + tax;
 
-      const items = cart.map(item => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-      }));
+      // Map payment method to valid enum values
+      const methodMap: Record<string, 'cash' | 'multicaixa' | 'bank_transfer' | 'other'> = {
+        cash: 'cash',
+        card: 'other',
+        multicaixa: 'multicaixa',
+        transfer: 'bank_transfer',
+      };
+      const validMethod = methodMap[paymentMethod] || 'other';
 
-      const { data: result, error } = await supabase.rpc('complete_pos_sale_transaction', {
-        p_gym_id: currentGym!.id,
-        p_member_id: selectedMember || null,
-        p_cashier_id: user!.id,
-        p_payment_method: paymentMethod,
-        p_items: items,
+      // Create payment record
+      const { error: paymentError } = await supabase.from('payments').insert({
+        gym_id: currentGym!.id,
+        member_id: selectedMember!,
+        amount: total,
+        payment_method: validMethod,
+        payment_status: 'completed',
+        paid_at: new Date().toISOString(),
+        description: `POS Sale: ${cart.map(i => `${i.quantity}x ${i.product.name}`).join(', ')}`,
       });
 
-      if (error) throw error;
-      return result;
+      if (paymentError) throw paymentError;
+
+      // Update product stock
+      for (const item of cart) {
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ stock_quantity: item.product.stock_quantity - item.quantity })
+          .eq('id', item.product.id);
+        
+        if (stockError) throw stockError;
+      }
+
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['sales'] });
       toast.success('Sale completed successfully');
       setCart([]);
       setSelectedMember(null);
