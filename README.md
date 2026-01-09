@@ -11,7 +11,7 @@
 [![Status](https://img.shields.io/badge/Status-Beta-yellow)](https://github.com/clrogon/nzila-gym-manager)
 [![Security](https://img.shields.io/badge/Security-Hardened-green)](SECURITY.md)
 
-**Live Demo | Demo ao Vivo**: https://nzila-gm.vercel.app
+**Live Demo | Demo ao Vivo**: [nzila-gym-manager.vercel.app](https://nzila-gym-manager.vercel.app)
 
 ---
 
