@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Users, Send, Trash2, MoreVertical } from 'lucide-react';
+import { MessageSquare, Users, Send, MoreVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useGym } from '@/contexts/GymContext';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface StaffContact {
   id: string;
@@ -111,12 +112,13 @@ export default function CommunicationsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="border-b p-4">
-        <h1 className="text-2xl font-bold">Communications</h1>
-      </div>
+    <DashboardLayout>
+      <div className="flex flex-col h-full bg-background">
+        <div className="border-b p-4">
+          <h1 className="text-2xl font-bold">Communications</h1>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'staff' | 'whatsapp')} className="flex-1">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'staff' | 'whatsapp')} className="flex-1">
         <TabsList className="grid w-full grid-cols-2 border-b">
           <TabsTrigger value="staff" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -377,6 +379,7 @@ export default function CommunicationsPage() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
