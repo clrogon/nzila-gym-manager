@@ -32,8 +32,6 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error(`Error in ${this.props.moduleName || 'module'}:`, error, errorInfo);
     
     // Log to monitoring service if available
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (typeof window !== 'undefined' && (window as any).Sentry) {
       (window as any).Sentry.captureException(error, {
         moduleName: this.props.moduleName,

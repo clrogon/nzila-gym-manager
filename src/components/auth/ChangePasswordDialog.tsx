@@ -82,7 +82,7 @@ export function ChangePasswordDialog({ trigger, open, onOpenChange }: ChangePass
       toast.success('Palavra-passe alterada com sucesso');
       resetForm();
       setIsOpen(false);
-     } catch (error) {
+    } catch (error: any) {
       console.error('Error changing password:', error);
       toast.error(error.message || 'Erro ao alterar palavra-passe');
     } finally {

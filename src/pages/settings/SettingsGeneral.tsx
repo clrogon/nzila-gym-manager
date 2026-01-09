@@ -174,7 +174,6 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
     return Object.keys(newErrors).length === 0;
   };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
   const logAuditTrail = async (changes: any) => {
     try {
       await supabase.from('audit_logs').insert({
@@ -249,7 +248,6 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
       toast({
         title: 'Definições Guardadas',
         description: 'As definições do ginásio foram atualizadas com sucesso.',
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
       });
     } catch (error: any) {
       console.error('Settings save failed:', error?.message);

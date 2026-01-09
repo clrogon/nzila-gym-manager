@@ -51,7 +51,6 @@ export default function MemberActivityHeatmap({
       thisMonthCheckIns,
       totalDays: checkInDates.length,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checkIns, daysToShow]);
 
   const getIntensity = (count: number) => {

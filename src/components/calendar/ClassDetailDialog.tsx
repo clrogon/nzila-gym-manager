@@ -12,13 +12,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import {
-  Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus,
-  Dumbbell, Edit2, Save, Loader2
+import { 
+  Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus, 
+  Dumbbell, Edit2, Save, Loader2 
 } from 'lucide-react';
 import { DisciplineStatusBadge } from '@/components/common/DisciplineStatusBadge';
 import { supabase } from '@/integrations/supabase/client';
-import type { AuthError } from '@supabase/supabase-js';
 
 interface ClassEvent {
   id: string;
@@ -70,67 +69,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onRefresh: () => void;
-  onRefreshParent?: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetchBookings = async (classEvent: ClassEvent, gymContext: any) => {
-  if (!classEvent) return [];
-  const { data } = await supabase
-    .from('class_bookings')
-    .select('*, member:members(full_name, email)')
-    .eq('class_id', classEvent.id)
-    .order('booked_at');
-  return data || [];
-};
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-const fetchMembers = async (gymContext: any) => {
-  if (!gymContext?.id) return [];
-  const { data } = await supabase
-    .from('members')
-    .select('id, full_name')
-    .eq('gym_id', gymContext.id)
-    .eq('status', 'active');
-  return data || [];
-};
-
-const fetchWorkoutTemplate = async (classEvent: ClassEvent) => {
-  if (!classEvent?.workout_template_id) {
-    return null;
-  }
-  const { data } = await supabase
-    .from('workout_templates')
-    .select('*')
-    .eq('id', classEvent.workout_template_id)
-    .maybeSingle();
-
-  if (data) {
-    return {
-      ...data,
-      exercises: Array.isArray(data.exercises) ? (data.exercises as unknown as WorkoutExercise[]) : null,
-    };
-  } else {
-    return null;
-  }
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetchAllWorkoutTemplates = async (gymContext: any) => {
-  if (!gymContext?.id) return [];
-  const { data } = await supabase
-    .from('workout_templates')
-    .select('id, name, description, category, difficulty, estimated_duration, exercises')
-    .eq('gym_id', gymContext.id)
-    .order('name');
-  return data?.map(t => ({
-    ...t,
-    exercises: Array.isArray(t.exercises) ? (t.exercises as unknown as WorkoutExercise[]) : null,
-  })) || [];
-};
-
-export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefreshParent }: Props) {
-  const gymContext = useGym();
+export function ClassDetailDialog({ classEvent, open, onClose, onRefresh }: Props) {
+  const { currentGym } = useGym();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [members, setMembers] = useState<{ id: string; full_name: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,10 +90,10 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
 
   useEffect(() => {
     if (open && classEvent) {
-      fetchBookings(classEvent, gymContext);
-      fetchMembers(gymContext);
-      fetchWorkoutTemplate(classEvent);
-      fetchAllWorkoutTemplates(gymContext);
+      fetchBookings();
+      fetchMembers();
+      fetchWorkoutTemplate();
+      fetchAllWorkoutTemplates();
       setEditForm({
         title: classEvent.title,
         description: classEvent.description || '',
@@ -160,6 +102,60 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       });
     }
   }, [open, classEvent?.id]);
+
+  const fetchBookings = async () => {
+    if (!classEvent) return;
+    const { data } = await supabase
+      .from('class_bookings')
+      .select('*, member:members(full_name, email)')
+      .eq('class_id', classEvent.id)
+      .order('booked_at');
+    setBookings(data || []);
+  };
+
+  const fetchMembers = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('members')
+      .select('id, full_name')
+      .eq('gym_id', currentGym.id)
+      .eq('status', 'active');
+    setMembers(data || []);
+  };
+
+  const fetchWorkoutTemplate = async () => {
+    if (!classEvent?.workout_template_id) {
+      setWorkoutTemplate(null);
+      return;
+    }
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('*')
+      .eq('id', classEvent.workout_template_id)
+      .maybeSingle();
+    
+    if (data) {
+      setWorkoutTemplate({
+        ...data,
+        exercises: Array.isArray(data.exercises) ? (data.exercises as unknown as WorkoutExercise[]) : null,
+      });
+    } else {
+      setWorkoutTemplate(null);
+    }
+  };
+
+  const fetchAllWorkoutTemplates = async () => {
+    if (!currentGym?.id) return;
+    const { data } = await supabase
+      .from('workout_templates')
+      .select('id, name, description, category, difficulty, estimated_duration, exercises')
+      .eq('gym_id', currentGym.id)
+      .order('name');
+    setWorkoutTemplates(data?.map(t => ({
+      ...t,
+      exercises: Array.isArray(t.exercises) ? (t.exercises as unknown as WorkoutExercise[]) : null,
+    })) || []);
+  };
 
   const confirmedBookings = bookings.filter(b => b.status === 'booked' || b.status === 'confirmed');
   const waitlistBookings = bookings.filter(b => b.status === 'waitlist');
@@ -176,9 +172,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       });
       if (error) throw error;
       toast.success(isWaitlist ? 'Added to waitlist' : 'Booking confirmed');
-      await fetchBookings(classEvent, gymContext);
-    } catch (error) {
-      toast.error((error as Error).message || 'Failed to add booking');
+      fetchBookings();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to add booking');
     } finally {
       setLoading(false);
     }
@@ -192,9 +188,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
         .eq('id', bookingId);
       if (error) throw error;
       toast.success('Checked in');
-      await fetchBookings(classEvent, gymContext);
-    } catch (error) {
-      toast.error((error as Error).message);
+      fetchBookings();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -205,7 +201,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
         .update({ status: 'cancelled' })
         .eq('id', bookingId);
       if (error) throw error;
-
+      
       if (waitlistBookings.length > 0) {
         await supabase
           .from('class_bookings')
@@ -215,9 +211,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       } else {
         toast.success('Booking cancelled');
       }
-      await fetchBookings(classEvent, gymContext);
-    } catch (error) {
-      toast.error((error as Error).message);
+      fetchBookings();
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
@@ -232,7 +228,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       toast.success('Class cancelled');
       onRefresh();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.message);
     }
   };
@@ -250,17 +246,19 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
           workout_template_id: editForm.workout_template_id || null,
         })
         .eq('id', classEvent.id);
-
+      
       if (error) throw error;
       toast.success('Class updated successfully');
       setIsEditing(false);
       onRefresh();
       
+      // Refresh workout template display
       if (editForm.workout_template_id) {
         const selected = workoutTemplates.find(t => t.id === editForm.workout_template_id);
         setWorkoutTemplate(selected || null);
+      } else {
+        setWorkoutTemplate(null);
       }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || 'Failed to update class');
     } finally {
@@ -268,25 +266,14 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
     }
   };
 
+  if (!classEvent) return null;
+
   const availableMembersForBooking = members.filter(
     m => !bookings.some(b => b.member_id === m.id && b.status !== 'cancelled')
   );
 
-  const handleDialogClose = (isOpen: boolean) => {
-    if (!isOpen) {
-      setEditForm({
-        title: '',
-        description: '',
-        capacity: 20,
-        workout_template_id: '',
-      });
-    }
-  };
-
-  if (!classEvent) return null;
-
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { onClose(); handleDialogClose(isOpen); }}>
+    <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -450,6 +437,20 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                         <Dumbbell className="w-5 h-5 text-primary" />
                         {workoutTemplate.name}
                       </CardTitle>
+                      <div className="flex gap-2 mt-2">
+                        {workoutTemplate.difficulty && (
+                          <Badge variant="outline">{workoutTemplate.difficulty}</Badge>
+                        )}
+                        {workoutTemplate.category && (
+                          <Badge variant="secondary">{workoutTemplate.category}</Badge>
+                        )}
+                        {workoutTemplate.estimated_duration && (
+                          <Badge variant="outline">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {workoutTemplate.estimated_duration} min
+                          </Badge>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent>
                       {workoutTemplate.description && (
@@ -457,7 +458,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                           {workoutTemplate.description}
                         </p>
                       )}
-
+                      
                       {workoutTemplate.exercises && workoutTemplate.exercises.length > 0 ? (
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm">Exercises:</h4>
@@ -493,7 +494,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                   <div className="text-center py-8 text-muted-foreground">
                     <Dumbbell className="w-12 h-12 mx-auto mb-4 opacity-30" />
                     <p>No workout template linked to this class</p>
-                    <p className="text-sm mt-2">Use the Workout tab to link a workout template for members to follow during this class</p>
+                    <p className="text-sm mt-2">Use the Edit tab to link a workout template</p>
                   </div>
                 )}
               </ScrollArea>
@@ -524,8 +525,6 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                     type="number"
                     value={editForm.capacity}
                     onChange={(e) => setEditForm(prev => ({ ...prev, capacity: parseInt(e.target.value) || 20 }))}
-                    min="1"
-                    max="200"
                   />
                 </div>
 
@@ -537,7 +536,6 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                   <Select
                     value={editForm.workout_template_id}
                     onValueChange={(v) => setEditForm(prev => ({ ...prev, workout_template_id: v }))}
-                    disabled={loading}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a workout template" />
@@ -546,8 +544,8 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                       <SelectItem value="">No workout linked</SelectItem>
                       {workoutTemplates.map(template => (
                         <SelectItem key={template.id} value={template.id}>
-                          {template.difficulty && ` (${template.difficulty})`}
                           {template.name}
+                          {template.difficulty && ` (${template.difficulty})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -609,7 +607,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
 
           {classEvent.status !== 'cancelled' && (
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={onClose} disabled={loading}>
+              <Button variant="outline" onClick={onClose}>
                 Close
               </Button>
               <Button variant="destructive" onClick={handleCancelClass}>
