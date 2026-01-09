@@ -14,7 +14,6 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ModuleLoader } from "@/components/common/ModuleLoader";
 import { MaintenanceGuard } from "./components/auth/MaintenanceGuard";
 
-import { MyGymsPage } from "./pages/MyGyms";
 import { SaaSAdminGuard } from "./components/auth/SaaSAdminGuard";
 
 import Index from "./pages/Index";
@@ -25,33 +24,33 @@ import ServerError from "@/pages/errors/ServerError";
 import Forbidden from "@/pages/errors/Forbidden";
 import Offline from "@/pages/errors/Offline";
 
-import { MyGymsPage } from "./pages/MyGyms";
+import MyGymsPage from "./pages/MyGyms";
 
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
-const AuthPage = lazy(() => import("./modules/auth")).then(m => ({ default: m.AuthPage })));
-const DashboardPage = lazy(() => import("./modules/dashboard")).then(m => ({ default: m.DashboardPage })));
-const MembersManagementPage = lazy(() => import("./modules/members")).then(m => ({ default: m.MembersManagementPage })));
-const MemberPortalPage = lazy(() => import("./modules/members")).then(m => ({ default: m.MemberPortalPage })));
-const MemberCheckInPage = lazy(() => import("./modules/members")).then(m => ({ default: m.MemberCheckInPage })));
-const MemberFinancesPage = lazy(() => import("./modules/members")).then(m => ({ default: m.MemberFinancesPage })));
-const MemberActivityPage = lazy(() => import("./modules/members")).then(m => ({ default: m.MemberActivityPage })));
-const CheckInsPage = lazy(() => import("./modules/checkins")).then(m => ({ default: m.CheckInsPage })));
-const PaymentsPage = lazy(() => import("./modules/payments")).then(m => ({ default: m.PaymentsPage })));
-const SettingsPage = lazy(() => import("./modules/settings")).then(m => ({ default: m.SettingsPage })));
-const OnboardingPage = lazy(() => import("./modules/onboarding")).then(m => ({ default: m.OnboardingPage })));
-const SuperAdminPage = lazy(() => import("./modules/superadmin")).then(m => ({ default: m.SuperAdminPage })));
-const SaaSAdminDashboard = lazy(() => import("./modules/saas-admin")).then(m => ({ default: m.SaaSAdminDashboard })));
-const GymManagement = lazy(() => import("./modules/saas-admin/pages/GymManagement")).then(m => ({ default: m.GymManagement })));
-const StaffPage = lazy(() => import("./modules/staff")).then(m => ({ default: m.StaffPage })));
-const CalendarPage = lazy(() => import("./modules/calendar")).then(m => ({ default: m.CalendarPage })));
-const TrainingPage = lazy(() => import("./modules/training")).then(m => ({ default: m.TrainingPage })));
-const LeadsPage = lazy(() => import("./modules/leads")).then(m => ({ default: m.LeadsPage })));
-const InventoryPage = lazy(() => import("./modules/inventory")).then(m => ({ default: m.InventoryPage })));
-const POSPage = lazy(() => import("./modules/pos")).then(m => ({ default: m.POSPage })));
-const KioskPage = lazy(() => import("./modules/kiosk")).then(m => ({ default: m.KioskPage })));
-const InvoicesPage = lazy(() => import("./modules/invoices")).then(m => ({ default: m.InvoicesPage })));
-const DisciplinesPage = lazy(() => import("./modules/disciplines")).then(m => ({ default: m.DisciplinesPage })));
-const CommunicationsPage = lazy(() => import("./pages/Communications")).then(m => ({ default: m.CommunicationsPage })));
+const AuthPage = lazy(() => import("./modules/auth").then(m => ({ default: m.AuthPage })));
+const DashboardPage = lazy(() => import("./modules/dashboard").then(m => ({ default: m.DashboardPage })));
+const MembersManagementPage = lazy(() => import("./modules/members").then(m => ({ default: m.MembersManagementPage })));
+const MemberPortalPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberPortalPage })));
+const MemberCheckInPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberCheckInPage })));
+const MemberFinancesPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberFinancesPage })));
+const MemberActivityPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberActivityPage })));
+const CheckInsPage = lazy(() => import("./modules/checkins").then(m => ({ default: m.CheckInsPage })));
+const PaymentsPage = lazy(() => import("./modules/payments").then(m => ({ default: m.PaymentsPage })));
+const SettingsPage = lazy(() => import("./modules/settings").then(m => ({ default: m.SettingsPage })));
+const OnboardingPage = lazy(() => import("./modules/onboarding").then(m => ({ default: m.OnboardingPage })));
+const SuperAdminPage = lazy(() => import("./modules/superadmin").then(m => ({ default: m.SuperAdminPage })));
+const SaaSAdminDashboard = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminDashboard })));
+const GymManagement = lazy(() => import("./modules/saas-admin/pages/GymManagement"));
+const StaffPage = lazy(() => import("./modules/staff").then(m => ({ default: m.StaffPage })));
+const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ default: m.CalendarPage })));
+const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
+const LeadsPage = lazy(() => import("./modules/leads").then(m => ({ default: m.LeadsPage })));
+const InventoryPage = lazy(() => import("./modules/inventory").then(m => ({ default: m.InventoryPage })));
+const POSPage = lazy(() => import("./modules/pos").then(m => ({ default: m.POSPage })));
+const KioskPage = lazy(() => import("./modules/kiosk").then(m => ({ default: m.KioskPage })));
+const InvoicesPage = lazy(() => import("./modules/invoices").then(m => ({ default: m.InvoicesPage })));
+const DisciplinesPage = lazy(() => import("./modules/disciplines").then(m => ({ default: m.DisciplinesPage })));
+const CommunicationsPage = lazy(() => import("./pages/Communications"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,7 +179,6 @@ function AppRoutes() {
       <Route path="/kiosk" element={<KioskPage />} />
       <Route path="/settings" element={<ProtectedRoute moduleName="Settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute moduleName="Profile"><UserProfile /></ProtectedRoute>} />
-      <Route path="/super-admin" element={<SaaSAdminGuard><SuperAdminPage /></SaaSAdminGuard>} />
 
       {/* SaaS Admin Portal */}
       <Route element={<SaaSAdminGuard />}>
@@ -228,9 +226,7 @@ const App = () => {
             <AuthProvider>
               <GymProvider>
                 <MaintenanceGuard>
-                  <SaaSAdminGuard>
-                    <AppRoutes />
-                  </SaaSAdminGuard>
+                  <AppRoutes />
                 </MaintenanceGuard>
               </GymProvider>
             </AuthProvider>

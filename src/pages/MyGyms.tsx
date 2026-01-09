@@ -517,6 +517,7 @@ export default function MyGyms() {
               </DialogFooter>
             </form>
           </DialogContent>
+        </Dialog>
 
         <Dialog open={!!editingGym} onOpenChange={(open) => !open && setEditingGym(null)}>
           <DialogContent className="sm:max-w-[600px]">
