@@ -3,6 +3,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
 import { useDisciplinesData } from '@/hooks/useDisciplinesData.tanstack';
+import type { Discipline, DisciplineRank } from '@/hooks/useDisciplinesData.tanstack';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

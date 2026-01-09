@@ -38,8 +38,8 @@
 | **Email Notifications** | ✅ Complete | ✅ Completo |
 | **Settings** | ✅ Complete | ✅ Completo |
 | **Super Admin** | ✅ Complete | ✅ Completo |
-| **GDPR Compliance** | 🚧 UI pending | 🚧 UI pendente |
-| **Kiosk Mode** | 🚧 In Development | 🚧 Em Desenvolvimento |
+| **GDPR Compliance** | ✅ Complete | ✅ Completo |
+| **Kiosk Mode** | ✅ Complete | ✅ Completo |
 | **SMS/WhatsApp** | 📋 Planned | 📋 Planeado |
 
 ---

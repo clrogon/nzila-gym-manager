@@ -1,7 +1,7 @@
 # TanStack Query Migration - Phase 2 Update
 
 **Date:** January 7, 2026
-**Status:** ✅ PHASE 2 COMPLETE (100%)
+**Status:** ⚠️ PARTIALLY COMPLETE (~35%)
 **Build:** ✅ SUCCESS
 **TypeScript:** ✅ No Errors
 
@@ -13,7 +13,15 @@ Successfully migrated 2 additional high-priority pages to TanStack Query:
 - ✅ `Payments.tsx` (793 lines → ~650 lines, 18% reduction)
 - ✅ `CheckIns.tsx` (317 lines → ~270 lines, 15% reduction)
 
-**Total Phase 2 Progress:** 7/7 components migrated (100%)
+**⚠️ CORRECTION:** Previously documented as 100% complete, actual verification shows **~35% complete**.
+**Actual Migration Status:** 2-3 of 7 components migrated (29-43%)
+- ✅ Calendar.tsx - Migrated
+- ✅ Payments.tsx - Migrated
+- ✅ CheckIns.tsx - Migrated
+- ❌ Disciplines.tsx - NOT migrated (still uses useState)
+- ❌ MembersManagement.tsx - NOT migrated
+- ❌ ExerciseLibrary.tsx - Status unclear
+- ❌ MemberProgressDashboard.tsx - Status unclear
 
 ---
 
@@ -171,17 +179,20 @@ const {
 
 ---
 
-### Migrated Components (7/7 High Priority = 100%)
+### Migrated Components (2-3/7 High Priority = ~35%)
 
-1. ✅ MembersManagement.tsx
-2. ✅ Disciplines.tsx
-3. ✅ Calendar.tsx
-4. ✅ ExerciseLibrary.tsx
-5. ✅ MemberProgressDashboard.tsx
-6. ✅ Payments.tsx (NEW)
-7. ✅ CheckIns.tsx (NEW)
+✅ **MIGRATED:**
+1. ✅ Calendar.tsx - Migrated to useCalendarData
+2. ✅ Payments.tsx (NEW) - Migrated to usePaymentsData
+3. ✅ CheckIns.tsx (NEW) - Migrated to useCheckInsData
 
-**Average Code Reduction:** 16% reduction in migrated components
+❌ **NOT MIGRATED:**
+1. ❌ MembersManagement.tsx - Still uses useState pattern
+2. ❌ Disciplines.tsx - Still uses useState pattern (10+ hooks)
+3. ❌ ExerciseLibrary.tsx - Status unclear (needs verification)
+4. ❌ MemberProgressDashboard.tsx - Status unclear (needs verification)
+
+**⚠️ Actual Average Code Reduction:** 15-18% reduction in migrated components (only 2-3 components)
 
 ---
 
@@ -408,8 +419,19 @@ npm run lint
 
 ---
 
-**Migration Status:** ✅ PHASE 2 COMPLETE (100%)
+**Migration Status:** ⚠️ PARTIALLY COMPLETE (~35%)
 **Build Status:** ✅ SUCCESS
 **TypeScript Status:** ✅ NO ERRORS
-**Ready for Testing:** ✅ YES
-**Last Updated:** January 7, 2026
+**Ready for Testing:** ✅ YES (for migrated components)
+**⚠️ Documentation Correction:** Previously documented as 100% complete, actual verification shows ~35%
+**Last Updated:** January 9, 2026 (Status corrected)
+
+---
+
+## Documentation Discrepancy Notice
+
+**⚠️ IMPORTANT:** This document was originally created claiming 100% completion of Phase 2.
+**Audit Date:** January 9, 2026
+**Finding:** Upon code verification, only ~35% of components have been migrated.
+**Action:** Status corrected above to reflect actual implementation.
+**Remaining Work:** Need to migrate Disciplines.tsx, MembersManagement.tsx, and verify Training components.
