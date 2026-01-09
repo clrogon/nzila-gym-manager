@@ -247,10 +247,10 @@ export function useMemberProgressData(
 
   // Refetch all data
   const refetchAll = useCallback(() => {
-    if (!!gymId) {
+    if (gymId) {
       refetchMembers();
     }
-    if (!!memberId) {
+    if (memberId) {
       refetchAssignments();
       refetchPromotions();
       refetchPerformance();

@@ -304,15 +304,8 @@ export function useSecureAuth() {
 // Session timeout warning component
 export function SessionTimeoutWarning() {
   const { sessionExpiresIn, refreshSession } = useSecureAuth();
-  const [showWarning, setShowWarning] = useState(false);
 
-  useEffect(() => {
-    if (sessionExpiresIn && sessionExpiresIn < 300000 && sessionExpiresIn > 0) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
-  }, [sessionExpiresIn]);
+  const showWarning = sessionExpiresIn !== null && sessionExpiresIn < 300000 && sessionExpiresIn > 0;
 
   if (!showWarning) return null;
 

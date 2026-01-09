@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     );
 
     // Parse request body for custom credentials (optional)
-    let config = DEFAULT_SUPER_ADMIN;
+    const config = DEFAULT_SUPER_ADMIN;
     try {
       const body = await req.json();
       if (body.email) config.email = body.email;

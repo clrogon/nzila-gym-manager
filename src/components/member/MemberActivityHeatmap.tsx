@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Flame, Calendar } from 'lucide-react';
+import { Activity, Flame } from 'lucide-react';
 import { useMemo } from 'react';
 import { format, subDays, eachDayOfInterval, isSameDay } from 'date-fns';
 import { pt } from 'date-fns/locale';

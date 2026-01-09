@@ -47,11 +47,9 @@ function evaluatePasswordStrength(password: string): PasswordStrength {
 
 export function ChangePasswordDialog({ trigger, open, onOpenChange }: ChangePasswordDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 

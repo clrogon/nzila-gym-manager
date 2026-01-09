@@ -58,13 +58,6 @@ export function TrainingLibraryView() {
 
   const categories = getCategoryNames();
 
-  // Fetch gym classes from database
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchGymClasses();
-    }
-  }, [currentGym?.id]);
-
   const fetchGymClasses = async () => {
     if (!currentGym?.id) return;
     const { data } = await supabase
@@ -74,6 +67,13 @@ export function TrainingLibraryView() {
       .eq('is_active', true);
     setGymClasses(data || []);
   };
+
+  // Fetch gym classes from database
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchGymClasses();
+    }
+  }, [currentGym?.id]);
 
   const getDataForTab = () => {
     const category = filterCategory === 'all' ? null : getCategoryByName(filterCategory);

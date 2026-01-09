@@ -42,13 +42,6 @@ export function PolymorphicWodBuilder({ category, exercises, onChange }: Polymor
     return DEFAULT_WORKOUT_CATEGORIES.flatMap(c => c.exercises);
   };
 
-  // Fetch gym-specific exercises
-  useEffect(() => {
-    if (currentGym?.id) {
-      fetchGymExercises();
-    }
-  }, [currentGym?.id]);
-
   const fetchGymExercises = async () => {
     if (!currentGym?.id) return;
     const { data } = await supabase
@@ -59,6 +52,12 @@ export function PolymorphicWodBuilder({ category, exercises, onChange }: Polymor
       .order('name');
     setGymExercises(data || []);
   };
+
+  useEffect(() => {
+    if (currentGym?.id) {
+      fetchGymExercises();
+    }
+  }, [currentGym?.id]);
 
   // Combine seed exercises with gym-specific ones
   const getAvailableExercises = (): string[] => {

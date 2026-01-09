@@ -40,7 +40,7 @@ const defaultFormData: MemberFormData = {
  * Handles member data input with proper typing and error handling
  */
 export function MemberForm({ memberData, onCancel, onSave, isEditing }: MemberFormProps) {
-  const [formData, setFormData] = useState<MemberFormData>(defaultFormData);
+  const [formData, setFormData] = useState<MemberFormData>(() => memberData || defaultFormData);
   const { toast } = useToast();
 
   useEffect(() => {
