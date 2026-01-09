@@ -12,9 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import {
-  Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus,
-  Dumbbell, Edit2, Save, Loader2
+import { 
+  Clock, MapPin, Users, User, CheckCircle, XCircle, UserPlus, 
+  Dumbbell, Edit2, Save, Loader2, Close as LucideClose
 } from 'lucide-react';
 import { DisciplineStatusBadge } from '@/components/common/DisciplineStatusBadge';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,7 +73,6 @@ interface Props {
   onRefreshParent?: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fetchBookings = async (classEvent: ClassEvent, gymContext: any) => {
   if (!classEvent) return [];
   const { data } = await supabase
@@ -83,7 +82,6 @@ const fetchBookings = async (classEvent: ClassEvent, gymContext: any) => {
     .order('booked_at');
   return data || [];
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 
 const fetchMembers = async (gymContext: any) => {
   if (!gymContext?.id) return [];
@@ -115,7 +113,6 @@ const fetchWorkoutTemplate = async (classEvent: ClassEvent) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fetchAllWorkoutTemplates = async (gymContext: any) => {
   if (!gymContext?.id) return [];
   const { data } = await supabase
@@ -148,9 +145,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
 
   useEffect(() => {
     if (open && classEvent) {
-      fetchBookings(classEvent, gymContext);
+      fetchBookings(gymContext);
       fetchMembers(gymContext);
-      fetchWorkoutTemplate(classEvent);
+      fetchWorkoutTemplate(gymContext);
       fetchAllWorkoutTemplates(gymContext);
       setEditForm({
         title: classEvent.title,
@@ -176,9 +173,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       });
       if (error) throw error;
       toast.success(isWaitlist ? 'Added to waitlist' : 'Booking confirmed');
-      await fetchBookings(classEvent, gymContext);
+      fetchBookings();
     } catch (error) {
-      toast.error((error as Error).message || 'Failed to add booking');
+      toast.error(error.message || 'Failed to add booking');
     } finally {
       setLoading(false);
     }
@@ -192,9 +189,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
         .eq('id', bookingId);
       if (error) throw error;
       toast.success('Checked in');
-      await fetchBookings(classEvent, gymContext);
+      fetchBookings();
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error(error.message);
     }
   };
 
@@ -205,7 +202,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
         .update({ status: 'cancelled' })
         .eq('id', bookingId);
       if (error) throw error;
-
+      
       if (waitlistBookings.length > 0) {
         await supabase
           .from('class_bookings')
@@ -215,9 +212,9 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
       } else {
         toast.success('Booking cancelled');
       }
-      await fetchBookings(classEvent, gymContext);
+      fetchBookings();
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error(error.message);
     }
   };
 
@@ -260,7 +257,6 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
         const selected = workoutTemplates.find(t => t.id === editForm.workout_template_id);
         setWorkoutTemplate(selected || null);
       }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || 'Failed to update class');
     } finally {
@@ -272,21 +268,15 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
     m => !bookings.some(b => b.member_id === m.id && b.status !== 'cancelled')
   );
 
-  const handleDialogClose = (isOpen: boolean) => {
-    if (!isOpen) {
-      setEditForm({
-        title: '',
-        description: '',
-        capacity: 20,
-        workout_template_id: '',
-      });
-    }
-  };
-
   if (!classEvent) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { onClose(); handleDialogClose(isOpen); }}>
+    <Dialog open={open} onOpenChange={() => onClose(); if (!open) setEditForm({
+      title: '',
+      description: '',
+      capacity: 20,
+      workout_template_id: '',
+    });}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -373,7 +363,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                           <div>
                             <p className="font-medium">{booking.member?.full_name}</p>
                             <p className="text-xs text-muted-foreground">
-                              Booked {format(parseISO(booking.booked_at), 'MMM d, h:mm a')}
+                              Booked {format(parseISO(booking.booked_at, 'MMM d, h:mm a')}
                             </p>
                           </div>
                         </div>
@@ -422,7 +412,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                           <div>
                             <p className="font-medium">{booking.member?.full_name}</p>
                             <p className="text-xs text-muted-foreground">
-                              Added {format(parseISO(booking.booked_at), 'MMM d, h:mm a')}
+                              Added {format(parseISO(booking.booked_at, 'MMM d, h:mm a')}
                             </p>
                           </div>
                         </div>
@@ -457,7 +447,7 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                           {workoutTemplate.description}
                         </p>
                       )}
-
+                      
                       {workoutTemplate.exercises && workoutTemplate.exercises.length > 0 ? (
                         <div className="space-y-2">
                           <h4 className="font-medium text-sm">Exercises:</h4>
@@ -481,14 +471,14 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                               </div>
                             ))}
                           </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No exercises defined for this workout.
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No exercises defined for this workout.
+                      </p>
+                    )}
+                  </CardContent>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <Dumbbell className="w-12 h-12 mx-auto mb-4 opacity-30" />
@@ -556,6 +546,8 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                     Link a workout template for members to follow during this class
                   </p>
                 </div>
+              </Select>
+                </div>
 
                 <Button onClick={handleSaveEdit} disabled={saving} className="w-full">
                   {saving ? (
@@ -595,13 +587,13 @@ export function ClassDetailDialog({ classEvent, open, onClose, onRefresh, onRefr
                           variant="outline"
                           onClick={() => handleAddBooking(member.id)}
                           disabled={loading}
-                        >
+                          >
                           <UserPlus className="w-4 h-4 mr-1" />
                           {confirmedBookings.length >= classEvent.capacity ? 'Add to Waitlist' : 'Book'}
                         </Button>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 )}
               </ScrollArea>
             </TabsContent>

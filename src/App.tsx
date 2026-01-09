@@ -50,7 +50,6 @@ const POSPage = lazy(() => import("./modules/pos").then(m => ({ default: m.POSPa
 const KioskPage = lazy(() => import("./modules/kiosk").then(m => ({ default: m.KioskPage })));
 const InvoicesPage = lazy(() => import("./modules/invoices").then(m => ({ default: m.InvoicesPage })));
 const DisciplinesPage = lazy(() => import("./modules/disciplines").then(m => ({ default: m.DisciplinesPage })));
-const CommunicationsPage = lazy(() => import("./pages/Communications"));
  
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -174,7 +173,6 @@ function AppRoutes() {
       <Route path="/leads" element={<ProtectedRoute moduleName="Leads"><LeadsPage /></ProtectedRoute>} />
       <Route path="/inventory" element={<ProtectedRoute moduleName="Inventory"><InventoryPage /></ProtectedRoute>} />
       <Route path="/pos" element={<ProtectedRoute moduleName="POS"><POSPage /></ProtectedRoute>} />
-      <Route path="/communications" element={<ProtectedRoute moduleName="Communications"><CommunicationsPage /></ProtectedRoute>} />
  
       {/* Special */}
       <Route path="/kiosk" element={<KioskPage />} />
