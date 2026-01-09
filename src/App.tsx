@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { ModuleLoader } from "@/components/common/ModuleLoader";
 import { MaintenanceGuard } from "./components/auth/MaintenanceGuard";
 
+import { MyGymsPage } from "./pages/MyGyms";
 import { SaaSAdminGuard } from "./components/auth/SaaSAdminGuard";
 
 import Index from "./pages/Index";
@@ -194,7 +195,7 @@ function AppRoutes() {
       <Route path="/403" element={<Forbidden />} />
       <Route path="/500" element={<ServerError />} />
       <Route path="/offline" element={<Offline />} />
-
+      <Route path="/my-gyms" element={<ProtectedRoute moduleName="My Gyms"><MyGymsPage /></ProtectedRoute>} />
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
