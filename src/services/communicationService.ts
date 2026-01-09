@@ -1,14 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { StaffMessage, WhatsAppMessage, SendStaffMessageParams, SendWhatsAppMessageParams } from '@/types/communications';
 
-export async function getStaffMessages(conversationUserId?: string) {
+/**
+ * Get staff messages, optionally filtered by conversation user
+ */
+export async function getStaffMessages(conversationUserId?: string): Promise<StaffMessage[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user?.id) return [];
+
   let query = supabase
-    .from('staff_messages')
-    .select(`
-      *,
-      sender:auth.users!sender_id(id, email, user_metadata),
-      recipient:auth.users!recipient_id(id, email, user_metadata)
-    `)
+    .from('staff_messages' as any)
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -18,75 +20,89 @@ export async function getStaffMessages(conversationUserId?: string) {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as StaffMessage[];
+  return (data || []) as unknown as StaffMessage[];
 }
 
-export async function sendStaffMessage(params: SendStaffMessageParams) {
+/**
+ * Get current user's active gym ID from user_roles
+ */
+async function getCurrentGymId(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('gym_id')
+    .eq('user_id', userId)
+    .limit(1)
+    .single();
+  
+  return data?.gym_id || null;
+}
+
+/**
+ * Send a staff message
+ */
+export async function sendStaffMessage(params: SendStaffMessageParams): Promise<StaffMessage> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user?.id) throw new Error('User not authenticated');
 
-  const { data: gymData } = await supabase
-    .from('user_gyms')
-    .select('gym_id')
-    .eq('user_id', userData.user.id)
-    .eq('is_active', true)
-    .single();
-
-  if (!gymData?.gym_id) throw new Error('No active gym found');
+  const gymId = await getCurrentGymId(userData.user.id);
+  if (!gymId) throw new Error('No active gym found');
 
   const { data, error } = await supabase
-    .from('staff_messages')
+    .from('staff_messages' as any)
     .insert({
-      gym_id: gymData.gym_id,
+      gym_id: gymId,
       sender_id: userData.user.id,
       recipient_id: params.recipient_id,
       message: params.message,
     })
-    .select(`
-      *,
-      sender:auth.users!sender_id(id, email, user_metadata)
-    `)
+    .select('*')
     .single();
 
   if (error) throw error;
-  return data as StaffMessage;
+  return data as unknown as StaffMessage;
 }
 
-export async function markStaffMessageAsRead(messageId: string) {
+/**
+ * Mark a staff message as read
+ */
+export async function markStaffMessageAsRead(messageId: string): Promise<StaffMessage> {
   const { data, error } = await supabase
-    .from('staff_messages')
+    .from('staff_messages' as any)
     .update({ is_read: true })
     .eq('id', messageId)
-    .select()
+    .select('*')
     .single();
 
   if (error) throw error;
-  return data as StaffMessage;
+  return data as unknown as StaffMessage;
 }
 
-export async function getUnreadCount() {
-  const { data, error } = await supabase
-    .from('staff_messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('recipient_id', supabase.auth.getUser().then(u => u.data.user?.id))
+/**
+ * Get unread message count for current user
+ */
+export async function getUnreadCount(): Promise<number> {
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user?.id) return 0;
+
+  const { count, error } = await supabase
+    .from('staff_messages' as any)
+    .select('*', { count: 'exact', head: true })
+    .eq('recipient_id', userData.user.id)
     .eq('is_read', false);
 
-  if (error) throw error;
-  return data?.length || 0;
+  if (error) return 0;
+  return count || 0;
 }
 
-export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams) {
+/**
+ * Send a WhatsApp message
+ */
+export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams): Promise<WhatsAppMessage> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData?.user?.id) throw new Error('User not authenticated');
 
-  const { data: gymData } = await supabase
-    .from('user_gyms')
-    .select('gym_id')
-    .eq('user_id', userData.user.id)
-    .eq('is_active', true)
-    .single();
-
-  if (!gymData?.gym_id) throw new Error('No active gym found');
+  const gymId = await getCurrentGymId(userData.user.id);
+  if (!gymId) throw new Error('No active gym found');
 
   let phoneNumber = params.phone_number;
   if (params.member_id) {
@@ -95,15 +111,15 @@ export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams) {
       .select('phone')
       .eq('id', params.member_id)
       .single();
-    if (memberData) phoneNumber = memberData.phone;
+    if (memberData) phoneNumber = memberData.phone || undefined;
   }
 
   if (!phoneNumber) throw new Error('No phone number provided');
 
   const { data, error } = await supabase
-    .from('whatsapp_messages')
+    .from('whatsapp_messages' as any)
     .insert({
-      gym_id: gymData.gym_id,
+      gym_id: gymId,
       sent_by: userData.user.id,
       member_id: params.member_id || null,
       phone_number: phoneNumber,
@@ -111,17 +127,14 @@ export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams) {
       template_name: params.template_name || null,
       status: 'pending',
     })
-    .select(`
-      *,
-      sent_by_user:auth.users!sent_by(id, email, user_metadata),
-      member:members!member_id(id, full_name, phone)
-    `)
+    .select('*')
     .single();
 
   if (error) throw error;
 
-  const whatsappData = data as WhatsAppMessage;
+  const whatsappData = data as unknown as WhatsAppMessage;
 
+  // Attempt to send via WhatsApp API (placeholder)
   try {
     const response = await fetch('/api/whatsapp/send', {
       method: 'POST',
@@ -132,26 +145,17 @@ export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams) {
       }),
     });
 
-    if (response.ok) {
-      await supabase
-        .from('whatsapp_messages')
-        .update({
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-        })
-        .eq('id', whatsappData.id);
-    } else {
-      await supabase
-        .from('whatsapp_messages')
-        .update({
-          status: 'failed',
-          error_message: 'Failed to send',
-        })
-        .eq('id', whatsappData.id);
-    }
+    const updatePayload = response.ok 
+      ? { status: 'sent', sent_at: new Date().toISOString() }
+      : { status: 'failed', error_message: 'Failed to send' };
+
+    await supabase
+      .from('whatsapp_messages' as any)
+      .update(updatePayload)
+      .eq('id', whatsappData.id);
   } catch (err) {
     await supabase
-      .from('whatsapp_messages')
+      .from('whatsapp_messages' as any)
       .update({
         status: 'failed',
         error_message: err instanceof Error ? err.message : 'Unknown error',
@@ -162,14 +166,13 @@ export async function sendWhatsAppMessage(params: SendWhatsAppMessageParams) {
   return whatsappData;
 }
 
-export async function getWhatsAppHistory(memberId?: string) {
+/**
+ * Get WhatsApp message history
+ */
+export async function getWhatsAppHistory(memberId?: string): Promise<WhatsAppMessage[]> {
   let query = supabase
-    .from('whatsapp_messages')
-    .select(`
-      *,
-      sent_by_user:auth.users!sent_by(id, email, user_metadata),
-      member:members!member_id(id, full_name, phone)
-    `)
+    .from('whatsapp_messages' as any)
+    .select('*')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -179,5 +182,5 @@ export async function getWhatsAppHistory(memberId?: string) {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data as WhatsAppMessage[];
+  return (data || []) as unknown as WhatsAppMessage[];
 }
