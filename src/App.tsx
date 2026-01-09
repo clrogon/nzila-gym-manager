@@ -46,12 +46,8 @@ const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ defaul
 const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
 const LeadsPage = lazy(() => import("./modules/leads").then(m => ({ default: m.LeadsPage })));
 const InventoryPage = lazy(() => import("./modules/inventory").then(m => ({ default: m.InventoryPage })));
-const POSPage = lazy(() => import("./modules/pos").then(m => ({ default: m.POSPage })));
-const KioskPage = lazy(() => import("./modules/kiosk").then(m => ({ default: m.KioskPage })));
-const InvoicesPage = lazy(() => import("./modules/invoices").then(m => ({ default: m.InvoicesPage })));
-const DisciplinesPage = lazy(() => import("./modules/disciplines").then(m => ({ default: m.DisciplinesPage })));
-const CommunicationsPage = lazy(() => import("./pages/Communications"));
- 
+const CommunicationsPage = lazy(() => import("./pages/Communications")).then(m => ({ default: m.CommunicationsPage })));
+const DisciplinesPage = lazy(() => import("./modules/disciplines")).then(m => ({ default: m.DisciplinesPage })));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
