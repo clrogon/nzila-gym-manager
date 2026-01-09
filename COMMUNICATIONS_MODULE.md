@@ -47,20 +47,15 @@
 supabase migration up
 
 # Or use the Supabase Dashboard:
-# Go to Database > Migrations and run the migration file
+# Go to Database > Migrations and run migration file
 ```
 
-### 2. Add to Navigation
-Add Communications link to the sidebar/navigation menu:
-```tsx
-import { MessageSquare } from 'lucide-react';
-
-// Add navigation item
-<NavLink to="/communications">
-  <MessageSquare className="w-4 h-4" />
-  Communications
-</NavLink>
-```
+### 2. Add to Navigation ✅ DONE
+Communications link added to sidebar navigation in `src/components/layout/DashboardLayout.tsx`:
+- Icon: MessageSquare
+- Label: "Comunicações"
+- Route: `/communications`
+- Accessible to: staff members (no role restrictions)
 
 ### 3. Test After Migration
 Once migration runs:

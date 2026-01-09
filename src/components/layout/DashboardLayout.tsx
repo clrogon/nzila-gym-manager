@@ -39,6 +39,7 @@ import {
   Award,
   Home,
   User,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ThemeToggle from '@/components/common/ThemeToggle';
@@ -61,12 +62,13 @@ const gymNavItems: NavItem[] = [
   { icon: Target, label: 'Plano de Treino', href: '/training', permission: 'training:read' },
   { icon: Award, label: 'Biblioteca de Treinos', href: '/disciplines', permission: 'training:read' },
   { icon: CreditCard, label: 'Financeiro', href: '/payments', permission: 'payments:read' },
-  { icon: FileText, label: 'Facturas', href: '/invoices', permission: 'payments:read' },
+  { icon: FileText, label: 'Faturas', href: '/invoices', permission: 'payments:read' },
   { icon: Package, label: 'Inventário', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: ShoppingCart, label: 'POS', href: '/pos', permission: 'payments:read' },
   { icon: Scan, label: 'Quiosque', href: '/kiosk', requiredRoles: ['super_admin', 'gym_owner', 'admin', 'staff'] },
   { icon: UserCog, label: 'Treinadores', href: '/staff', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
   { icon: Settings, label: 'Definições', href: '/settings', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
+  { icon: MessageSquare, label: 'Comunicações', href: '/communications' },
 ];
 
 /* Navegação para membros */
