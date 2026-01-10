@@ -66,9 +66,13 @@ export default function MemberCheckIn() {
         .select('id, full_name, status')
         .eq('user_id', user.id)
         .eq('gym_id', currentGym.id)
-        .single();
+        .maybeSingle();
 
       if (memberError) throw memberError;
+      if (!member) {
+        setLoading(false);
+        return;
+      }
       setMemberData(member);
 
       if (member) {
@@ -83,7 +87,7 @@ export default function MemberCheckIn() {
           .gte('checked_in_at', today.toISOString())
           .order('checked_in_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
         setTodayCheckIn(todayCheckInData);
 
