@@ -71,6 +71,10 @@ export const classSchema = z.object({
   coach_id: z.string().uuid().optional().or(z.literal('')),
   is_recurring: z.boolean().optional(),
   recurrence_rule: z.string().max(200).optional().or(z.literal('')),
+  discipline_id: z.string().uuid().optional().or(z.literal('')),
+  workout_template_id: z.string().uuid().optional().or(z.literal('')),
+  is_mandatory: z.boolean().optional(),
+  is_active: z.boolean().optional(),
 });
 
 export type ClassFormData = z.infer<typeof classSchema>;
@@ -102,9 +106,13 @@ export const workoutTemplateSchema = z.object({
   name: nameSchema,
   description: z.string().trim().max(1000, 'Description too long').optional().or(z.literal('')),
   category: z.string().trim().max(50, 'Category too long').optional(),
-  difficulty: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
+  difficulty: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).optional(),
+  discipline_id: z.string().uuid().optional().or(z.literal('')),
   estimated_duration: z.number().int().positive('Duration must be positive').max(480, 'Duration cannot exceed 8 hours').optional(),
   is_public: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+  min_rank_level: z.number().int().nonnegative().max(10).optional().nullable(),
+  max_rank_level: z.number().int().nonnegative().max(10).optional().nullable(),
   exercises: z.array(z.object({
     name: z.string().trim().min(1).max(100),
     sets: z.number().int().positive().max(100).optional(),
@@ -116,6 +124,24 @@ export const workoutTemplateSchema = z.object({
 });
 
 export type WorkoutTemplateFormData = z.infer<typeof workoutTemplateSchema>;
+
+// ===== Exercise Schemas =====
+export const exerciseSchema = z.object({
+  name: nameSchema,
+  description: z.string().trim().max(1000, 'Description too long').optional().or(z.literal('')),
+  category: z.string().trim().max(50, 'Category too long').optional(),
+  difficulty: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).optional(),
+  discipline_id: z.string().uuid().optional().or(z.literal('')),
+  equipment: z.string().trim().max(500).optional().or(z.literal('')),
+  muscle_groups: z.array(z.string()).optional(),
+  instructions: z.string().trim().max(5000, 'Instructions too long').optional().or(z.literal('')),
+  video_url: z.string().url('Invalid URL').max(500).optional().or(z.literal('')),
+  is_active: z.boolean().optional(),
+  min_rank_level: z.number().int().nonnegative().max(10).optional().nullable(),
+  max_rank_level: z.number().int().nonnegative().max(10).optional().nullable(),
+});
+
+export type ExerciseFormData = z.infer<typeof exerciseSchema>;
 
 // ===== Discount Schemas =====
 export const discountSchema = z.object({

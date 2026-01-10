@@ -413,6 +413,7 @@ export type Database = {
           end_time: string
           gym_id: string
           id: string
+          is_mandatory: boolean | null
           location_id: string | null
           recurrence_days: number[] | null
           recurrence_type: string
@@ -432,6 +433,7 @@ export type Database = {
           end_time: string
           gym_id: string
           id?: string
+          is_mandatory?: boolean | null
           location_id?: string | null
           recurrence_days?: number[] | null
           recurrence_type: string
@@ -451,6 +453,7 @@ export type Database = {
           end_time?: string
           gym_id?: string
           id?: string
+          is_mandatory?: boolean | null
           location_id?: string | null
           recurrence_days?: number[] | null
           recurrence_type?: string
@@ -541,6 +544,8 @@ export type Database = {
           end_time: string
           gym_id: string
           id: string
+          is_active: boolean | null
+          is_mandatory: boolean | null
           is_recurring: boolean | null
           location_id: string | null
           recurrence_rule: string | null
@@ -561,6 +566,8 @@ export type Database = {
           end_time: string
           gym_id: string
           id?: string
+          is_active?: boolean | null
+          is_mandatory?: boolean | null
           is_recurring?: boolean | null
           location_id?: string | null
           recurrence_rule?: string | null
@@ -581,6 +588,8 @@ export type Database = {
           end_time?: string
           gym_id?: string
           id?: string
+          is_active?: boolean | null
+          is_mandatory?: boolean | null
           is_recurring?: boolean | null
           location_id?: string | null
           recurrence_rule?: string | null
@@ -974,11 +983,15 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          difficulty: string | null
+          discipline_id: string | null
           equipment: string | null
           gym_id: string
           id: string
           instructions: string | null
           is_active: boolean | null
+          max_rank_level: number | null
+          min_rank_level: number | null
           muscle_groups: string[] | null
           name: string
           updated_at: string
@@ -989,11 +1002,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          difficulty?: string | null
+          discipline_id?: string | null
           equipment?: string | null
           gym_id: string
           id?: string
           instructions?: string | null
           is_active?: boolean | null
+          max_rank_level?: number | null
+          min_rank_level?: number | null
           muscle_groups?: string[] | null
           name: string
           updated_at?: string
@@ -1004,11 +1021,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          difficulty?: string | null
+          discipline_id?: string | null
           equipment?: string | null
           gym_id?: string
           id?: string
           instructions?: string | null
           is_active?: boolean | null
+          max_rank_level?: number | null
+          min_rank_level?: number | null
           muscle_groups?: string[] | null
           name?: string
           updated_at?: string
@@ -1130,11 +1151,14 @@ export type Database = {
           created_by: string | null
           description: string | null
           difficulty: string | null
+          discipline_id: string | null
           estimated_duration: number | null
           exercises: Json | null
           gym_id: string
           id: string
           is_active: boolean | null
+          max_rank_level: number | null
+          min_rank_level: number | null
           name: string
           updated_at: string
         }
@@ -1144,11 +1168,14 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           difficulty?: string | null
+          discipline_id?: string | null
           estimated_duration?: number | null
           exercises?: Json | null
           gym_id: string
           id?: string
           is_active?: boolean | null
+          max_rank_level?: number | null
+          min_rank_level?: number | null
           name: string
           updated_at?: string
         }
@@ -1158,11 +1185,14 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           difficulty?: string | null
+          discipline_id?: string | null
           estimated_duration?: number | null
           exercises?: Json | null
           gym_id?: string
           id?: string
           is_active?: boolean | null
+          max_rank_level?: number | null
+          min_rank_level?: number | null
           name?: string
           updated_at?: string
         }
@@ -2659,11 +2689,15 @@ export type Database = {
           created_by: string | null
           description: string | null
           difficulty: string | null
+          discipline_id: string | null
           estimated_duration: number | null
           exercises: Json | null
           gym_id: string
           id: string
+          is_active: boolean | null
           is_public: boolean | null
+          max_rank_level: number | null
+          min_rank_level: number | null
           name: string
           updated_at: string
         }
@@ -2673,11 +2707,15 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           difficulty?: string | null
+          discipline_id?: string | null
           estimated_duration?: number | null
           exercises?: Json | null
           gym_id: string
           id?: string
+          is_active?: boolean | null
           is_public?: boolean | null
+          max_rank_level?: number | null
+          min_rank_level?: number | null
           name: string
           updated_at?: string
         }
@@ -2687,12 +2725,16 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           difficulty?: string | null
+          discipline_id?: string | null
           estimated_duration?: number | null
           exercises?: Json | null
           gym_id?: string
           id?: string
+          is_active?: boolean | null
           is_public?: boolean | null
-          name?: string
+          max_rank_level?: number | null
+          min_rank_level?: number | null
+          name: string
           updated_at?: string
         }
         Relationships: [
