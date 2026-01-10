@@ -77,9 +77,13 @@ export default function MemberFinances() {
         .select('id, full_name')
         .eq('user_id', user.id)
         .eq('gym_id', currentGym.id)
-        .single();
+        .maybeSingle();
 
       if (memberError) throw memberError;
+      if (!member) {
+        setLoading(false);
+        return;
+      }
       setMemberData(member);
 
       if (member) {
