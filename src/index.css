@@ -96,7 +96,11 @@
     --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.3);
     --shadow-md: 0 4px 8px hsl(0 0% 0% / 0.4);
     --shadow-lg: 0 8px 16px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 20px 40px hsl(0 0% 0% / 0.6);
+    --shadow-2xl: 0 30px 60px hsl(0 0% 0% / 0.7);
     --shadow-gold: 0 0 30px hsl(45 93% 56% / 0.15);
+    --shadow-gold-lg: 0 0 60px hsl(45 93% 56% / 0.25);
+    --shadow-gold-glow: 0 4px 30px hsl(45 93% 56% / 0.3);
   }
 
   /* Light mode override (if needed) */

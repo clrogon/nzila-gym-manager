@@ -39,6 +39,8 @@ import {
   Award,
   Home,
   User,
+  Sparkles,
+  Compass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ThemeToggle from '@/components/common/ThemeToggle';
@@ -58,8 +60,9 @@ const gymNavItems: NavItem[] = [
   { icon: TrendingUp, label: 'Leads', href: '/leads', permission: 'members:read' },
   { icon: UserCheck, label: 'Entradas', href: '/check-ins', permission: 'checkins:read' },
   { icon: CalendarDays, label: 'Agenda', href: '/calendar', permission: 'classes:read' },
-  { icon: Target, label: 'Plano de Treino', href: '/training', permission: 'training:read' },
-  { icon: Award, label: 'Biblioteca de Treinos', href: '/disciplines', permission: 'training:read' },
+  { icon: Target, label: 'Centro de Treino', href: '/training', permission: 'training:read' },
+  { icon: Compass, label: 'Hub de Treino', href: '/training-hub', permission: 'training:read' },
+  { icon: Award, label: 'Disciplinas', href: '/disciplines', permission: 'training:read' },
   { icon: CreditCard, label: 'Financeiro', href: '/payments', permission: 'payments:read' },
   { icon: FileText, label: 'Facturas', href: '/invoices', permission: 'payments:read' },
   { icon: Package, label: 'Inventário', href: '/inventory', requiredRoles: ['super_admin', 'gym_owner', 'admin'] },
@@ -72,6 +75,8 @@ const gymNavItems: NavItem[] = [
 /* Navegação para membros */
 const memberNavItems: NavItem[] = [
   { icon: Home, label: 'Meu Portal', href: '/member/portal' },
+  { icon: Sparkles, label: 'Dashboard Elite', href: '/member/elite' },
+  { icon: Compass, label: 'Hub de Treino', href: '/training-hub' },
   { icon: UserCheck, label: 'Check-In', href: '/member/checkin' },
   { icon: CalendarDays, label: 'Minhas Aulas', href: '/bookings' },
   { icon: CreditCard, label: 'Pagamentos', href: '/member/finances' },
