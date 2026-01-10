@@ -50,6 +50,7 @@ export interface Location {
 export interface Coach {
   id: string;
   full_name: string;
+  disciplines?: string[];
 }
 
 /**
@@ -239,6 +240,7 @@ export function useCalendarData(gymId: string | undefined, weekStart: Date, week
         data?.map((r: any) => ({
           id: r.user_id,
           full_name: r.profiles.full_name,
+          disciplines: [], // To be populated when trainer_disciplines table exists
         })) || [];
 
       return list;

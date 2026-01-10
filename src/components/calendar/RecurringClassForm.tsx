@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,12 +27,18 @@ interface Location {
   capacity?: number;
 }
 
+interface Discipline {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
 interface RecurringClassFormProps {
   gymId: string;
-  disciplines: Array<{ id: string; name: string }>;
+  disciplines: Array<Discipline>;
   classTypes: Array<{ id: string; name: string }>;
   locations: Location[];
-  coaches: Array<{ id: string; full_name: string }>;
+  coaches: Array<{ id: string; full_name: string; disciplines?: string[] }>;
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -69,6 +75,16 @@ export function RecurringClassForm({
   const [locationId, setLocationId] = useState('');
   const [coachId, setCoachId] = useState('');
   const [capacity, setCapacity] = useState('20');
+
+  // Filter coaches based on selected discipline
+  const qualifiedCoaches = useMemo(() => {
+    if (!disciplineId) return coaches;
+
+    return coaches.filter((coach) => {
+      const coachDisciplines = coach.disciplines || [];
+      return coachDisciplines.includes(disciplineId);
+    });
+  }, [coaches, disciplineId]);
   
   const [recurrenceType, setRecurrenceType] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 3, 5]);
@@ -541,7 +557,7 @@ function CommonFields({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Nenhum</SelectItem>
-              {coaches.map(c => (
+              {qualifiedCoaches.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
               ))}
             </SelectContent>

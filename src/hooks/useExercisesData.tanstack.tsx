@@ -17,6 +17,12 @@ export interface GymExercise {
   muscle_groups: string[] | null;
   video_url: string | null;
   is_active: boolean;
+  discipline_id?: string | null;
+  discipline?: {
+    id: string;
+    name: string;
+    is_active: boolean;
+  } | null;
 }
 
 /**
@@ -31,6 +37,7 @@ export interface ExerciseFormData {
   muscle_groups: string[];
   video_url: string;
   is_active: boolean;
+  discipline_id: string | null;
 }
 
 /**
@@ -94,7 +101,14 @@ export function useExercisesData(gymId: string | undefined) {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+
+      // Filter out exercises with inactive disciplines
+      // This will work after migration is run and discipline_id column exists
+      const filtered = (data || []).filter((ex: any) => {
+        return !ex.discipline || (ex.discipline && ex.discipline.is_active !== false);
+      });
+
+      return filtered;
     },
     // Cache for 15 minutes (exercises are stable but can change)
     staleTime: 15 * 60 * 1000,
@@ -111,7 +125,7 @@ export function useExercisesData(gymId: string | undefined) {
   const exercisesByCategory = useMemo(() => {
     if (!exercises) return {};
     const map: Record<string, GymExercise[]> = {};
-    (exercises || []).forEach((exercise) => {
+    exercises.forEach((exercise) => {
       const category = exercise.category || 'uncategorized';
       if (!map[category]) {
         map[category] = [];
@@ -128,12 +142,26 @@ export function useExercisesData(gymId: string | undefined) {
         throw new Error('Gym ID is required');
       }
 
+      const insertData: any = {
+        name: exerciseData.name,
+        description: exerciseData.description,
+        category: exerciseData.category,
+        equipment: exerciseData.equipment,
+        instructions: exerciseData.instructions,
+        muscle_groups: exerciseData.muscle_groups,
+        video_url: exerciseData.video_url,
+        is_active: exerciseData.is_active,
+        gym_id: gymId,
+      };
+
+      // Only include discipline_id if provided (for after migration)
+      if (exerciseData.discipline_id) {
+        insertData.discipline_id = exerciseData.discipline_id;
+      }
+
       const { data, error } = await supabase
         .from('gym_exercises')
-        .insert([{
-          ...exerciseData,
-          gym_id: gymId
-        }])
+        .insert([insertData])
         .select()
         .single();
 
@@ -185,9 +213,18 @@ export function useExercisesData(gymId: string | undefined) {
   // Update exercise mutation with optimistic update
   const updateExercise = useMutation({
     mutationFn: async ({ id, ...exerciseData }: Partial<ExerciseFormData> & { id: string }) => {
+      const updateData: any = { ...exerciseData };
+
+      // Only include discipline_id in update if explicitly provided (for after migration)
+      if (exerciseData.discipline_id !== undefined) {
+        updateData.discipline_id = exerciseData.discipline_id;
+      } else {
+        delete (updateData as any).discipline_id;
+      }
+
       const { data, error } = await supabase
         .from('gym_exercises')
-        .update(exerciseData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

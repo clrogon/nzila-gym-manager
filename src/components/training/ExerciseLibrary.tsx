@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { getCategoryNames } from '@/lib/seedData';
 import { useExercisesData } from '@/hooks/useExercisesData.tanstack';
+import { useDisciplinesData } from '@/hooks/useDisciplinesData.tanstack';
 import type { GymExercise, ExerciseFormData } from '@/hooks/useExercisesData.tanstack';
 import {
   Plus, Search, Loader2, Edit2, Trash2, Dumbbell, Play, Filter
@@ -35,7 +36,7 @@ const EQUIPMENT_OPTIONS = [
 
 export function ExerciseLibrary() {
   const { currentGym } = useGym();
-  
+
   // Use TanStack Query hook for exercise data
   const {
     exercises,
@@ -44,11 +45,15 @@ export function ExerciseLibrary() {
     updateExercise,
     deleteExercise,
   } = useExercisesData(currentGym?.id);
-  
+
+  // Fetch disciplines for filter
+  const { activeDisciplines } = useDisciplinesData(currentGym?.id);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterMuscle, setFilterMuscle] = useState<string>('all');
   const [filterEquipment, setFilterEquipment] = useState<string>('all');
+  const [filterDiscipline, setFilterDiscipline] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
   // Dialog states
@@ -70,6 +75,7 @@ export function ExerciseLibrary() {
     muscle_groups: [] as string[],
     video_url: '',
     is_active: true,
+    discipline_id: '' as string,
   });
 
   const resetForm = () => {
@@ -82,6 +88,7 @@ export function ExerciseLibrary() {
       muscle_groups: [] as string[],
       video_url: '',
       is_active: true,
+      discipline_id: '' as string,
     });
   };
 
@@ -93,7 +100,7 @@ export function ExerciseLibrary() {
 
     setIsSubmitting(true);
     try {
-      await createExercise.mutateAsync({
+      const exerciseData: any = {
         name: formData.name.trim(),
         description: formData.description.trim() || '',
         category: formData.category,
@@ -102,12 +109,19 @@ export function ExerciseLibrary() {
         muscle_groups: formData.muscle_groups.length > 0 ? formData.muscle_groups : [],
         video_url: formData.video_url.trim() || '',
         is_active: formData.is_active,
-      } as ExerciseFormData);
-      
+      };
+
+      // Only include discipline_id if it has a value (after migration)
+      if (formData.discipline_id) {
+        exerciseData.discipline_id = formData.discipline_id;
+      }
+
+      await createExercise.mutateAsync(exerciseData as ExerciseFormData);
+
       setIsCreateOpen(false);
       resetForm();
     } catch (error) {
-      // Toast is already handled by the hook
+      // Toast is already handled by hook
     } finally {
       setIsSubmitting(false);
     }
@@ -186,7 +200,9 @@ export function ExerciseLibrary() {
     const matchesCategory = filterCategory === 'all' || ex.category === filterCategory;
     const matchesMuscle = filterMuscle === 'all' || ex.muscle_groups?.includes(filterMuscle);
     const matchesEquipment = filterEquipment === 'all' || ex.equipment === filterEquipment;
-    return matchesSearch && matchesCategory && matchesMuscle && matchesEquipment;
+    const exDisciplineId = (ex as any).discipline_id;
+    const matchesDiscipline = filterDiscipline === 'all' || exDisciplineId === filterDiscipline;
+    return matchesSearch && matchesCategory && matchesMuscle && matchesEquipment && matchesDiscipline;
   });
 
   const activeFiltersCount = [filterCategory, filterMuscle, filterEquipment].filter(f => f !== 'all').length;
@@ -245,7 +261,7 @@ export function ExerciseLibrary() {
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 pt-2 border-t">
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Categoria</Label>
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
@@ -275,8 +291,9 @@ export function ExerciseLibrary() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Equipamento</Label>
-                  <Select value={filterEquipment} onValueChange={setFilterEquipment}>
+                  <Label>Equipamento</Label>
+                  <Select value={formData.equipment} onValueChange={(v) => setFormData((prev: any) => ({ ...prev, equipment: v }))}>
+                    <SelectTrigger placeholder="Selecionar equipamento" />
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -288,6 +305,38 @@ export function ExerciseLibrary() {
                     </SelectContent>
                   </Select>
                 </div>
+                {activeDisciplines && activeDisciplines.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Disciplina</Label>
+                    <Select value={formData.discipline_id || ''} onValueChange={(v) => setFormData((prev: any) => ({ ...prev, discipline_id: v || '' }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Nenhuma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhuma</SelectItem>
+                        {activeDisciplines.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {activeDisciplines && activeDisciplines.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Disciplina</Label>
+                    <Select value={filterDiscipline} onValueChange={setFilterDiscipline}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as disciplinas</SelectItem>
+                        {activeDisciplines.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -396,19 +445,48 @@ export function ExerciseLibrary() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select value={formData.category} onValueChange={(v) => setFormData(prev => ({ ...prev, category: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Equipamento</Label>
+                  <Select value={formData.equipment} onValueChange={(v) => setFormData(prev => ({ ...prev, equipment: v }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecionar equipamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EQUIPMENT_OPTIONS.map((e) => (
+                        <SelectItem key={e} value={e}>{e}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {activeDisciplines && activeDisciplines.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Disciplina</Label>
+                    <Select value={formData.discipline_id} onValueChange={(v) => setFormData(prev => ({ ...prev, discipline_id: v || '' }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Nenhuma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhuma</SelectItem>
+                        {activeDisciplines.map((d) => (
+                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
               <div className="space-y-2">
                 <Label>Equipamento</Label>

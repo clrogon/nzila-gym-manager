@@ -15,6 +15,12 @@ export interface WorkoutTemplate {
   difficulty: string | null;
   estimated_duration: number | null;
   exercises: any[] | null;
+  discipline_id?: string | null;
+  discipline?: {
+    id: string;
+    name: string;
+    is_active: boolean;
+  } | null;
 }
 
 /**
@@ -27,6 +33,7 @@ export interface WorkoutTemplateFormData {
   difficulty: string;
   estimated_duration: number;
   exercises: any[];
+  discipline_id?: string | null;
 }
 
 /**
@@ -90,7 +97,13 @@ export function useWorkoutsData(gymId: string | undefined) {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+
+      // Filter out workouts with inactive disciplines (after migration)
+      const filtered = (data || []).filter((wt: any) => {
+        return !wt.discipline || (wt.discipline && wt.discipline.is_active !== false);
+      });
+
+      return filtered;
     },
     // Cache for 10 minutes (templates are moderately stable)
     staleTime: 10 * 60 * 1000,
@@ -133,12 +146,24 @@ export function useWorkoutsData(gymId: string | undefined) {
         throw new Error('Gym ID is required');
       }
 
+      const insertData: any = {
+        name: templateData.name,
+        description: templateData.description,
+        category: templateData.category,
+        difficulty: templateData.difficulty,
+        estimated_duration: templateData.estimated_duration,
+        exercises: templateData.exercises,
+        gym_id: gymId,
+      };
+
+      // Only include discipline_id if provided (after migration)
+      if (templateData.discipline_id) {
+        insertData.discipline_id = templateData.discipline_id;
+      }
+
       const { data, error } = await supabase
         .from('workout_templates')
-        .insert([{
-          ...templateData,
-          gym_id: gymId
-        }])
+        .insert([insertData])
         .select()
         .single();
 
@@ -190,9 +215,18 @@ export function useWorkoutsData(gymId: string | undefined) {
   // Update template mutation with optimistic update
   const updateTemplate = useMutation({
     mutationFn: async ({ id, ...templateData }: Partial<WorkoutTemplateFormData> & { id: string }) => {
+      const updateData: any = { ...templateData };
+
+      // Only include discipline_id if explicitly provided (after migration)
+      if (templateData.discipline_id !== undefined) {
+        updateData.discipline_id = templateData.discipline_id;
+      } else {
+        delete (updateData as any).discipline_id;
+      }
+
       const { data, error } = await supabase
         .from('workout_templates')
-        .update(templateData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
