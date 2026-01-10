@@ -229,6 +229,7 @@ export function useDisciplinesData(gymId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
       toast({
         title: 'Success',
         description: 'Discipline deleted successfully',
@@ -281,6 +282,7 @@ export function useDisciplinesData(gymId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: disciplinesQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
       toast({
         title: 'Success',
         description: 'Discipline status updated',
