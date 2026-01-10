@@ -44,12 +44,14 @@ const GymManagement = lazy(() => import("./modules/saas-admin").then(m => ({ def
 const StaffPage = lazy(() => import("./modules/staff").then(m => ({ default: m.StaffPage })));
 const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ default: m.CalendarPage })));
 const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
+const TrainingHubPage = lazy(() => import("@/components/training/TrainingHub").then(m => ({ default: m.TrainingHub })));
 const LeadsPage = lazy(() => import("./modules/leads").then(m => ({ default: m.LeadsPage })));
 const InventoryPage = lazy(() => import("./modules/inventory").then(m => ({ default: m.InventoryPage })));
 const POSPage = lazy(() => import("./modules/pos").then(m => ({ default: m.POSPage })));
 const KioskPage = lazy(() => import("./modules/kiosk").then(m => ({ default: m.KioskPage })));
 const InvoicesPage = lazy(() => import("./modules/invoices").then(m => ({ default: m.InvoicesPage })));
 const DisciplinesPage = lazy(() => import("./modules/disciplines").then(m => ({ default: m.DisciplinesPage })));
+const EliteDashboardPage = lazy(() => import("@/components/member/elite/EliteDashboard").then(m => ({ default: m.EliteDashboard })));
  
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -159,6 +161,7 @@ function AppRoutes() {
  
       {/* Member */}
       <Route path="/member/portal" element={<ProtectedRoute moduleName="Member Portal"><MemberPortalPage /></ProtectedRoute>} />
+      <Route path="/member/elite" element={<ProtectedRoute moduleName="Elite Dashboard"><EliteDashboardPage /></ProtectedRoute>} />
       <Route path="/member/checkin" element={<ProtectedRoute moduleName="Member Check-In"><MemberCheckInPage /></ProtectedRoute>} />
       <Route path="/member/finances" element={<ProtectedRoute moduleName="Member Finances"><MemberFinancesPage /></ProtectedRoute>} />
       <Route path="/member/activity" element={<ProtectedRoute moduleName="Member Activity"><MemberActivityPage /></ProtectedRoute>} />
@@ -167,6 +170,7 @@ function AppRoutes() {
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
       <Route path="/calendar" element={<ProtectedRoute moduleName="Calendar"><CalendarPage /></ProtectedRoute>} />
       <Route path="/training" element={<ProtectedRoute moduleName="Training"><TrainingPage /></ProtectedRoute>} />
+      <Route path="/training-hub" element={<ProtectedRoute moduleName="Training Hub"><TrainingHubPage /></ProtectedRoute>} />
       <Route path="/disciplines" element={<ProtectedRoute moduleName="Disciplines"><DisciplinesPage /></ProtectedRoute>} />
       <Route path="/payments" element={<ProtectedRoute moduleName="Payments"><PaymentsPage /></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute moduleName="Invoices"><InvoicesPage /></ProtectedRoute>} />
