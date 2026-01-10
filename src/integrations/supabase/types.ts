@@ -2954,6 +2954,25 @@ export type Database = {
         }[]
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      get_gym_members_safe: {
+        Args: { p_gym_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          gym_id: string
+          id: string
+          is_minor: boolean
+          membership_end_date: string
+          membership_plan_id: string
+          membership_start_date: string
+          phone: string
+          status: Database["public"]["Enums"]["member_status"]
+          tutor_id: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_gym_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_role: {
         Args: { _gym_id: string; _user_id: string }
