@@ -416,9 +416,24 @@ Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LI
 
 ## 🆘 Support | Suporte
 
-- **Documentation | Documentação**: [README.md](README.md)
-- **Security | Segurança**: [SECURITY.md](SECURITY.md)
-- **Security Hardening | Endurecimento**: [SECURITY_HARDENING.md](SECURITY_HARDENING.md)
+### Documentation | Documentação
+
+| Audience | Guide | Language |
+|-----------|--------|----------|
+| **Gym Members** | [User Guide](docs/USER_GUIDE.md) | EN/PT |
+| **Gym Owners/Managers** | [Admin Guide](docs/ADMIN_GUIDE.md) | EN/PT |
+| **Trainers/Coaches/Staff** | [Staff Guide](docs/STAFF_GUIDE.md) | EN/PT |
+| **Developers** | [Documentation Index](docs/README.md) | EN |
+
+### Technical Documentation | Documentação Técnica
+
+- **[README](README.md)** - Project overview, architecture, and setup
+- **[SECURITY.md](SECURITY.md)** - Security policies and compliance
+- **[SECURITY_HARDENING.md](SECURITY_HARDENING.md)** - Security implementation details
+- **[DISCIPLINE_ENHANCEMENTS.md](DISCIPLINE_ENHANCEMENTS.md)** - Discipline and rank system features
+
+### Contact | Contacto
+
 - **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
 - **Email**: support@nzila.ao | suporte@nzila.ao
 
