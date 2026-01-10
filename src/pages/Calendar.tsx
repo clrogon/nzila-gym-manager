@@ -256,6 +256,7 @@ export default function Calendar() {
                   <RecurringClassForm
                     gymId={currentGym.id}
                     disciplines={disciplines}
+                    classTypes={classTypes}
                     locations={locations}
                     coaches={coaches}
                     onSuccess={() => {

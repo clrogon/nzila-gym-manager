@@ -484,6 +484,7 @@ export default function Disciplines() {
                                 checked={discipline.is_active}
                                 onCheckedChange={() => toggleDisciplineStatus.mutate(discipline.id)}
                                 onClick={(e) => e.stopPropagation()}
+                                disabled={toggleDisciplineStatus.isPending}
                               />
                             )}
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />

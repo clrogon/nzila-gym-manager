@@ -145,7 +145,7 @@ export function validateClassCapacity(
 export type ClassFormValidation = {
   [key: string]: string | undefined;
   title?: string;
-  classTypeId?: string;
+  disciplineId?: string;
   locationId?: string;
   capacity?: string;
   time?: string;
@@ -155,7 +155,7 @@ export type ClassFormValidation = {
 
 export function validateClassForm(params: {
   title: string;
-  classTypeId: string;
+  disciplineId: string;
   locationId: string;
   capacity: number;
   startDate: string;
@@ -171,8 +171,8 @@ export function validateClassForm(params: {
     errors.title = 'Título é obrigatório';
   }
 
-  if (!params.classTypeId) {
-    errors.classTypeId = 'Disciplina é obrigatória';
+  if (!params.disciplineId) {
+    errors.disciplineId = 'Disciplina é obrigatória';
   }
 
   if (!params.locationId) {

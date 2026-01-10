@@ -30,6 +30,7 @@ interface Location {
 interface RecurringClassFormProps {
   gymId: string;
   disciplines: Array<{ id: string; name: string }>;
+  classTypes: Array<{ id: string; name: string }>;
   locations: Location[];
   coaches: Array<{ id: string; full_name: string }>;
   onSuccess: () => void;
@@ -49,6 +50,7 @@ const DAYS_OF_WEEK = [
 export function RecurringClassForm({
   gymId,
   disciplines,
+  classTypes,
   locations,
   coaches,
   onSuccess,
@@ -63,6 +65,7 @@ export function RecurringClassForm({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [classTypeId, setClassTypeId] = useState('');
+  const [disciplineId, setDisciplineId] = useState('');
   const [locationId, setLocationId] = useState('');
   const [coachId, setCoachId] = useState('');
   const [capacity, setCapacity] = useState('20');
@@ -79,7 +82,7 @@ export function RecurringClassForm({
   const validateForm = (): boolean => {
     const formErrors = validateClassForm({
       title,
-      classTypeId,
+      disciplineId,
       locationId,
       capacity: parseInt(capacity) || 0,
       startDate,
@@ -115,7 +118,8 @@ export function RecurringClassForm({
           gymId,
           title: title.trim(),
           description: description.trim() || undefined,
-          classTypeId,
+          classTypeId: classTypeId || undefined,
+          disciplineId: disciplineId || undefined,
           locationId,
           coachId: coachId || undefined,
           capacity: parseInt(capacity),
@@ -136,7 +140,8 @@ export function RecurringClassForm({
           title: title.trim(),
           description: description.trim() || undefined,
           gymId,
-          classTypeId,
+          classTypeId: classTypeId || undefined,
+          disciplineId: disciplineId || undefined,
           locationId,
           coachId: coachId || undefined,
           capacity: parseInt(capacity),
@@ -162,7 +167,7 @@ export function RecurringClassForm({
         }
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create class(es):', error);
       toast.error('Erro ao criar aula(s)');
     } finally {
@@ -200,6 +205,8 @@ export function RecurringClassForm({
             setDescription={setDescription}
             classTypeId={classTypeId}
             setClassTypeId={setClassTypeId}
+            disciplineId={disciplineId}
+            setDisciplineId={setDisciplineId}
             locationId={locationId}
             setLocationId={setLocationId}
             coachId={coachId}
@@ -207,6 +214,7 @@ export function RecurringClassForm({
             capacity={capacity}
             setCapacity={setCapacity}
             disciplines={disciplines}
+            classTypes={classTypes}
             locations={locations}
             coaches={coaches}
             errors={errors}
@@ -257,6 +265,8 @@ export function RecurringClassForm({
             setDescription={setDescription}
             classTypeId={classTypeId}
             setClassTypeId={setClassTypeId}
+            disciplineId={disciplineId}
+            setDisciplineId={setDisciplineId}
             locationId={locationId}
             setLocationId={setLocationId}
             coachId={coachId}
@@ -264,6 +274,7 @@ export function RecurringClassForm({
             capacity={capacity}
             setCapacity={setCapacity}
             disciplines={disciplines}
+            classTypes={classTypes}
             locations={locations}
             coaches={coaches}
             errors={errors}
@@ -413,10 +424,12 @@ function CommonFields({
   title, setTitle,
   description, setDescription,
   classTypeId, setClassTypeId,
+  disciplineId, setDisciplineId,
   locationId, setLocationId,
   coachId, setCoachId,
   capacity, setCapacity,
   disciplines,
+  classTypes,
   locations,
   coaches,
   errors,
@@ -428,6 +441,8 @@ function CommonFields({
   setDescription: (v: string) => void;
   classTypeId: string;
   setClassTypeId: (v: string) => void;
+  disciplineId: string;
+  setDisciplineId: (v: string) => void;
   locationId: string;
   setLocationId: (v: string) => void;
   coachId: string;
@@ -435,6 +450,7 @@ function CommonFields({
   capacity: string;
   setCapacity: (v: string) => void;
   disciplines: Array<{ id: string; name: string }>;
+  classTypes: Array<{ id: string; name: string }>;
   locations: Array<{ id: string; name: string; capacity?: number }>;
   coaches: Array<{ id: string; full_name: string }>;
   errors: Record<string, string>;
@@ -466,11 +482,11 @@ function CommonFields({
         />
       </div>
 
-      {/* Discipline & Location */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Discipline, Class Type & Location */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>Disciplina *</Label>
-          <Select value={classTypeId} onValueChange={setClassTypeId} disabled={loading}>
+          <Select value={disciplineId} onValueChange={setDisciplineId} disabled={loading}>
             <SelectTrigger>
               <SelectValue placeholder="Selecionar" />
             </SelectTrigger>
@@ -480,7 +496,21 @@ function CommonFields({
               ))}
             </SelectContent>
           </Select>
-          {errors.classTypeId && <p className="text-xs text-destructive">{errors.classTypeId}</p>}
+          {errors.disciplineId && <p className="text-xs text-destructive">{errors.disciplineId}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Tipo de Aula</Label>
+          <Select value={classTypeId} onValueChange={setClassTypeId} disabled={loading}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecionar" />
+            </SelectTrigger>
+            <SelectContent>
+              {classTypes.map(ct => (
+                <SelectItem key={ct.id} value={ct.id}>{ct.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

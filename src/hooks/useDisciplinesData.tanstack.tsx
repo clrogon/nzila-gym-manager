@@ -48,9 +48,9 @@ export function useDisciplinesData(gymId: string | undefined) {
   const { toast } = useToast();
   const { hasPermission } = useRBAC();
 
-  const canCreate = hasPermission('disciplines:create');
-  const canUpdate = hasPermission('disciplines:update');
-  const canDelete = hasPermission('disciplines:delete');
+  const canCreate = hasPermission('training:create');
+  const canUpdate = hasPermission('training:update');
+  const canDelete = hasPermission('training:delete');
 
   const disciplinesQueryKey = ['disciplines', gymId] as const;
   const disciplineRanksQueryKey = ['discipline_ranks', gymId] as const;
@@ -250,15 +250,34 @@ export function useDisciplinesData(gymId: string | undefined) {
     mutationFn: async (id: string) => {
       const { data: discipline } = await supabase
         .from('disciplines')
-        .select('id, is_active')
+        .select('id, is_active, name')
         .eq('id', id)
         .maybeSingle();
 
       if (!discipline) throw new Error('Discipline not found');
 
+      const newStatus = !discipline.is_active;
+
+      // If disabling, check for upcoming classes
+      if (!newStatus) {
+        const now = new Date().toISOString();
+        const { data: upcomingClasses } = await supabase
+          .from('classes')
+          .select('id, title, start_time')
+          .eq('discipline_id', id)
+          .gte('start_time', now)
+          .limit(1);
+
+        if (upcomingClasses && upcomingClasses.length > 0) {
+          throw new Error(
+            `Não é possível desativar "${discipline.name}" pois existem ${upcomingClasses.length} aula(s) agendada(s) para o futuro. Cancele as aulas primeiro ou agende para outro período.`
+          );
+        }
+      }
+
       const { data, error } = await supabase
         .from('disciplines')
-        .update({ is_active: !discipline.is_active })
+        .update({ is_active: newStatus })
         .eq('id', id)
         .select()
         .single();

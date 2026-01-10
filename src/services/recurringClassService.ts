@@ -6,7 +6,8 @@ export interface RecurringClassPattern {
   title: string;
   description?: string;
   gymId: string;
-  classTypeId: string;
+  classTypeId?: string;
+  disciplineId?: string;
   locationId: string;
   coachId?: string;
   capacity: number;
@@ -35,7 +36,8 @@ interface ClassOccurrence {
   gym_id: string;
   title: string;
   description: string | null;
-  class_type_id: string;
+  class_type_id: string | null;
+  discipline_id: string | null;
   location_id: string;
   coach_id: string | null;
   capacity: number;
@@ -61,7 +63,8 @@ export async function createRecurringSeries(
         gym_id: pattern.gymId,
         title: pattern.title,
         description: pattern.description || null,
-        class_type_id: pattern.classTypeId,
+        class_type_id: pattern.classTypeId || null,
+        discipline_id: pattern.disciplineId || null,
         location_id: pattern.locationId,
         coach_id: pattern.coachId || null,
         capacity: pattern.capacity,
@@ -150,7 +153,8 @@ export async function createSingleClass(params: {
   gymId: string;
   title: string;
   description?: string;
-  classTypeId: string;
+  classTypeId?: string;
+  disciplineId?: string;
   locationId: string;
   coachId?: string;
   capacity: number;
@@ -194,7 +198,8 @@ export async function createSingleClass(params: {
         gym_id: params.gymId,
         title: params.title,
         description: params.description || null,
-        class_type_id: params.classTypeId,
+        class_type_id: params.classTypeId || null,
+        discipline_id: params.disciplineId || null,
         location_id: params.locationId,
         coach_id: params.coachId || null,
         capacity: params.capacity,
@@ -246,7 +251,8 @@ function generateOccurrences(pattern: RecurringClassPattern): ClassOccurrence[] 
         gym_id: pattern.gymId,
         title: pattern.title,
         description: pattern.description || null,
-        class_type_id: pattern.classTypeId,
+        class_type_id: pattern.classTypeId || null,
+        discipline_id: pattern.disciplineId || null,
         location_id: pattern.locationId,
         coach_id: pattern.coachId || null,
         capacity: pattern.capacity,
