@@ -35,9 +35,65 @@ serve(async (req) => {
 
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
 
+    // Check IP-based rate limit
+    const { data: ipLimitCheck, error: ipLimitError } = await supabaseClient.rpc('check_auth_rate_limit', {
+      p_identifier: clientIp,
+      p_identifier_type: 'ip'
+    });
+
+    if (ipLimitError) {
+      console.error('IP rate limit check error:', ipLimitError);
+    }
+
+    if (ipLimitCheck && !ipLimitCheck.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          error: ipLimitCheck.reason === 'temporarily_blocked' 
+            ? 'Too many requests from your IP. Please try again later.' 
+            : 'Rate limit exceeded',
+          retry_after_seconds: ipLimitCheck.retry_after_seconds 
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check email-based rate limit (for signin only to prevent account enumeration on signup)
+    if (action === 'signin') {
+      const { data: emailLimitCheck, error: emailLimitError } = await supabaseClient.rpc('check_auth_rate_limit', {
+        p_identifier: email.toLowerCase(),
+        p_identifier_type: 'email'
+      });
+
+      if (emailLimitError) {
+        console.error('Email rate limit check error:', emailLimitError);
+      }
+
+      if (emailLimitCheck && !emailLimitCheck.allowed) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Too many login attempts for this account. Please try again later.',
+            retry_after_seconds: emailLimitCheck.retry_after_seconds 
+          }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     let authResult;
     if (action === 'signin') {
       authResult = await supabaseClient.auth.signInWithPassword({ email, password });
+      
+      // Reset rate limits on successful signin
+      if (!authResult.error) {
+        await supabaseClient.rpc('reset_auth_rate_limit', {
+          p_identifier: clientIp,
+          p_identifier_type: 'ip'
+        });
+        await supabaseClient.rpc('reset_auth_rate_limit', {
+          p_identifier: email.toLowerCase(),
+          p_identifier_type: 'email'
+        });
+      }
     } else {
       authResult = await supabaseClient.auth.signUp({
         email,
