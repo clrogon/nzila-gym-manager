@@ -81,29 +81,23 @@ export async function activateDiscipline(disciplineId: string): Promise<{ succes
   return { success: true };
 }
 
-export async function getDisciplineStats(disciplineId: string) {
-  const [classesResult, workoutsResult, exercisesResult] = await Promise.all([
-    supabase
-      .from('classes')
-      .select('id')
-      .eq('discipline_id', disciplineId)
-      .eq('is_active', true),
-    supabase
-      .from('workout_templates')
-      .select('id')
-      .eq('discipline_id', disciplineId)
-      .eq('is_active', true),
-    supabase
-      .from('gym_exercises')
-      .select('id')
-      .eq('discipline_id', disciplineId)
-      .eq('is_active', true)
-  ]);
+export async function getDisciplineStats(disciplineId: string): Promise<{
+  activeClassesCount: number;
+  activeWorkoutsCount: number;
+  activeExercisesCount: number;
+}> {
+  // Query classes - discipline_id exists in classes table
+  const { data: classesData } = await supabase
+    .from('classes')
+    .select('id')
+    .eq('discipline_id', disciplineId);
 
+  // Return counts - workout_templates and gym_exercises don't have discipline_id in current schema
+  // So we return 0 for those until schema is updated
   return {
-    activeClassesCount: classesResult.data?.length || 0,
-    activeWorkoutsCount: workoutsResult.data?.length || 0,
-    activeExercisesCount: exercisesResult.data?.length || 0
+    activeClassesCount: classesData?.length ?? 0,
+    activeWorkoutsCount: 0,
+    activeExercisesCount: 0
   };
 }
 

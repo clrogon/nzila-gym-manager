@@ -89,10 +89,8 @@ export function ChangePasswordDialog({ trigger, open, onOpenChange }: ChangePass
   };
 
   const resetForm = () => {
-    setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
-    setShowCurrent(false);
     setShowNew(false);
     setShowConfirm(false);
   };
