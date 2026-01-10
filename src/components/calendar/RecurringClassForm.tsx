@@ -77,7 +77,7 @@ export function RecurringClassForm({
   const [capacity, setCapacity] = useState('20');
 
   // Filter coaches based on selected discipline
-  const qualifiedCoaches = useMemo(() => {
+  const filteredCoaches = useMemo(() => {
     if (!disciplineId) return coaches;
 
     return coaches.filter((coach) => {
@@ -557,7 +557,7 @@ function CommonFields({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Nenhum</SelectItem>
-              {qualifiedCoaches.map(c => (
+              {coaches.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
               ))}
             </SelectContent>

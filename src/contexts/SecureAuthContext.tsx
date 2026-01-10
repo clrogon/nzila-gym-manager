@@ -77,7 +77,7 @@ export function SecureAuthProvider({ children }: { children: React.ReactNode }) 
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionExpiresIn, setSessionExpiresIn] = useState<number | null>(null);
-  const sessionCheckInterval = useRef<NodeJS.Timeout>();
+  const sessionCheckInterval = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const warningShown = useRef(false);
 
   // Calculate session expiry

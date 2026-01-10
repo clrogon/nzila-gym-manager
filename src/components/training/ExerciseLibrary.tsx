@@ -181,6 +181,7 @@ export function ExerciseLibrary() {
       muscle_groups: item.muscle_groups || [],
       video_url: item.video_url || '',
       is_active: item.is_active ?? true,
+      discipline_id: (item as any).discipline_id || '',
     });
     setIsEditOpen(true);
   };
@@ -291,9 +292,8 @@ export function ExerciseLibrary() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Equipamento</Label>
-                  <Select value={formData.equipment} onValueChange={(v) => setFormData((prev: any) => ({ ...prev, equipment: v }))}>
-                    <SelectTrigger placeholder="Selecionar equipamento" />
+                  <Label className="text-xs text-muted-foreground">Equipamento</Label>
+                  <Select value={filterEquipment} onValueChange={setFilterEquipment}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
