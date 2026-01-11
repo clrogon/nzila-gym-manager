@@ -204,7 +204,7 @@ export default function MemberPortal() {
           <Button
             variant="outline"
             className="h-20 flex flex-col gap-2"
-            onClick={() => navigate('/bookings')}
+            onClick={() => navigate('/member/bookings')}
           >
             <CalendarDays className="w-6 h-6 text-primary" />
             <span className="text-sm">Aulas</span>

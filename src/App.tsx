@@ -33,6 +33,7 @@ const MemberPortalPage = lazy(() => import("./modules/members").then(m => ({ def
 const MemberCheckInPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberCheckInPage })));
 const MemberFinancesPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberFinancesPage })));
 const MemberActivityPage = lazy(() => import("./modules/members").then(m => ({ default: m.MemberActivityPage })));
+const MemberBookingsPage = lazy(() => import("./modules/booking/MemberBookings"));
 const CheckInsPage = lazy(() => import("./modules/checkins").then(m => ({ default: m.CheckInsPage })));
 const PaymentsPage = lazy(() => import("./modules/payments").then(m => ({ default: m.PaymentsPage })));
 const SettingsPage = lazy(() => import("./modules/settings").then(m => ({ default: m.SettingsPage })));
@@ -165,6 +166,7 @@ function AppRoutes() {
       <Route path="/member/checkin" element={<ProtectedRoute moduleName="Member Check-In"><MemberCheckInPage /></ProtectedRoute>} />
       <Route path="/member/finances" element={<ProtectedRoute moduleName="Member Finances"><MemberFinancesPage /></ProtectedRoute>} />
       <Route path="/member/activity" element={<ProtectedRoute moduleName="Member Activity"><MemberActivityPage /></ProtectedRoute>} />
+      <Route path="/member/bookings" element={<ProtectedRoute moduleName="Member Bookings"><MemberBookingsPage /></ProtectedRoute>} />
  
       {/* Operations */}
       <Route path="/check-ins" element={<ProtectedRoute moduleName="Check-ins"><CheckInsPage /></ProtectedRoute>} />
