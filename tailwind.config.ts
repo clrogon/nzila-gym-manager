@@ -121,7 +121,7 @@ export default {
   			xl: 'calc(var(--radius) + 4px)',
   			'2xl': 'calc(var(--radius) + 8px)'
   		},
-  		boxShadow: {
+		boxShadow: {
   			soft: '0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.1)',
   			card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
   			'card-hover': '0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.05)',
@@ -131,7 +131,11 @@ export default {
   			md: 'var(--shadow-md)',
   			lg: 'var(--shadow-lg)',
   			xl: 'var(--shadow-xl)',
-  			'2xl': 'var(--shadow-2xl)'
+  			'2xl': 'var(--shadow-2xl)',
+  			gold: 'var(--shadow-gold)',
+  			'gold-lg': 'var(--shadow-gold-lg)',
+  			'gold-glow': 'var(--shadow-gold-glow)',
+  			'gold-intense': 'var(--shadow-gold-intense)'
   		},
   		keyframes: {
   			'accordion-down': {
