@@ -78,7 +78,7 @@ const memberNavItems: NavItem[] = [
   { icon: Sparkles, label: 'Dashboard Elite', href: '/member/elite' },
   { icon: Compass, label: 'Hub de Treino', href: '/training-hub' },
   { icon: UserCheck, label: 'Check-In', href: '/member/checkin' },
-  { icon: CalendarDays, label: 'Minhas Aulas', href: '/bookings' },
+  { icon: CalendarDays, label: 'Minhas Aulas', href: '/member/bookings' },
   { icon: CreditCard, label: 'Pagamentos', href: '/member/finances' },
   { icon: TrendingUp, label: 'Progresso', href: '/member/activity' },
   { icon: User, label: 'Perfil', href: '/profile' },
@@ -126,7 +126,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Redirect members away from staff routes
   useEffect(() => {
-    if (isMemberOnly && !location.pathname.startsWith('/member') && !location.pathname.startsWith('/bookings') && !location.pathname.startsWith('/profile')) {
+    if (isMemberOnly && !location.pathname.startsWith('/member') && !location.pathname.startsWith('/training-hub') && !location.pathname.startsWith('/profile')) {
       navigate('/member/portal');
     }
   }, [isMemberOnly, location.pathname, navigate]);
