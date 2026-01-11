@@ -34,11 +34,12 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, CreditCard, Banknote, Smartphone, Search, FileText, 
   ArrowUpRight, ArrowDownLeft, TrendingUp, Calendar, Receipt,
-  Download, Filter, MoreHorizontal, Send, Eye, CheckCircle2
+  Download, Filter, MoreHorizontal, Send, Eye, CheckCircle2, Loader2
 } from 'lucide-react';
 import { RequirePermission } from '@/components/common/RequirePermission';
 import { useRBAC } from '@/hooks/useRBAC';
-import { usePaymentsData, type PaymentFormData, type Invoice } from '@/hooks/usePaymentsData.tanstack';
+import { usePaymentsData, type PaymentFormData } from '@/hooks/usePaymentsData.tanstack';
+import { useInvoicesData, type InvoiceFormData, type InvoiceStatus } from '@/hooks/useInvoicesData.tanstack';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,9 +56,19 @@ export default function Payments() {
     members, 
     plans, 
     payments, 
-    loading, 
+    loading: paymentsLoading, 
     createPayment 
   } = usePaymentsData(currentGym?.id);
+
+  const {
+    invoices,
+    stats: invoiceStats,
+    loading: invoicesLoading,
+    createInvoice,
+    updateInvoiceStatus,
+  } = useInvoicesData(currentGym?.id);
+
+  const loading = paymentsLoading || invoicesLoading;
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
@@ -85,13 +96,6 @@ export default function Payments() {
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoiceDescription, setInvoiceDescription] = useState('');
 
-  // Mock invoices for UI (would be fetched from DB in real implementation)
-  const [invoices] = useState<Invoice[]>([
-    { id: '1', member_name: 'João Silva', amount: 15000, status: 'paid', due_date: '2024-01-15', created_at: '2024-01-01' },
-    { id: '2', member_name: 'Maria Santos', amount: 25000, status: 'sent', due_date: '2024-01-20', created_at: '2024-01-05' },
-    { id: '3', member_name: 'Pedro Costa', amount: 15000, status: 'overdue', due_date: '2024-01-10', created_at: '2024-01-01' },
-  ]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentGym || !memberId) return;
@@ -118,10 +122,20 @@ export default function Payments() {
 
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In real implementation, this would create an invoice in the database
-    toast({ title: 'Invoice Created', description: 'Invoice has been created and is ready to send.' });
-    setInvoiceDialogOpen(false);
-    resetInvoiceForm();
+    if (!invoiceMemberId || !invoiceAmount) return;
+
+    try {
+      await createInvoice.mutateAsync({
+        member_id: invoiceMemberId,
+        subtotal: parseFloat(invoiceAmount),
+        due_date: invoiceDueDate || undefined,
+        notes: invoiceDescription || undefined,
+      });
+      setInvoiceDialogOpen(false);
+      resetInvoiceForm();
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+    }
   };
 
   const resetForm = () => {
@@ -447,7 +461,7 @@ export default function Payments() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-bold">{invoices.filter(i => i.status === 'sent').length}</p>
+                  <p className="text-2xl font-bold">{invoiceStats.issued + invoiceStats.overdue}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-yellow-500/10">
                   <Receipt className="w-5 h-5 text-yellow-500" />
@@ -563,41 +577,57 @@ export default function Payments() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.member_name}</TableCell>
-                        <TableCell>{formatCurrency(invoice.amount)}</TableCell>
-                        <TableCell>{formatDate(invoice.due_date)}</TableCell>
-                        <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="w-4 h-4 mr-2" />
-                                View
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Send className="w-4 h-4 mr-2" />
-                                Send
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Mark as Paid
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="w-4 h-4 mr-2" />
-                                Download PDF
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                    {invoices.length > 0 ? (
+                      invoices.map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-medium">{invoice.member?.full_name || 'Unknown'}</TableCell>
+                          <TableCell>{formatCurrency(invoice.total)}</TableCell>
+                          <TableCell>{invoice.due_date ? formatDate(invoice.due_date) : '-'}</TableCell>
+                          <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  View
+                                </DropdownMenuItem>
+                                {invoice.status === 'draft' && (
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInvoiceStatus.mutate({ id: invoice.id, status: 'issued' })}
+                                  >
+                                    <Send className="w-4 h-4 mr-2" />
+                                    Issue Invoice
+                                  </DropdownMenuItem>
+                                )}
+                                {['issued', 'overdue'].includes(invoice.status) && (
+                                  <DropdownMenuItem 
+                                    onClick={() => updateInvoiceStatus.mutate({ id: invoice.id, status: 'paid' })}
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    Mark as Paid
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem>
+                                  <Download className="w-4 h-4 mr-2" />
+                                  Download PDF
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          {loading ? 'Loading...' : 'No invoices found'}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

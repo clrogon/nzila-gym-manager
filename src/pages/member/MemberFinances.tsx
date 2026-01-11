@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGym } from '@/contexts/GymContext';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,15 +22,11 @@ import {
   Download,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
-
-interface MemberData {
-  id: string;
-  full_name: string;
-}
 
 interface Payment {
   id: string;
@@ -56,61 +52,65 @@ export default function MemberFinances() {
   const { user } = useAuth();
   const { currentGym } = useGym();
 
-  const [memberData, setMemberData] = useState<MemberData | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user && currentGym) {
-      fetchData();
-    }
-  }, [user, currentGym]);
-
-  const fetchData = async () => {
-    if (!user || !currentGym) return;
-
-    try {
-      // Fetch member
-      const { data: member, error: memberError } = await supabase
+  // Fetch member data
+  const { data: memberData, isLoading: memberLoading } = useQuery({
+    queryKey: ['member-profile', user?.id, currentGym?.id],
+    queryFn: async () => {
+      if (!user || !currentGym) return null;
+      
+      const { data, error } = await supabase
         .from('members')
         .select('id, full_name')
         .eq('user_id', user.id)
         .eq('gym_id', currentGym.id)
         .maybeSingle();
 
-      if (memberError) throw memberError;
-      if (!member) {
-        setLoading(false);
-        return;
-      }
-      setMemberData(member);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user && !!currentGym,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (member) {
-        // Fetch payments
-        const { data: paymentData } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('member_id', member.id)
-          .order('created_at', { ascending: false });
+  // Fetch payments
+  const { data: payments = [], isLoading: paymentsLoading } = useQuery<Payment[]>({
+    queryKey: ['member-payments', memberData?.id],
+    queryFn: async () => {
+      if (!memberData?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('payments')
+        .select('id, amount, currency, payment_method, payment_status, description, paid_at, created_at')
+        .eq('member_id', memberData.id)
+        .order('created_at', { ascending: false });
 
-        setPayments(paymentData || []);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!memberData?.id,
+    staleTime: 2 * 60 * 1000,
+  });
 
-        // Fetch invoices
-        const { data: invoiceData } = await supabase
-          .from('invoices')
-          .select('id, invoice_number, total, status, due_date, created_at')
-          .eq('member_id', member.id)
-          .order('created_at', { ascending: false });
+  // Fetch invoices
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery<Invoice[]>({
+    queryKey: ['member-invoices', memberData?.id],
+    queryFn: async () => {
+      if (!memberData?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('id, invoice_number, total, status, due_date, created_at')
+        .eq('member_id', memberData.id)
+        .order('created_at', { ascending: false });
 
-        setInvoices(invoiceData || []);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!memberData?.id,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const loading = memberLoading || paymentsLoading || invoicesLoading;
 
   const formatCurrency = (amount: number, currency: string = 'AOA') => {
     return new Intl.NumberFormat('pt-AO', {
@@ -120,29 +120,35 @@ export default function MemberFinances() {
   };
 
   const getPaymentStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      completed: 'default',
-      pending: 'secondary',
-      failed: 'destructive',
-      refunded: 'outline',
+    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: React.ReactNode }> = {
+      completed: { variant: 'default', label: 'Pago', icon: <CheckCircle className="w-3 h-3" /> },
+      pending: { variant: 'secondary', label: 'Pendente', icon: <Clock className="w-3 h-3" /> },
+      failed: { variant: 'destructive', label: 'Falhado', icon: <AlertCircle className="w-3 h-3" /> },
+      refunded: { variant: 'outline', label: 'Reembolsado', icon: null },
     };
-    const labels: Record<string, string> = {
-      completed: 'Pago',
-      pending: 'Pendente',
-      failed: 'Falhado',
-      refunded: 'Reembolsado',
-    };
-    const icons: Record<string, React.ReactNode> = {
-      completed: <CheckCircle className="w-3 h-3" />,
-      pending: <Clock className="w-3 h-3" />,
-      failed: <AlertCircle className="w-3 h-3" />,
-    };
+    
+    const { variant, label, icon } = config[status] || { variant: 'outline' as const, label: status, icon: null };
+    
     return (
-      <Badge variant={variants[status] || 'outline'} className="flex items-center gap-1 w-fit">
-        {icons[status]}
-        {labels[status] || status}
+      <Badge variant={variant} className="flex items-center gap-1 w-fit">
+        {icon}
+        {label}
       </Badge>
     );
+  };
+
+  const getInvoiceStatusBadge = (status: string) => {
+    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
+      draft: { variant: 'outline', label: 'Rascunho' },
+      issued: { variant: 'secondary', label: 'Emitida' },
+      paid: { variant: 'default', label: 'Paga' },
+      overdue: { variant: 'destructive', label: 'Vencida' },
+      void: { variant: 'outline', label: 'Anulada' },
+    };
+    
+    const { variant, label } = config[status] || { variant: 'outline' as const, label: status };
+    
+    return <Badge variant={variant}>{label}</Badge>;
   };
 
   const getPaymentMethodLabel = (method: string) => {
@@ -150,12 +156,15 @@ export default function MemberFinances() {
       cash: 'Dinheiro',
       card: 'Cartão',
       transfer: 'Transferência',
+      bank_transfer: 'Transferência',
       multicaixa: 'Multicaixa',
       pos: 'POS',
+      other: 'Outro',
     };
     return labels[method] || method;
   };
 
+  // Calculate financial summary
   const outstandingBalance = payments
     .filter(p => p.payment_status === 'pending')
     .reduce((sum, p) => sum + p.amount, 0);
@@ -209,7 +218,8 @@ export default function MemberFinances() {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4" />
                 Saldo Pendente
               </CardTitle>
             </CardHeader>
@@ -222,12 +232,13 @@ export default function MemberFinances() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
                 Total Pago
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(totalPaid, currentGym?.currency || 'AOA')}
               </div>
             </CardContent>
@@ -235,7 +246,8 @@ export default function MemberFinances() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Wallet className="w-4 h-4" />
                 Transações
               </CardTitle>
             </CardHeader>
@@ -280,7 +292,7 @@ export default function MemberFinances() {
                         <TableCell>{payment.description || 'Pagamento'}</TableCell>
                         <TableCell>{getPaymentMethodLabel(payment.payment_method)}</TableCell>
                         <TableCell className="font-medium">
-                          {formatCurrency(payment.amount, payment.currency)}
+                          {formatCurrency(payment.amount, payment.currency || currentGym?.currency || 'AOA')}
                         </TableCell>
                         <TableCell>
                           {getPaymentStatusBadge(payment.payment_status)}
@@ -338,9 +350,7 @@ export default function MemberFinances() {
                           {formatCurrency(invoice.total, currentGym?.currency || 'AOA')}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={invoice.status === 'paid' ? 'default' : 'secondary'}>
-                            {invoice.status === 'paid' ? 'Paga' : 'Pendente'}
-                          </Badge>
+                          {getInvoiceStatusBadge(invoice.status)}
                         </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="sm">

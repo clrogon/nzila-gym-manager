@@ -1,22 +1,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wallet, Receipt, ArrowRight } from 'lucide-react';
+import { Wallet, Receipt, ArrowRight, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useMemberFinancialSummary } from '@/hooks/useFinancialData.tanstack';
 
 interface MemberFinancialSummaryProps {
-  outstandingBalance: number;
-  currency: string;
+  memberId?: string;
+  gymId?: string;
+  currency?: string;
+  // Legacy props for backward compatibility
+  outstandingBalance?: number;
   lastPaymentDate?: string | null;
   lastPaymentAmount?: number | null;
 }
 
 export default function MemberFinancialSummary({
-  outstandingBalance,
-  currency,
-  lastPaymentDate,
-  lastPaymentAmount,
+  memberId,
+  gymId,
+  currency = 'AOA',
+  outstandingBalance: legacyBalance,
+  lastPaymentDate: legacyPaymentDate,
+  lastPaymentAmount: legacyPaymentAmount,
 }: MemberFinancialSummaryProps) {
   const navigate = useNavigate();
+  
+  // Use hook if memberId and gymId provided, otherwise use legacy props
+  const { data: financialData, isLoading } = useMemberFinancialSummary(memberId, gymId);
+
+  // Determine data source
+  const outstandingBalance = financialData?.outstandingBalance ?? legacyBalance ?? 0;
+  const lastPaymentDate = financialData?.lastPaymentDate ?? legacyPaymentDate;
+  const lastPaymentAmount = financialData?.lastPaymentAmount ?? legacyPaymentAmount;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('pt-AO', {
@@ -32,6 +46,22 @@ export default function MemberFinancialSummary({
       year: 'numeric',
     });
   };
+
+  if (isLoading && memberId && gymId) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Wallet className="w-5 h-5 text-primary" />
+            Resumo Financeiro
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -51,7 +81,7 @@ export default function MemberFinancialSummary({
           </div>
         </div>
 
-        {lastPaymentDate && lastPaymentAmount !== null && (
+        {lastPaymentDate && lastPaymentAmount !== null && lastPaymentAmount !== undefined && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground border-t pt-4">
             <Receipt className="w-4 h-4" />
             <span>
