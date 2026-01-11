@@ -4,12 +4,21 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useRBAC } from '@/hooks/useRBAC';
 import { useGym } from '@/contexts/GymContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Mail, MessageSquare, Loader2 } from 'lucide-react';
+import { 
+  Save, 
+  Mail, 
+  MessageSquare, 
+  Loader2, 
+  Bell, 
+  Clock, 
+  Globe,
+  Sparkles,
+  RotateCcw
+} from 'lucide-react';
 
 interface NotificationSettings {
   email_notifications?: boolean;
@@ -49,7 +58,6 @@ export default function SettingsNotifications() {
   const loadSettings = () => {
     if (!currentGym) return;
 
-    // Load from gym's settings JSON field
     const settings = currentGym.settings as NotificationSettings | null;
     
     setTimezone(currentGym.timezone || 'Africa/Luanda');
@@ -90,7 +98,6 @@ export default function SettingsNotifications() {
       return;
     }
 
-    // Validate reminder days
     const days = parseInt(reminderDays, 10);
     if (isNaN(days) || days < 1 || days > 90) {
       toast({
@@ -152,157 +159,178 @@ export default function SettingsNotifications() {
     }
   };
 
+  const SectionCard = ({ 
+    children, 
+    icon: Icon, 
+    title, 
+    description 
+  }: { 
+    children: React.ReactNode; 
+    icon: React.ElementType; 
+    title: string; 
+    description: string;
+  }) => (
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-card to-accent/5 shadow-lg hover:shadow-xl transition-all duration-500 group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 group-hover:glow-gold transition-all duration-300">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-display">{title}</CardTitle>
+            <CardDescription className="text-muted-foreground/80">
+              {description}
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="relative z-10">
+        {children}
+      </CardContent>
+    </Card>
+  );
+
+  const NotificationToggle = ({
+    icon: Icon,
+    iconColor,
+    title,
+    description,
+    checked,
+    onCheckedChange,
+  }: {
+    icon: React.ElementType;
+    iconColor: string;
+    title: string;
+    description: string;
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+  }) => (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30 hover:border-border/50 transition-all duration-200">
+      <div className="flex items-center gap-4">
+        <div className={`p-2.5 rounded-xl ${iconColor}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="font-medium">{title}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <Switch 
+        checked={checked} 
+        onCheckedChange={(value) => { 
+          onCheckedChange(value);
+          markChanged();
+        }}
+        disabled={!canEdit}
+        className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+      />
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Notification Channels */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Canais de Notificação</CardTitle>
-          <CardDescription>Configure como deseja contactar os seus membros</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Mail className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="font-medium">Notificações por Email</p>
-                <p className="text-sm text-muted-foreground">Enviar notificações por email</p>
-              </div>
-            </div>
-            <Switch 
-              checked={emailNotifications} 
-              onCheckedChange={(checked) => { 
-                setEmailNotifications(checked);
-                markChanged();
-              }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-          </div>
+      <SectionCard
+        icon={Bell}
+        title="Canais de Notificação"
+        description="Configure como deseja contactar os seus membros"
+      >
+        <div className="space-y-4">
+          <NotificationToggle
+            icon={Mail}
+            iconColor="bg-blue-500/10 text-blue-500"
+            title="Notificações por Email"
+            description="Enviar notificações por email"
+            checked={emailNotifications}
+            onCheckedChange={setEmailNotifications}
+          />
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <MessageSquare className="w-5 h-5 text-green-500" />
-              </div>
-              <div>
-                <p className="font-medium">Notificações por SMS</p>
-                <p className="text-sm text-muted-foreground">Enviar mensagens de texto aos membros</p>
-              </div>
-            </div>
-            <Switch 
-              checked={smsNotifications} 
-              onCheckedChange={(checked) => { 
-                setSmsNotifications(checked);
-                markChanged();
-              }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-          </div>
-        </CardContent>
-      </Card>
+          <NotificationToggle
+            icon={MessageSquare}
+            iconColor="bg-green-500/10 text-green-500"
+            title="Notificações por SMS"
+            description="Enviar mensagens de texto aos membros"
+            checked={smsNotifications}
+            onCheckedChange={setSmsNotifications}
+          />
+        </div>
+      </SectionCard>
 
       {/* Automatic Messages */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mensagens Automáticas</CardTitle>
-          <CardDescription>Configure notificações automáticas para os seus membros</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Mensagens de Boas-vindas</p>
-              <p className="text-sm text-muted-foreground">Enviar email de boas-vindas a novos membros</p>
-            </div>
-            <Switch 
-              checked={welcomeEmails} 
-              onCheckedChange={(checked) => { 
-                setWelcomeEmails(checked);
-                markChanged();
-              }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+      <SectionCard
+        icon={Clock}
+        title="Mensagens Automáticas"
+        description="Configure notificações automáticas para os seus membros"
+      >
+        <div className="space-y-4">
+          <NotificationToggle
+            icon={Sparkles}
+            iconColor="bg-purple-500/10 text-purple-500"
+            title="Mensagens de Boas-vindas"
+            description="Enviar email de boas-vindas a novos membros"
+            checked={welcomeEmails}
+            onCheckedChange={setWelcomeEmails}
+          />
+
+          <div className="space-y-3">
+            <NotificationToggle
+              icon={Bell}
+              iconColor="bg-orange-500/10 text-orange-500"
+              title="Lembretes de Expiração"
+              description="Notificar membros antes da expiração da subscrição"
+              checked={membershipReminders}
+              onCheckedChange={setMembershipReminders}
             />
+
+            {membershipReminders && (
+              <div className="ml-16 p-4 rounded-xl bg-muted/30 border border-border/20 animate-fade-in">
+                <Label className="text-sm font-medium mb-2 block">Dias antes da expiração</Label>
+                <Select 
+                  value={reminderDays} 
+                  onValueChange={(value) => {
+                    setReminderDays(value);
+                    markChanged();
+                  }}
+                  disabled={!canEdit}
+                >
+                  <SelectTrigger className={`w-48 bg-background/50 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 dia</SelectItem>
+                    <SelectItem value="3">3 dias</SelectItem>
+                    <SelectItem value="5">5 dias</SelectItem>
+                    <SelectItem value="7">7 dias</SelectItem>
+                    <SelectItem value="14">14 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Lembretes de Expiração de Subscrição</p>
-              <p className="text-sm text-muted-foreground">Notificar membros antes da expiração da subscrição</p>
-            </div>
-            <Switch 
-              checked={membershipReminders} 
-              onCheckedChange={(checked) => { 
-                setMembershipReminders(checked);
-                markChanged();
-              }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-          </div>
-
-          {membershipReminders && (
-            <div className="ml-6 space-y-2">
-              <Label>Dias antes da expiração</Label>
-              <Select 
-                value={reminderDays} 
-                onValueChange={(value) => {
-                  setReminderDays(value);
-                  markChanged();
-                }}
-                disabled={!canEdit}
-              >
-                <SelectTrigger className={`w-40 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 dia</SelectItem>
-                  <SelectItem value="3">3 dias</SelectItem>
-                  <SelectItem value="5">5 dias</SelectItem>
-                  <SelectItem value="7">7 dias</SelectItem>
-                  <SelectItem value="14">14 dias</SelectItem>
-                  <SelectItem value="30">30 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Lembretes de Pagamento</p>
-              <p className="text-sm text-muted-foreground">Enviar lembretes para pagamentos pendentes</p>
-            </div>
-            <Switch 
-              checked={paymentReminders} 
-              onCheckedChange={(checked) => { 
-                setPaymentReminders(checked);
-                markChanged();
-              }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-          </div>
-        </CardContent>
-      </Card>
+          <NotificationToggle
+            icon={Bell}
+            iconColor="bg-red-500/10 text-red-500"
+            title="Lembretes de Pagamento"
+            description="Enviar lembretes para pagamentos pendentes"
+            checked={paymentReminders}
+            onCheckedChange={setPaymentReminders}
+          />
+        </div>
+      </SectionCard>
 
       {/* Regional Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações Regionais</CardTitle>
-          <CardDescription>Defina fuso horário e formato de data/hora</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <SectionCard
+        icon={Globe}
+        title="Configurações Regionais"
+        description="Defina fuso horário e formato de data/hora"
+      >
+        <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
-            <Label>Fuso Horário</Label>
+            <Label className="text-sm font-medium">Fuso Horário</Label>
             <Select 
               value={timezone} 
               onValueChange={(value) => {
@@ -311,7 +339,7 @@ export default function SettingsNotifications() {
               }}
               disabled={!canEdit}
             >
-              <SelectTrigger className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}>
+              <SelectTrigger className={`bg-background/50 border-border/50 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -324,7 +352,7 @@ export default function SettingsNotifications() {
           </div>
 
           <div className="space-y-2">
-            <Label>Locale</Label>
+            <Label className="text-sm font-medium">Locale</Label>
             <Select 
               value={locale} 
               onValueChange={(value) => {
@@ -333,7 +361,7 @@ export default function SettingsNotifications() {
               }}
               disabled={!canEdit}
             >
-              <SelectTrigger className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}>
+              <SelectTrigger className={`bg-background/50 border-border/50 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -343,16 +371,18 @@ export default function SettingsNotifications() {
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
       {/* Action Buttons */}
-      <div className="flex gap-2">
+      <div className="flex items-center justify-between pt-2">
         {canEdit ? (
-          <>
+          <div className="flex gap-3">
             <Button 
               onClick={handleSave} 
               disabled={loading || !hasChanges}
+              size="lg"
+              className="relative overflow-hidden bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg hover:shadow-xl hover:glow-gold transition-all duration-300 font-medium"
             >
               {loading ? (
                 <>
@@ -371,15 +401,24 @@ export default function SettingsNotifications() {
                 variant="outline"
                 onClick={handleReset}
                 disabled={loading}
+                className="border-border/50 hover:bg-muted/50"
               >
-                Reverter Alterações
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Reverter
               </Button>
             )}
-          </>
+          </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Não tem permissão para editar estas definições. Contacte um administrador.
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-4 py-2 rounded-lg">
+            <Sparkles className="w-4 h-4" />
+            Não tem permissão para editar estas definições.
+          </div>
+        )}
+        
+        {hasChanges && (
+          <span className="text-sm text-primary animate-pulse">
+            Alterações não guardadas
+          </span>
         )}
       </div>
     </div>
