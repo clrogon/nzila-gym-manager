@@ -19,10 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useRBAC } from '@/hooks/useRBAC';
-import { Save, Upload, Loader2 } from 'lucide-react';
+import { 
+  Save, 
+  Upload, 
+  Loader2, 
+  Building2, 
+  Globe, 
+  Settings2, 
+  Palette,
+  Sparkles
+} from 'lucide-react';
 import type { Json } from '@/integrations/supabase/types';
 
 interface GymSettings {
@@ -202,7 +210,6 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
       }]);
     } catch (error) {
       console.error('Failed to log audit trail:', error);
-      // Don't block the operation if audit logging fails
     }
   };
 
@@ -290,115 +297,174 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
     if (canEdit) setHasChanges(true);
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informação do Ginásio</CardTitle>
-        <CardDescription>
-          Atualize a informação básica, identidade e regras operacionais do ginásio
-        </CardDescription>
+  const SectionCard = ({ 
+    children, 
+    icon: Icon, 
+    title, 
+    description 
+  }: { 
+    children: React.ReactNode; 
+    icon: React.ElementType; 
+    title: string; 
+    description: string;
+  }) => (
+    <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-card to-accent/5 shadow-lg hover:shadow-xl transition-all duration-500 group">
+      {/* Decorative glow */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 group-hover:glow-gold transition-all duration-300">
+            <Icon className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-lg font-display">{title}</CardTitle>
+            <CardDescription className="text-muted-foreground/80">
+              {description}
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
+      <CardContent className="relative z-10">
+        {children}
+      </CardContent>
+    </Card>
+  );
 
-      <CardContent className="space-y-6">
-        {/* Logo */}
-        <div className="space-y-2">
-          <Label>Logótipo</Label>
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/50">
-              {logoUrl && /^https?:\/\/.+/.test(logoUrl) ? (
-                <img
-                  src={logoUrl}
-                  alt="Logótipo do ginásio"
-                  className="w-full h-full object-cover rounded-lg"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <Upload className="w-6 h-6 text-muted-foreground" />
-              )}
+  const inputClassName = `bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`;
+
+  return (
+    <div className="space-y-6">
+      {/* Logo & Identity Section */}
+      <SectionCard 
+        icon={Building2} 
+        title="Identidade do Ginásio" 
+        description="Logótipo e informações básicas de contacto"
+      >
+        <div className="space-y-6">
+          {/* Logo Upload */}
+          <div className="flex items-start gap-6">
+            <div className="relative group/logo">
+              <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center bg-muted/30 overflow-hidden transition-all duration-300 group-hover/logo:border-primary/40 group-hover/logo:bg-muted/50">
+                {logoUrl && /^https?:\/\/.+/.test(logoUrl) ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logótipo do ginásio"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Upload className="w-8 h-8 text-muted-foreground/60" />
+                )}
+              </div>
+              {/* Glow effect on hover */}
+              <div className="absolute inset-0 rounded-2xl glow-gold opacity-0 group-hover/logo:opacity-50 transition-opacity duration-300 pointer-events-none" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 space-y-2">
+              <Label className="text-sm font-medium">URL do Logótipo</Label>
               <Input
-                placeholder="URL do Logótipo (https://...)"
+                placeholder="https://..."
                 value={logoUrl}
                 onChange={e => {
                   setLogoUrl(e.target.value);
                   markChanged();
                 }}
                 disabled={!canEdit}
-                className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+                className={inputClassName}
               />
               {errors.logoUrl && (
-                <p className="text-xs text-destructive mt-1">{errors.logoUrl}</p>
+                <p className="text-xs text-destructive">{errors.logoUrl}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Basic Info Grid */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Nome do Ginásio *</Label>
+              <Input 
+                value={gymName} 
+                onChange={e => { setGymName(e.target.value); markChanged(); }}
+                disabled={!canEdit}
+                className={inputClassName}
+              />
+              {errors.gymName && (
+                <p className="text-xs text-destructive">{errors.gymName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Email</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); markChanged(); }}
+                disabled={!canEdit}
+                className={inputClassName}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Telefone</Label>
+              <Input 
+                value={phone} 
+                onChange={e => { setPhone(e.target.value); markChanged(); }}
+                placeholder="+244 923 456 789"
+                disabled={!canEdit}
+                className={inputClassName}
+              />
+              {errors.phone && (
+                <p className="text-xs text-destructive">{errors.phone}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Morada</Label>
+              <Input 
+                value={address} 
+                onChange={e => { setAddress(e.target.value); markChanged(); }}
+                disabled={!canEdit}
+                className={inputClassName}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">NIF / VAT</Label>
+              <Input 
+                value={vatNumber} 
+                onChange={e => { setVatNumber(e.target.value); markChanged(); }}
+                placeholder="Ex: 5123456789"
+                disabled={!canEdit}
+                className={inputClassName}
+              />
+              {errors.vatNumber && (
+                <p className="text-xs text-destructive">{errors.vatNumber}</p>
               )}
             </div>
           </div>
         </div>
+      </SectionCard>
 
-        <Separator />
-
-        {/* Identity & localisation */}
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Regional Settings */}
+      <SectionCard 
+        icon={Globe} 
+        title="Configurações Regionais" 
+        description="Fuso horário, moeda e preferências de idioma"
+      >
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
-            <Label>Nome do Ginásio *</Label>
-            <Input 
-              value={gymName} 
-              onChange={e => { setGymName(e.target.value); markChanged(); }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-            {errors.gymName && (
-              <p className="text-xs text-destructive">{errors.gymName}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={email}
-              onChange={e => { setEmail(e.target.value); markChanged(); }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input 
-              value={phone} 
-              onChange={e => { setPhone(e.target.value); markChanged(); }}
-              placeholder="+244 923 456 789"
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Morada</Label>
-            <Input 
-              value={address} 
-              onChange={e => { setAddress(e.target.value); markChanged(); }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Fuso Horário</Label>
+            <Label className="text-sm font-medium">Fuso Horário</Label>
             <Select 
               value={timezone} 
               onValueChange={v => { setTimezone(v); markChanged(); }}
               disabled={!canEdit}
             >
-              <SelectTrigger className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}>
+              <SelectTrigger className={inputClassName}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -411,13 +477,13 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
           </div>
 
           <div className="space-y-2">
-            <Label>Locale</Label>
+            <Label className="text-sm font-medium">Locale</Label>
             <Select 
               value={locale} 
               onValueChange={v => { setLocale(v); markChanged(); }}
               disabled={!canEdit}
             >
-              <SelectTrigger className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}>
+              <SelectTrigger className={inputClassName}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -429,13 +495,13 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
           </div>
 
           <div className="space-y-2">
-            <Label>Moeda</Label>
+            <Label className="text-sm font-medium">Moeda</Label>
             <Select 
               value={currency} 
               onValueChange={v => { setCurrency(v); markChanged(); }}
               disabled={!canEdit}
             >
-              <SelectTrigger className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}>
+              <SelectTrigger className={inputClassName}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -446,28 +512,18 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label>NIF / VAT</Label>
-            <Input 
-              value={vatNumber} 
-              onChange={e => { setVatNumber(e.target.value); markChanged(); }}
-              placeholder="Ex: 5123456789"
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-            {errors.vatNumber && (
-              <p className="text-xs text-destructive">{errors.vatNumber}</p>
-            )}
-          </div>
         </div>
+      </SectionCard>
 
-        <Separator />
-
-        {/* Operational rules */}
-        <div className="grid gap-4 md:grid-cols-2">
+      {/* Operational Rules */}
+      <SectionCard 
+        icon={Settings2} 
+        title="Regras Operacionais" 
+        description="Configure as políticas de subscrição e pagamento"
+      >
+        <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-2">
-            <Label>Duração padrão da subscrição (dias)</Label>
+            <Label className="text-sm font-medium">Duração padrão da subscrição (dias)</Label>
             <Input
               type="number"
               min="1"
@@ -475,7 +531,7 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
               value={defaultMembership}
               onChange={e => { setDefaultMembership(e.target.value); markChanged(); }}
               disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+              className={inputClassName}
             />
             {errors.defaultMembership && (
               <p className="text-xs text-destructive">{errors.defaultMembership}</p>
@@ -483,7 +539,7 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
           </div>
 
           <div className="space-y-2">
-            <Label>Período de tolerância (dias)</Label>
+            <Label className="text-sm font-medium">Período de tolerância (dias)</Label>
             <Input
               type="number"
               min="0"
@@ -491,70 +547,82 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
               value={gracePeriod}
               onChange={e => { setGracePeriod(e.target.value); markChanged(); }}
               disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+              className={inputClassName}
             />
             {errors.gracePeriod && (
               <p className="text-xs text-destructive">{errors.gracePeriod}</p>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="autoSuspend"
-              checked={autoSuspend}
-              onCheckedChange={checked => { setAutoSuspend(Boolean(checked)); markChanged(); }}
-              disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            />
-            <Label 
-              htmlFor="autoSuspend"
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
-            >
-              Suspender automaticamente pagamentos em atraso
-            </Label>
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Branding */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Cor Principal</Label>
-            <div className="flex gap-2">
-              <Input
-                type="color"
-                value={primaryColor}
-                onChange={e => { setPrimaryColor(e.target.value); markChanged(); }}
-                disabled={!canEdit}
-                className={`w-20 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}
-              />
-              <Input
-                value={primaryColor}
-                onChange={e => { setPrimaryColor(e.target.value); markChanged(); }}
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border/30">
+              <Checkbox
+                id="autoSuspend"
+                checked={autoSuspend}
+                onCheckedChange={checked => { setAutoSuspend(Boolean(checked)); markChanged(); }}
                 disabled={!canEdit}
                 className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+              />
+              <Label 
+                htmlFor="autoSuspend"
+                className={`text-sm ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}
+              >
+                Suspender automaticamente membros com pagamentos em atraso
+              </Label>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Branding */}
+      <SectionCard 
+        icon={Palette} 
+        title="Marca & Personalização" 
+        description="Cores e textos personalizados para faturas"
+      >
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Cor Principal</Label>
+            <div className="flex gap-3">
+              <div className="relative">
+                <Input
+                  type="color"
+                  value={primaryColor}
+                  onChange={e => { setPrimaryColor(e.target.value); markChanged(); }}
+                  disabled={!canEdit}
+                  className={`w-14 h-10 p-1 cursor-pointer rounded-lg border-2 border-border/50 ${!canEdit ? 'cursor-not-allowed opacity-60' : ''}`}
+                />
+              </div>
+              <Input
+                value={primaryColor}
+                onChange={e => { setPrimaryColor(e.target.value); markChanged(); }}
+                disabled={!canEdit}
+                className={`flex-1 ${inputClassName}`}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Rodapé de faturas</Label>
+            <Label className="text-sm font-medium">Rodapé de faturas</Label>
             <Input
               value={invoiceFooter}
               onChange={e => { setInvoiceFooter(e.target.value); markChanged(); }}
               placeholder="Ex: Obrigado pela sua preferência"
               disabled={!canEdit}
-              className={!canEdit ? 'cursor-not-allowed opacity-60' : ''}
+              className={inputClassName}
             />
           </div>
         </div>
+      </SectionCard>
 
+      {/* Save Button */}
+      <div className="flex items-center justify-between pt-2">
         {canEdit ? (
           <Button 
             onClick={handleSave} 
             disabled={loading || !hasChanges}
-            className="w-full sm:w-auto"
+            size="lg"
+            className="relative overflow-hidden bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg hover:shadow-xl hover:glow-gold transition-all duration-300 font-medium"
           >
             {loading ? (
               <>
@@ -569,11 +637,18 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
             )}
           </Button>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Não tem permissão para editar estas definições. Contacte um administrador.
-          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 px-4 py-2 rounded-lg">
+            <Sparkles className="w-4 h-4" />
+            Não tem permissão para editar estas definições.
+          </div>
         )}
-      </CardContent>
-    </Card>
+        
+        {hasChanges && (
+          <span className="text-sm text-primary animate-pulse">
+            Alterações não guardadas
+          </span>
+        )}
+      </div>
+    </div>
   );
 }

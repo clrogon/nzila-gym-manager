@@ -9,7 +9,18 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useRBAC } from '@/hooks/useRBAC';
-import { Trash2, AlertCircle, CreditCard, Loader2, Edit, X } from 'lucide-react';
+import { 
+  Trash2, 
+  AlertCircle, 
+  CreditCard, 
+  Loader2, 
+  Edit, 
+  X, 
+  Plus,
+  Sparkles,
+  Check,
+  Clock
+} from 'lucide-react';
 
 export interface MembershipPlan {
   id: string;
@@ -48,7 +59,6 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Plan name validation
     if (!planName.trim()) {
       newErrors.planName = 'Nome é obrigatório';
     } else if (planName.trim().length < 2) {
@@ -57,7 +67,6 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
       newErrors.planName = 'Nome não pode exceder 100 caracteres';
     }
 
-    // Price validation
     const price = parseFloat(planPrice);
     if (isNaN(price) || price <= 0) {
       newErrors.planPrice = 'Preço deve ser maior que zero';
@@ -65,13 +74,11 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
       newErrors.planPrice = 'Preço não pode exceder 10.000.000';
     }
 
-    // Duration validation
     const duration = parseInt(planDuration, 10);
     if (isNaN(duration) || duration < 1 || duration > 3650) {
       newErrors.planDuration = 'Duração deve estar entre 1 e 3650 dias';
     }
 
-    // Description validation (optional but max length)
     if (planDescription.trim().length > 500) {
       newErrors.planDescription = 'Descrição não pode exceder 500 caracteres';
     }
@@ -237,10 +244,23 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
     setErrors({});
   };
 
+  const getDurationLabel = (days: number) => {
+    if (days === 1) return 'Diário';
+    if (days === 7) return 'Semanal';
+    if (days === 14) return 'Quinzenal';
+    if (days === 30) return 'Mensal';
+    if (days === 90) return 'Trimestral';
+    if (days === 180) return 'Semestral';
+    if (days === 365) return 'Anual';
+    return `${days} dias`;
+  };
+
+  const inputClassName = 'bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200';
+
   return (
     <div className="space-y-6">
       {!canEdit && (
-        <Alert>
+        <Alert className="border-border/50 bg-muted/30">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Apenas Leitura</AlertTitle>
           <AlertDescription>
@@ -250,23 +270,35 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
       )}
 
       {canCreate && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingPlanId ? 'Editar Plano' : 'Adicionar Plano de Subscrição'}</CardTitle>
-            <CardDescription>
-              {editingPlanId ? 'Atualize os detalhes do plano de subscrição' : 'Crie um novo plano de subscrição para o seu ginásio'}
-            </CardDescription>
+        <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-card to-accent/5 shadow-lg">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+          
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+                <Plus className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-display">
+                  {editingPlanId ? 'Editar Plano' : 'Adicionar Plano de Subscrição'}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground/80">
+                  {editingPlanId ? 'Atualize os detalhes do plano' : 'Crie um novo plano para o seu ginásio'}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+          <CardContent className="relative z-10">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Nome do Plano *</Label>
+                  <Label className="text-sm font-medium">Nome do Plano *</Label>
                   <Input
-                    placeholder="ex: Mensal Básico"
+                    placeholder="ex: Mensal Premium"
                     value={planName}
                     onChange={(e) => setPlanName(e.target.value)}
                     disabled={loading}
+                    className={inputClassName}
                   />
                   {errors.planName && (
                     <p className="text-xs text-destructive">{errors.planName}</p>
@@ -274,12 +306,13 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Descrição</Label>
+                  <Label className="text-sm font-medium">Descrição</Label>
                   <Input
-                    placeholder="Breve descrição"
+                    placeholder="Breve descrição do plano"
                     value={planDescription}
                     onChange={(e) => setPlanDescription(e.target.value)}
                     disabled={loading}
+                    className={inputClassName}
                   />
                   {errors.planDescription && (
                     <p className="text-xs text-destructive">{errors.planDescription}</p>
@@ -287,7 +320,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Preço ({currency}) *</Label>
+                  <Label className="text-sm font-medium">Preço ({currency}) *</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -296,6 +329,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                     value={planPrice}
                     onChange={(e) => setPlanPrice(e.target.value)}
                     disabled={loading}
+                    className={inputClassName}
                   />
                   {errors.planPrice && (
                     <p className="text-xs text-destructive">{errors.planPrice}</p>
@@ -303,13 +337,13 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Duração (Dias) *</Label>
+                  <Label className="text-sm font-medium">Duração *</Label>
                   <Select 
                     value={planDuration} 
                     onValueChange={setPlanDuration}
                     disabled={loading}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className={inputClassName}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,15 +362,22 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={loading}>
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl hover:glow-gold transition-all duration-300"
+                >
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {editingPlanId ? 'A atualizar...' : 'A adicionar...'}
                     </>
                   ) : (
-                    editingPlanId ? 'Atualizar Plano' : 'Adicionar Plano'
+                    <>
+                      {editingPlanId ? <Check className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      {editingPlanId ? 'Atualizar Plano' : 'Adicionar Plano'}
+                    </>
                   )}
                 </Button>
                 {editingPlanId && (
@@ -345,6 +386,7 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                     variant="outline" 
                     onClick={resetForm}
                     disabled={loading}
+                    className="border-border/50 hover:bg-muted/50"
                   >
                     <X className="w-4 h-4 mr-2" />
                     Cancelar
@@ -356,42 +398,62 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Planos Atuais</CardTitle>
-          <CardDescription>Gerir os seus planos de subscrição existentes</CardDescription>
+      <Card className="relative overflow-hidden border-border/50 bg-gradient-to-br from-card via-card to-accent/5 shadow-lg">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+        
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
+              <CreditCard className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg font-display">Planos Atuais</CardTitle>
+              <CardDescription className="text-muted-foreground/80">
+                {plans.length} planos configurados
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-10">
           {plans.length > 0 ? (
             <div className="space-y-3">
               {plans.map((plan) => (
                 <div
                   key={plan.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  className="group flex items-center justify-between p-5 rounded-xl bg-muted/20 border border-border/30 hover:border-primary/20 hover:bg-muted/30 transition-all duration-300"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-2 h-12 rounded-full ${plan.is_active ? 'bg-green-500' : 'bg-muted'}`} />
+                    <div className={`w-1.5 h-14 rounded-full transition-colors ${plan.is_active ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{plan.name}</p>
-                        {!plan.is_active && <Badge variant="secondary">Inativo</Badge>}
+                        <p className="font-semibold text-base">{plan.name}</p>
+                        {!plan.is_active && (
+                          <Badge variant="secondary" className="text-xs">Inativo</Badge>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatCurrency(plan.price)} · {plan.duration_days} dias
-                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-lg font-bold text-primary">
+                          {formatCurrency(plan.price)}
+                        </span>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {getDurationLabel(plan.duration_days)}
+                        </span>
+                      </div>
                       {plan.description && (
-                        <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
                       )}
                     </div>
                   </div>
 
                   {canEdit && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => toggleStatus(plan)}
                         disabled={loading}
+                        className="hover:bg-muted"
                       >
                         {plan.is_active ? 'Desativar' : 'Ativar'}
                       </Button>
@@ -400,13 +462,14 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
                         variant="ghost"
                         onClick={() => handleEdit(plan)}
                         disabled={loading}
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => remove(plan.id, plan.name)}
                         disabled={loading}
                       >
@@ -418,10 +481,15 @@ export default function SettingsPlans({ plans, refresh, currency, gymId }: Setti
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">
-                Ainda sem planos de subscrição. {canCreate ? 'Adicione o seu primeiro plano acima.' : 'Contacte um administrador para adicionar planos.'}
+            <div className="text-center py-16">
+              <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-8 h-8 text-muted-foreground/60" />
+              </div>
+              <p className="text-muted-foreground mb-2">
+                Ainda sem planos de subscrição
+              </p>
+              <p className="text-sm text-muted-foreground/70">
+                {canCreate ? 'Adicione o seu primeiro plano acima.' : 'Contacte um administrador para adicionar planos.'}
               </p>
             </div>
           )}
