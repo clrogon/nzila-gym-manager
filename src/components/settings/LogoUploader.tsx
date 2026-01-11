@@ -14,12 +14,25 @@ interface LogoUploaderProps {
   onSave: () => Promise<void>;
 }
 
+// Validate URL has safe protocol (prevents javascript: XSS attacks)
+const isSafeUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:', 'data:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 export function LogoUploader({ currentLogoUrl, gymId, canEdit, onSave }: LogoUploaderProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState(currentLogoUrl || '');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    isSafeUrl(currentLogoUrl) ? currentLogoUrl : null
+  );
   const [mode, setMode] = useState<'upload' | 'url'>(currentLogoUrl?.startsWith('http') ? 'url' : 'upload');
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,11 +108,9 @@ export function LogoUploader({ currentLogoUrl, gymId, canEdit, onSave }: LogoUpl
   const handleUrlSubmit = async () => {
     if (!urlInput.trim()) return;
 
-    // Basic URL validation
-    try {
-      new URL(urlInput);
-    } catch {
-      toast({ title: 'Erro', description: 'URL inválido.', variant: 'destructive' });
+    // Validate URL protocol for security
+    if (!isSafeUrl(urlInput)) {
+      toast({ title: 'Erro', description: 'URL inválido. Apenas HTTP, HTTPS ou data URLs são permitidos.', variant: 'destructive' });
       return;
     }
 
@@ -140,7 +151,7 @@ export function LogoUploader({ currentLogoUrl, gymId, canEdit, onSave }: LogoUpl
         {/* Preview */}
         <div className="relative group/logo">
           <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center bg-muted/30 overflow-hidden transition-all duration-300 group-hover/logo:border-primary/40">
-            {previewUrl ? (
+            {previewUrl && isSafeUrl(previewUrl) ? (
               <img
                 src={previewUrl}
                 alt="Logótipo"
