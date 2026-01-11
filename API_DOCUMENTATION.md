@@ -73,7 +73,7 @@ Content-Type: application/json
 ```json
 {
   "email": "user@example.com",
-  "password": "securePassword123",
+  "password": "your-secure-password",
   "action": "signin"
 }
 ```
@@ -117,7 +117,7 @@ Content-Type: application/json
 ```json
 {
   "email": "user@example.com",
-  "password": "SecurePass123",
+  "password": "your-secure-password",
   "action": "signup",
   "fullName": "John Doe"
 }
@@ -805,8 +805,8 @@ Initializes super admin account for platform setup.
 **Request Body:**
 ```json
 {
-  "email": "superadmin@nzila.ao",
-  "password": "SecureAdmin123"
+  "email": "your-admin@example.com",
+  "password": "your-secure-admin-password"
 }
 ```
 
