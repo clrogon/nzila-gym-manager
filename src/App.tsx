@@ -41,7 +41,13 @@ const OnboardingPage = lazy(() => import("./modules/onboarding").then(m => ({ de
 const SuperAdminPage = lazy(() => import("./modules/superadmin").then(m => ({ default: m.SuperAdminPage })));
 const SaaSAdminDashboard = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminDashboard })));
 const GymManagement = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.GymManagement })));
-// SaaSAdminSettings removed - tables don't exist
+const SaaSAdminLayout = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SaaSAdminLayout })));
+const SubscriptionManager = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SubscriptionManager })));
+const AnnouncementManager = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.AnnouncementManager })));
+const SupportTicketManager = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SupportTicketManager })));
+const FeatureFlagManager = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.FeatureFlagManager })));
+const SystemHealthDashboard = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.SystemHealthDashboard })));
+const PlatformSettingsManager = lazy(() => import("./modules/saas-admin").then(m => ({ default: m.PlatformSettingsManager })));
 const StaffPage = lazy(() => import("./modules/staff").then(m => ({ default: m.StaffPage })));
 const CalendarPage = lazy(() => import("./modules/calendar").then(m => ({ default: m.CalendarPage })));
 const TrainingPage = lazy(() => import("./modules/training").then(m => ({ default: m.TrainingPage })));
@@ -188,8 +194,16 @@ function AppRoutes() {
       
       {/* SaaS Admin Portal */}
       <Route element={<SaaSAdminGuard />}>
-        <Route path="/saas-admin" element={<SaaSAdminDashboard />} />
-        <Route path="/saas-admin/gyms" element={<GymManagement />} />
+        <Route element={<Suspense fallback={<ModuleLoader message="Loading Platform Admin..." />}><SaaSAdminLayout /></Suspense>}>
+          <Route path="/saas-admin" element={<Suspense fallback={<ModuleLoader />}><SaaSAdminDashboard /></Suspense>} />
+          <Route path="/saas-admin/gyms" element={<Suspense fallback={<ModuleLoader />}><GymManagement /></Suspense>} />
+          <Route path="/saas-admin/subscriptions" element={<Suspense fallback={<ModuleLoader />}><SubscriptionManager /></Suspense>} />
+          <Route path="/saas-admin/announcements" element={<Suspense fallback={<ModuleLoader />}><AnnouncementManager /></Suspense>} />
+          <Route path="/saas-admin/support" element={<Suspense fallback={<ModuleLoader />}><SupportTicketManager /></Suspense>} />
+          <Route path="/saas-admin/features" element={<Suspense fallback={<ModuleLoader />}><FeatureFlagManager /></Suspense>} />
+          <Route path="/saas-admin/health" element={<Suspense fallback={<ModuleLoader />}><SystemHealthDashboard /></Suspense>} />
+          <Route path="/saas-admin/settings" element={<Suspense fallback={<ModuleLoader />}><PlatformSettingsManager /></Suspense>} />
+        </Route>
       </Route>
  
       {/* Error Pages */}
