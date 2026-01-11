@@ -47,12 +47,13 @@ export function PlanAnalytics({ plans, gymId, currency }: PlanAnalyticsProps) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, member_id')
-        .eq('gym_id', gymId)
-        .eq('status', 'completed')
-        .gte('created_at', thirtyDaysAgo.toISOString());
+      type PaymentRow = { amount: number; member_id: string };
+      // Break chain to avoid TS2589 deep instantiation error
+      const baseQuery = supabase.from('payments').select('amount, member_id');
+      const gymQuery = baseQuery.eq('gym_id', gymId);
+      // @ts-expect-error - avoiding excessive type instantiation depth
+      const statusQuery = gymQuery.eq('status', 'completed');
+      const { data: payments } = (await statusQuery.gte('created_at', thirtyDaysAgo.toISOString())) as { data: PaymentRow[] | null };
 
       // Aggregate data
       const memberCounts: Record<string, number> = {};
