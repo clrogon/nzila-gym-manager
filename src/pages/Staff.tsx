@@ -83,11 +83,16 @@ export default function Staff() {
 
   // Form state
   const [formData, setFormData] = useState({
+    fullName: '',
     email: '',
+    phone: '',
     role: 'staff' as AppRole,
     gym_id: '',
     is_trainer: false,
+    createAccount: true,
+    sendWelcomeEmail: true,
   });
+  const [isCreating, setIsCreating] = useState(false);
 
   const canManageStaff = hasPermission('staff:create') || hasPermission('staff:update');
   const canDeleteStaff = hasPermission('staff:delete');
@@ -171,80 +176,121 @@ export default function Staff() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // First, find the user by email
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', formData.email)
-      .maybeSingle();
-
-    if (!profile) {
-      toast.error('User not found. They must sign up first.');
-      return;
-    }
+    setIsCreating(true);
 
     const gymId = isSuperAdmin ? formData.gym_id : currentGym?.id;
 
     if (!gymId) {
       toast.error('Please select a gym');
+      setIsCreating(false);
       return;
     }
 
-    // Check if role already exists
-    const { data: existing } = await supabase
-      .from('user_roles')
-      .select('id')
-      .eq('user_id', profile.id)
-      .eq('gym_id', gymId)
-      .maybeSingle();
+    try {
+      if (selectedStaff) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({ role: formData.role, is_trainer: formData.is_trainer })
+          .eq('id', selectedStaff.id);
 
-    if (existing && !selectedStaff) {
-      toast.error('User already has a role in this gym');
-      return;
-    }
+        if (error) throw error;
+        toast.success('Staff role updated');
+      } else {
+        // Check if creating a new account or linking existing user
+        if (formData.createAccount) {
+          // Call edge function to create user account
+          const { data: session } = await supabase.auth.getSession();
+          
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user-account`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session?.session?.access_token}`,
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                fullName: formData.fullName,
+                phone: formData.phone,
+                role: formData.role,
+                gymId: gymId,
+                sendWelcomeEmail: formData.sendWelcomeEmail,
+              }),
+            }
+          );
 
-    if (selectedStaff) {
-      // Update existing role
-      const { error } = await supabase
-        .from('user_roles')
-        .update({ role: formData.role, is_trainer: formData.is_trainer })
-        .eq('id', selectedStaff.id);
+          const result = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to create user account');
+          }
 
-      if (error) {
-        toast.error('Failed to update staff role');
-        return;
+          toast.success(result.message || 'Staff member added with login account');
+        } else {
+          // Original flow: find existing user by email
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', formData.email)
+            .maybeSingle();
+
+          if (!profile) {
+            toast.error('User not found. They must sign up first, or enable "Create Login Account".');
+            setIsCreating(false);
+            return;
+          }
+
+          // Check if role already exists
+          const { data: existing } = await supabase
+            .from('user_roles')
+            .select('id')
+            .eq('user_id', profile.id)
+            .eq('gym_id', gymId)
+            .maybeSingle();
+
+          if (existing) {
+            toast.error('User already has a role in this gym');
+            setIsCreating(false);
+            return;
+          }
+
+          const { error } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: profile.id,
+              gym_id: gymId,
+              role: formData.role,
+              is_trainer: formData.is_trainer,
+            });
+
+          if (error) throw error;
+          toast.success('Staff member added');
+        }
       }
-      toast.success('Staff role updated');
-    } else {
-      // Create new role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: profile.id,
-          gym_id: gymId,
-          role: formData.role,
-          is_trainer: formData.is_trainer,
-        });
 
-      if (error) {
-        toast.error('Failed to add staff member');
-        return;
-      }
-      toast.success('Staff member added');
+      resetForm();
+      fetchStaffMembers();
+    } catch (error: any) {
+      console.error('Error in handleSubmit:', error);
+      toast.error(error.message || 'Failed to save staff member');
+    } finally {
+      setIsCreating(false);
     }
-
-    resetForm();
-    fetchStaffMembers();
   };
 
   const handleEdit = (staff: StaffMember) => {
     setSelectedStaff(staff);
     setFormData({
+      fullName: staff.profile?.full_name || '',
       email: staff.profile?.email || '',
+      phone: '',
       role: staff.role,
       gym_id: staff.gym_id || '',
       is_trainer: staff.is_trainer || false,
+      createAccount: false,
+      sendWelcomeEmail: false,
     });
     setDialogOpen(true);
   };
@@ -269,7 +315,16 @@ export default function Staff() {
   };
 
   const resetForm = () => {
-    setFormData({ email: '', role: 'staff', gym_id: '', is_trainer: false });
+    setFormData({ 
+      fullName: '', 
+      email: '', 
+      phone: '',
+      role: 'staff', 
+      gym_id: '', 
+      is_trainer: false,
+      createAccount: true,
+      sendWelcomeEmail: true,
+    });
     setSelectedStaff(null);
     setDialogOpen(false);
   };
@@ -347,8 +402,39 @@ export default function Staff() {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+                {!selectedStaff && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="createAccount" className="text-sm font-medium cursor-pointer">
+                        Create Login Account
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Create a new account with email & temporary password
+                      </p>
+                    </div>
+                    <Switch
+                      id="createAccount"
+                      checked={formData.createAccount}
+                      onCheckedChange={(checked) => setFormData({ ...formData, createAccount: checked })}
+                    />
+                  </div>
+                )}
+
+                {formData.createAccount && !selectedStaff && (
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name *</Label>
+                    <Input
+                      id="fullName"
+                      value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                      placeholder="John Doe"
+                      required={formData.createAccount}
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">Email Address *</Label>
                   <Input
                     id="email"
                     type="email"
@@ -359,6 +445,18 @@ export default function Staff() {
                     disabled={!!selectedStaff}
                   />
                 </div>
+
+                {formData.createAccount && !selectedStaff && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+244 923 456 789"
+                    />
+                  </div>
+                )}
 
                 {isSuperAdmin && !selectedStaff && (
                   <div className="space-y-2">
@@ -421,12 +519,30 @@ export default function Staff() {
                   />
                 </div>
 
+                {formData.createAccount && !selectedStaff && (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sendWelcomeEmail" className="text-sm font-medium cursor-pointer">
+                        Send Welcome Email
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Send login credentials via email
+                      </p>
+                    </div>
+                    <Switch
+                      id="sendWelcomeEmail"
+                      checked={formData.sendWelcomeEmail}
+                      onCheckedChange={(checked) => setFormData({ ...formData, sendWelcomeEmail: checked })}
+                    />
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} disabled={isCreating}>
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    {selectedStaff ? 'Update' : 'Add Staff'}
+                  <Button type="submit" disabled={isCreating}>
+                    {isCreating ? 'Creating...' : selectedStaff ? 'Update' : 'Add Staff'}
                   </Button>
                 </div>
               </form>
