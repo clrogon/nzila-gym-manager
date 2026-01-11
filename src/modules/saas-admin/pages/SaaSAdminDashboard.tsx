@@ -1,24 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from 'recharts';
-import {
   Building2,
   Users,
-  TrendingUp,
   DollarSign,
   AlertCircle,
   CheckCircle,
@@ -153,17 +139,14 @@ export default function SaaSAdminDashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-muted-foreground">Loading platform metrics...</div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-muted-foreground">Loading platform metrics...</div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-2 mb-6">
           <Building2 className="w-8 h-8 text-primary" />
@@ -271,6 +254,5 @@ export default function SaaSAdminDashboard() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }
