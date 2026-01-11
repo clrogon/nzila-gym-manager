@@ -79,7 +79,7 @@ export default function SubscriptionManager() {
         .select(`
           *,
           gym:gyms(name, email),
-          plan:platform_plans(name, monthly_price)
+          plan:platform_plans(name, price_monthly)
         `)
         .order('created_at', { ascending: false });
 
@@ -87,7 +87,7 @@ export default function SubscriptionManager() {
       // Map plan data
       const mapped = (data || []).map((s) => ({
         ...s,
-        plan: s.plan ? { name: (s.plan as any).name, price: (s.plan as any).monthly_price || 0 } : undefined,
+        plan: s.plan ? { name: (s.plan as any).name, price: (s.plan as any).price_monthly || 0 } : undefined,
       }));
       setSubscriptions(mapped as Subscription[]);
     } catch (error) {

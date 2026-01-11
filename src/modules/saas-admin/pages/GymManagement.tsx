@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -255,23 +254,20 @@ export default function GymManagement() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-muted-foreground">Loading gyms...</div>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-muted-foreground">Loading gyms...</div>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-primary" />
-            <h1 className="text-3xl font-display font-bold">Gym Management</h1>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="w-6 h-6 text-amber-500" />
+          <h2 className="text-2xl font-display font-bold">Gym Management</h2>
+        </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);
             if (!open) resetForm();
@@ -348,110 +344,109 @@ export default function GymManagement() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Search gyms..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="trial">Trial</SelectItem>
-              <SelectItem value="past_due">Past Due</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Gyms Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gyms ({filteredGyms.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {filteredGyms.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No gyms found.
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Phone</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredGyms.map((gym) => (
-                      <TableRow key={gym.id}>
-                        <TableCell className="font-medium">{gym.name}</TableCell>
-                        <TableCell>{gym.email || '-'}</TableCell>
-                        <TableCell>{gym.phone || '-'}</TableCell>
-                        <TableCell>{getStatusBadge(gym.subscription_status)}</TableCell>
-                        <TableCell>
-                          {new Date(gym.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(gym)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="w-4 h-4 text-destructive" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Gym</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete {gym.name}? This
-                                    action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(gym.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
-    </DashboardLayout>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="Search gyms..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <SelectTrigger className="w-full sm:w-48">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="trial">Trial</SelectItem>
+          <SelectItem value="past_due">Past Due</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    {/* Gyms Table */}
+    <Card>
+      <CardHeader>
+        <CardTitle>Gyms ({filteredGyms.length})</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {filteredGyms.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">
+            No gyms found.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredGyms.map((gym) => (
+                  <TableRow key={gym.id}>
+                    <TableCell className="font-medium">{gym.name}</TableCell>
+                    <TableCell>{gym.email || '-'}</TableCell>
+                    <TableCell>{gym.phone || '-'}</TableCell>
+                    <TableCell>{getStatusBadge(gym.subscription_status)}</TableCell>
+                    <TableCell>
+                      {new Date(gym.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(gym)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Gym</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {gym.name}? This
+                                action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(gym.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  </div>
   );
 }

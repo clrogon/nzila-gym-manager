@@ -41,6 +41,7 @@ import {
   User,
   Sparkles,
   Compass,
+  Crown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ThemeToggle from '@/components/common/ThemeToggle';
@@ -86,6 +87,7 @@ const memberNavItems: NavItem[] = [
 
 /* Navegação da plataforma (apenas Super Admin) */
 const platformNavItems: NavItem[] = [
+  { icon: Crown, label: 'Admin SaaS', href: '/saas-admin' },
   { icon: Building2, label: 'Ginásios', href: '/super-admin' },
   { icon: UserCog, label: 'Equipa Global', href: '/staff' },
 ];
