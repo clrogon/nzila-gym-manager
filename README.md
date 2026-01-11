@@ -456,7 +456,7 @@ Este projecto está licenciado sob a Licença MIT - veja o ficheiro [LICENSE](LI
 ### Contact | Contacto
 
 - **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
-- **Email**: support@nzila.ao | suporte@nzila.ao
+- **Email**: [your-support-email@example.com] | [your-support-email@example.com]
 
 ---
 

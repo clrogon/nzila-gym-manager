@@ -616,7 +616,6 @@ Para incidentes, problemas ou preocupações:
 
 ## Support | Suporte
 
-- **Staff Portal Help**: +244 XXX XXX XXX
-- **Email**: staff-support@nzila.ao
+- **GitHub Issues**: [https://github.com/clrogon/nzila-gym-manager/issues](https://github.com/clrogon/nzila-gym-manager/issues)
 - **Training**: Contact manager for training sessions
 - **Documentation**: [Admin Guide](./ADMIN_GUIDE.md) | [User Guide](./USER_GUIDE.md)

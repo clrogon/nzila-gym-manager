@@ -290,21 +290,15 @@ A: Health data is stored in a separate secure table (`member_sensitive_data`) wi
 
 | Support Type | Contact | Response Time |
 |--------------|----------|----------------|
-| **Member Support** | support@nzila.ao | 24 hours |
-| **Admin Support** | admin-support@nzila.ao | 12 hours |
-| **Staff Support** | staff-support@nzila.ao | 12 hours |
-| **Technical Support** | tech-support@nzila.ao | 24 hours |
-| **Emergency** | +244 XXX XXX XXX | Immediate |
+| **Support** | [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues) | Community-based |
+| **Documentation** | [Documentation Index](../DOCUMENTATION.md) | Self-service |
 
 ### PT
 
 | Tipo de Suporte | Contacto | Tempo de Resposta |
 |-----------------|----------|------------------|
-| **Suporte de Membros** | support@nzila.ao | 24 horas |
-| **Suporte Administrativo** | admin-support@nzila.ao | 12 horas |
-| **Suporte de Staff** | staff-support@nzila.ao | 12 horas |
-| **Suporte Técnico** | tech-support@nzila.ao | 24 horas |
-| **Emergência** | +244 XXX XXX XXX | Imediato |
+| **Suporte** | [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues) | Baseado em comunidade |
+| **Documentação** | [Índice de Documentação](../DOCUMENTATION.md) | Auto-serviço |
 
 ---
 

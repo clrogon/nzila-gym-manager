@@ -19,7 +19,7 @@ Thank you for your interest in contributing to Nzila Gym Manager! We welcome con
 
 ## Code of Conduct
 
-This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to support@nzila.ao.
+This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to https://github.com/clrogon/nzila-gym-manager/issues.
 
 ---
 
@@ -410,7 +410,7 @@ Who would benefit from this feature?
 
 **DO NOT** create public issues for security vulnerabilities.
 
-Please email security concerns to: **security@nzila.ao**
+Please email security concerns to: **[your-security-email@example.com]**
 
 See [SECURITY.md](SECURITY.md) for our security policy.
 
@@ -420,7 +420,7 @@ See [SECURITY.md](SECURITY.md) for our security policy.
 
 - **General Discussion**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
 - **Bug Reports**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
-- **Email**: support@nzila.ao
+- **Email**: [your-support-email@example.com]
 
 ---
 

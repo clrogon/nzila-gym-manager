@@ -565,4 +565,4 @@ The Nzila Gym Manager demonstrates **exceptional security posture**, **comprehen
 
 **For questions or clarifications, please contact:**
 - GitHub Issues: https://github.com/clrogon/nzila-gym-manager/issues
-- Email: support@nzila.ao
+- Email: [your-support-email@example.com]

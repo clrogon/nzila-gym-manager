@@ -574,7 +574,7 @@ ORDER BY version DESC;
 - **Vercel Documentation**: https://vercel.com/docs
 - **Supabase Documentation**: https://supabase.com/docs
 - **GitHub Issues**: https://github.com/clrogon/nzila-gym-manager/issues
-- **Email**: support@nzila.ao
+- **Email**: [your-support-email@example.com]
 
 ---
 

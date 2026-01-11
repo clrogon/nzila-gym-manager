@@ -423,6 +423,5 @@ R: Sim, vá a **Meus Treinos** → **Exportar Histórico** para baixar CSV/PDF.
 
 ## Support | Suporte
 
-- **Email**: support@nzila.ao
-- **Phone**: +244 XXX XXX XXX
-- **Help Desk**: Visit your gym reception
+- **GitHub Issues**: [https://github.com/clrogon/nzila-gym-manager/issues](https://github.com/clrogon/nzila-gym-manager/issues)
+- **Documentation**: [Documentation Index](../DOCUMENTATION.md)

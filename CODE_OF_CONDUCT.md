@@ -82,7 +82,7 @@
 
 **PT**: Casos de comportamento abusivo, assediador ou de outra forma inaceitável podem ser reportados aos líderes da comunidade responsáveis pela aplicação em:
 
-**Email**: conduct@nzila.ao | conduta@nzila.ao
+**Email**: [your-conduct-email@example.com] | conduta@example.com
 
 **EN**: All complaints will be reviewed and investigated promptly and fairly.
 
@@ -160,9 +160,9 @@
 
 ## Security Reporting | Reporte de Segurança
 
-**EN**: Security vulnerabilities should be reported privately to security@nzila.ao, not through public channels. See [SECURITY.md](SECURITY.md) for our security policy.
+**EN**: Security vulnerabilities should be reported privately to [your-security-email@example.com], not through public channels. See [SECURITY.md](SECURITY.md) for our security policy.
 
-**PT**: Vulnerabilidades de segurança devem ser reportadas privadamente para security@nzila.ao, não através de canais públicos. Veja [SECURITY.md](SECURITY.md) para a nossa política de segurança.
+**PT**: Vulnerabilidades de segurança devem ser reportadas privadamente para [your-security-email@example.com], não através de canais públicos. Veja [SECURITY.md](SECURITY.md) para a nossa política de segurança.
 
 ---
 

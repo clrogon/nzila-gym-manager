@@ -15,7 +15,7 @@ We release patches for security vulnerabilities. Currently supported:
 
 Instead, please report security issues via email to:
 
-📧 **security@gymmanager.local** (or your actual contact)
+📧 **security@example.com** (or your actual contact)
 
 ### What to Include
 

@@ -134,9 +134,9 @@
 
 - **Carlos Rogão** ([@clrogon](https://github.com/clrogon)) - Project Lead | Líder de Projecto
 
-**EN**: Interested in becoming a maintainer? Reach out to carlos@nzila.ao
+**EN**: Interested in becoming a maintainer? Reach out to [your-maintainer-email@example.com]
 
-**PT**: Interessado em tornar-se mantenedor? Entre em contacto com carlos@nzila.ao
+**PT**: Interessado em tornar-se mantenedor? Entre em contacto com [your-maintainer-email@example.com]
 
 ---
 
@@ -150,9 +150,9 @@
 - **Patreon**: [patreon.com/clrogon](https://patreon.com/clrogon)
 - **Ko-fi**: [ko-fi.com/clrogon](https://ko-fi.com/clrogon)
 
-**EN**: Corporate sponsorships and partnerships available. Contact: hello@nzila.ao
+**EN**: Corporate sponsorships and partnerships available. Contact: [your-partnership-email@example.com]
 
-**PT**: Patrocínios corporativos e parcerias disponíveis. Contacto: ola@nzila.ao
+**PT**: Patrocínios corporativos e parcerias disponíveis. Contacto: [your-partnership-email@example.com]
 
 ---
 

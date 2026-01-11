@@ -512,7 +512,7 @@ For contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - **Issues**: [GitHub Issues](https://github.com/clrogon/nzila-gym-manager/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/clrogon/nzila-gym-manager/discussions)
-- **Email**: support@nzila.ao
+- **Email**: [your-support-email@example.com]
 
 ---
 

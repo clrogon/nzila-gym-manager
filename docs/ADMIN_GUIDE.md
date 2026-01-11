@@ -751,6 +751,5 @@ R: Vá a **Configurações** → **Exportação de Dados** para baixar dados com
 
 ## Support | Suporte
 
-- **Admin Help Desk**: +244 XXX XXX XXX
-- **Email**: admin-support@nzila.ao
+- **GitHub Issues**: [https://github.com/clrogon/nzila-gym-manager/issues](https://github.com/clrogon/nzila-gym-manager/issues)
 - **Documentation**: [README.md](../README.md)

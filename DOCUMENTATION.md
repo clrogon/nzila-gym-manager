@@ -193,7 +193,7 @@ git log --all -- '*.md' --oneline
 ### Questions or Issues?
 
 - **GitHub Issues**: [https://github.com/clrogon/nzila-gym-manager/issues](https://github.com/clrogon/nzila-gym-manager/issues)
-- **Email**: support@nzila.ao | suporte@nzila.ao
+- **Email**: [your-support-email@example.com] | [your-support-email@example.com]
 - **Documentation Issues**: Create a GitHub issue with label "documentation"
 
 ### Suggesting Improvements

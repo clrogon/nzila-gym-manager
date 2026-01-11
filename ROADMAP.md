@@ -7,35 +7,32 @@
 ## 🎯 Core Features | Funcionalidades Principais
 
 ### 01. Pagamentos Digitais | Digital Payments
-Processamento seguro e imediato. O sistema valida o pagamento e liberta a entrada na hora.
-> Secure and immediate processing. The system validates payment and releases entry instantly.
+Processamento seguro de pagamentos com gestão manual de comprovativos.
+> Secure payment processing with manual proof management.
 
-- [x] Multicaixa Express integration | Integração Multicaixa Express
+- [x] Multicaixa proof upload | Upload de comprovativos Multicaixa
+- [ ] Multicaixa Express automatic integration | Integração automática Multicaixa Express 📋
 - [x] Real-time payment validation | Validação de pagamento em tempo real
-- [x] Automatic access release | Liberação automática de acesso
+- [x] Manual access control | Controlo de acesso manual
 - [x] Multiple payment methods | Múltiplos métodos de pagamento
 
 ### 02. Controlo de Entradas | Entry Control
-O Nzila conecta-se diretamente aos equipamentos físicos do seu ginásio para garantir segurança total.
-> Nzila connects directly to your gym's physical equipment to ensure total security.
+Suporte para integrações de hardware futuras. Actualmente suporta QR Code e gestão de PIN.
+> Support for future hardware integrations. Currently supports QR Code and PIN management.
 
-**Biometria Facial | Facial Biometrics**
-Compatível com Hikvision e ZKTeco para entrada sem contacto.
-> Compatible with Hikvision and ZKTeco for contactless entry.
-
-**Sincronização Offline | Offline Sync**
-O torniquete continua a funcionar mesmo se a internet cair.
-> The turnstile continues to work even if the internet goes down.
+**Biometria Facial | Facial Biometrics** 📋
+Planeada integração com Hikvision e ZKTeco para entrada sem contacto (v2.0).
+> Planned Hikvision and ZKTeco integration for contactless entry (v2.0).
 
 **Cartões RFID | RFID Cards**
-Gestão simples de cartões de acesso para staff e membros.
-> Simple access card management for staff and members.
+Suporte para cartões de acesso (requer hardware específico).
+> Access card support (requires specific hardware).
 
-- [x] Turnstile/hardware integration | Integração com torniquetes
+- [ ] Turnstile/hardware integration | Integração com torniquetes 📋
 - [x] Automatic overdue blocking | Bloqueio automático por atraso
-- [x] Biometric support (Hikvision, ZKTeco) | Suporte biométrico facial
-- [x] RFID card management | Gestão de cartões RFID
-- [x] Offline sync capability | Sincronização offline
+- [ ] Biometric support (Hikvision, ZKTeco) | Suporte biométrico facial 📋
+- [ ] RFID card management | Gestão de cartões RFID 📋
+- [ ] Offline sync capability | Sincronização offline 📋
 
 ### 03. Relatórios Financeiros | Financial Reports
 Saiba exatamente quanto faturou hoje. Mapas de caixa, previsões e histórico de vendas.
@@ -180,8 +177,8 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 - [x] Payment processing | Processamento de pagamentos
 - [x] Invoice generation | Geração de facturas
 - [x] Invoice list view | Visualização de lista de facturas
-- [x] Multicaixa Express integration | Integração Multicaixa Express
-- [x] Multicaixa proof upload | Upload de comprovativo Multicaixa
+- [x] Multicaixa proof upload | Upload de comprovativos Multicaixa
+- [ ] Automatic Multicaixa Express integration | Integração automática Multicaixa Express 📋
 - [x] Bank reconciliation | Reconciliação bancária
 - [x] Financial reports (PDF export) | Relatórios financeiros (exportação PDF)
 - [x] Discount/coupon system | Sistema de descontos/cupões
@@ -290,73 +287,25 @@ Gira várias unidades (Luanda, Talatona, Benguela) num único painel administrat
 
 ---
 
-## 💰 Planos Flexíveis | Flexible Plans
 
-### Starter
-**35.000 Kz/mês | 35,000 Kz/month**
-Para pequenos estúdios e boxes de CrossFit.
-> For small studios and CrossFit boxes.
-
-- [x] Membros Activos | Active Members
-- [x] Pagamentos Digitais | Digital Payments
-- [x] Controlo de Hardware | Hardware Control
-- [ ] Dashboard BI | BI Dashboard
-- [ ] Suporte Prioritário | Priority Support
-
-### Pro (Melhor Escolha | Best Choice)
-**75.000 Kz/mês | 75,000 Kz/month**
-Para ginásios com controlo de acesso e alto volume.
-> For gyms with access control and high volume.
-
-- [x] Membros Activos | Active Members
-- [x] Pagamentos Digitais | Digital Payments
-- [x] Controlo de Hardware | Hardware Control
-- [x] Dashboard BI | BI Dashboard
-- [x] Suporte Prioritário | Priority Support
-
-### Enterprise
-**Sob Consulta | On Request**
-Para redes de ginásios e grandes complexos desportivos.
-> For gym chains and large sports complexes.
-
-- [x] Membros Activos | Active Members
-- [x] Pagamentos Digitais | Digital Payments
-- [x] Controlo de Hardware | Hardware Control
-- [x] Dashboard BI | BI Dashboard
-- [x] Suporte Prioritário | Priority Support
-- [x] Implementação Personalizada | Custom Implementation
-
----
-
-## 💬 Quem Confia | Who Trusts Us
-
-### Testemunhos | Testimonials
-
-> "Antes perdíamos muito tempo a conferir comprovativos de transferência. Com o Nzila e os pagamentos digitais, é tudo automático."
-> — **João Manuel**, Proprietário, Luanda Elite Fit
-
-> "O bloqueio automático no torniquete reduziu os pagamentos em atraso em quase 90%. O sistema paga-se sozinho."
-> — **Maria Costa**, Gerente, The Talatona Club
-
----
 
 ## ❓ Perguntas Frequentes | FAQ
 
 ### Preciso comprar torniquetes novos? | Do I need to buy new turnstiles?
-O Nzila integra com as principais marcas do mercado (Hikvision, ZKTeco). Provavelmente podemos usar os seus atuais.
-> Nzila integrates with major market brands (Hikvision, ZKTeco). We can probably use your current ones.
+O Nzila suporta check-in por QR Code actualmente. Integrações de hardware biométrico e RFID planeadas para v2.0.
+> Nzila supports QR Code check-in currently. Biometric and RFID hardware integrations planned for v2.0.
 
 ### Como recebo o dinheiro dos pagamentos? | How do I receive payment money?
-O dinheiro vai directamente para a sua conta bancária via Multicaixa Express. Sem intermediários.
-> Money goes directly to your bank account via Multicaixa Express. No intermediaries.
+O sistema suporta upload de comprovativos Multicaixa. Para pagamentos automáticos, requer integração com gateway bancário local.
+> The system supports Multicaixa proof upload. For automatic payments, local bank gateway integration required.
 
 ### Quanto tempo demora a implementação? | How long does implementation take?
 Normalmente 2-3 dias úteis para configuração completa, incluindo integração de hardware.
 > Usually 2-3 business days for complete setup, including hardware integration.
 
-### Posso experimentar antes de comprar? | Can I try before buying?
-Sim! Oferecemos uma demonstração gratuita personalizada para o seu ginásio.
-> Yes! We offer a free personalized demo for your gym.
+### Posso experimentar antes de usar? | Can I try before using?
+Sim! Este é um projecto de código aberto e gratuito. Pode clonar o repositório e executar localmente.
+> Yes! This is an open-source project and free to use. You can clone the repository and run it locally.
 
 ---
 
@@ -372,6 +321,3 @@ Sim! Oferecemos uma demonstração gratuita personalizada para o seu ginásio.
 
 **Have suggestions? | Tem sugestões?** 
 [Open a feature request | Abra um pedido de funcionalidade](https://github.com/clrogon/nzila-gym-manager/issues/new/choose)
-
-**Digitalize o seu Ginásio | Digitize your Gym**
-📧 email@gym.ao | 📱 +244 ...

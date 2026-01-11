@@ -54,8 +54,8 @@ Have an idea? [Create a feature request](https://github.com/clrogon/nzila-gym-ma
 
 For enterprise deployments and custom development:
 
-📧 **support@gymmanager.local**  
-🌐 **https://gymmanager.local**
+📧 **https://github.com/clrogon/nzila-gym-manager/issues**  
+🌐 **https://github.com/clrogon/nzila-gym-manager**
 
 ## ⏱️ Response Times
 
