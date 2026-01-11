@@ -198,6 +198,7 @@ export function useRBAC(): UseRBACReturn {
         .select('role')
         .eq('user_id', user.id)
         .eq('role', 'super_admin')
+        .is('gym_id', null)
         .maybeSingle();
 
       setIsSuperAdmin(!!data);
