@@ -402,7 +402,7 @@ Edge Functions are located in `supabase/functions/`:
 POST /functions/v1/auth-with-rate-limit
 {
   "email": "user@example.com",
-  "password": "securePassword123",
+  "password": "your-secure-password",
   "action": "signin" // or "signup"
 }
 ```
