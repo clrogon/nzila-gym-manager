@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useGym } from '@/contexts/GymContext';
 import { useRBAC } from '@/hooks/useRBAC';
+import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +105,11 @@ export default function Members() {
   const [isDependent, setIsDependent] = useState(false);
   const [tutorId, setTutorId] = useState('');
   const [healthConditions, setHealthConditions] = useState('');
+  
+  // Form state - Account creation
+  const [createLoginAccount, setCreateLoginAccount] = useState(false);
+  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   const canViewMembers = hasPermission('members:read');
   const canCreateMembers = hasPermission('members:create');
@@ -117,6 +123,9 @@ export default function Members() {
       return;
     }
 
+    setIsCreatingAccount(true);
+
+    try {
       if (membershipPlanId && membershipStartDate) {
         const plan = plans.find(p => p.id === membershipPlanId);
         if (plan) {
@@ -125,33 +134,79 @@ export default function Members() {
         }
       }
 
-    const memberData: MemberFormData = {
-      full_name: fullName,
-      email: email || '',
-      phone: phone || '',
-      date_of_birth: dateOfBirth || '',
-      address: address || '',
-      photo_url: photoUrl || '',
-      emergency_contact: emergencyContact || '',
-      emergency_phone: emergencyPhone || '',
-      status: status as 'active' | 'inactive' | 'pending' | 'suspended',
-      membership_plan_id: membershipPlanId || '',
-      notes: notes || '',
-      is_dependent: isDependent,
-      tutor_id: tutorId || '',
-    };
+      const memberData: MemberFormData = {
+        full_name: fullName,
+        email: email || '',
+        phone: phone || '',
+        date_of_birth: dateOfBirth || '',
+        address: address || '',
+        photo_url: photoUrl || '',
+        emergency_contact: emergencyContact || '',
+        emergency_phone: emergencyPhone || '',
+        status: status as 'active' | 'inactive' | 'pending' | 'suspended',
+        membership_plan_id: membershipPlanId || '',
+        notes: notes || '',
+        is_dependent: isDependent,
+        tutor_id: tutorId || '',
+      };
 
-    try {
+      let newMemberId: string | undefined;
+
       if (editingMember) {
         await updateMember.mutateAsync({ id: editingMember.id, ...memberData });
       } else {
-        await createMember.mutateAsync(memberData);
+        const result = await createMember.mutateAsync(memberData);
+        newMemberId = result?.id;
+      }
+
+      // Create login account if requested and not editing
+      if (createLoginAccount && !editingMember && email) {
+        const { data: session } = await supabase.auth.getSession();
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user-account`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              email: email,
+              fullName: fullName,
+              phone: phone,
+              role: 'member',
+              gymId: currentGym.id,
+              memberId: newMemberId,
+              sendWelcomeEmail: sendWelcomeEmail,
+            }),
+          }
+        );
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          toast({ 
+            title: 'Membro criado', 
+            description: `Membro adicionado, mas falhou criar conta: ${result.error}`, 
+            variant: 'destructive' 
+          });
+        } else {
+          toast({ 
+            title: 'Sucesso', 
+            description: sendWelcomeEmail 
+              ? 'Membro criado com conta de login. Credenciais enviadas por email.' 
+              : 'Membro criado com conta de login.' 
+          });
+        }
       }
 
       resetForm();
       setDialogOpen(false);
     } catch (error) {
       console.error('Erro ao guardar membro:', error);
+    } finally {
+      setIsCreatingAccount(false);
     }
   };
 
@@ -206,6 +261,8 @@ export default function Members() {
     setIsDependent(false);
     setTutorId('');
     setHealthConditions('');
+    setCreateLoginAccount(false);
+    setSendWelcomeEmail(true);
   };
 
   const potentialTutors = members.filter(m => !m.is_dependent && m.id !== editingMember?.id);
@@ -516,10 +573,49 @@ export default function Members() {
                         </div>
                       )}
                     </TabsContent>
+
+                    {/* Account Creation Section - only when creating new member */}
+                    {!editingMember && email && (
+                      <div className="mt-6 p-4 border rounded-lg bg-primary/5 border-primary/20">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="createLoginAccount" className="text-sm font-medium">
+                              Criar Conta de Login
+                            </Label>
+                            <p className="text-xs text-muted-foreground">
+                              Criar conta para o membro aceder ao portal
+                            </p>
+                          </div>
+                          <Switch
+                            id="createLoginAccount"
+                            checked={createLoginAccount}
+                            onCheckedChange={setCreateLoginAccount}
+                          />
+                        </div>
+
+                        {createLoginAccount && (
+                          <div className="flex items-center justify-between pt-3 border-t border-primary/20">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="sendWelcomeEmail" className="text-sm font-medium">
+                                Enviar Email de Boas-Vindas
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Enviar credenciais de login por email
+                              </p>
+                            </div>
+                            <Switch
+                              id="sendWelcomeEmail"
+                              checked={sendWelcomeEmail}
+                              onCheckedChange={setSendWelcomeEmail}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </Tabs>
 
-                  <Button type="submit" className="w-full">
-                    {editingMember ? 'Atualizar Membro' : 'Registar Membro'}
+                  <Button type="submit" className="w-full" disabled={isCreatingAccount}>
+                    {isCreatingAccount ? 'A criar...' : editingMember ? 'Atualizar Membro' : 'Registar Membro'}
                   </Button>
                 </form>
               </DialogContent>
