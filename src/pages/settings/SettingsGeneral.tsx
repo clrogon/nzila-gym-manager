@@ -23,6 +23,18 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useRBAC } from '@/hooks/useRBAC';
 import { Save, Upload, Loader2 } from 'lucide-react';
+import type { Json } from '@/integrations/supabase/types';
+
+interface GymSettings {
+  vat_number?: string | null;
+  default_membership_days?: number | null;
+  grace_period_days?: number | null;
+  auto_suspend_unpaid?: boolean | null;
+  primary_color?: string | null;
+  invoice_footer?: string | null;
+  locale?: string | null;
+  [key: string]: Json | undefined;
+}
 
 interface Gym {
   id: string;
@@ -31,15 +43,9 @@ interface Gym {
   address?: string | null;
   email?: string | null;
   timezone?: string | null;
-  locale?: string | null;
   currency?: string | null;
-  vat_number?: string | null;
   logo_url?: string | null;
-  default_membership_days?: number | null;
-  grace_period_days?: number | null;
-  auto_suspend_unpaid?: boolean | null;
-  primary_color?: string | null;
-  invoice_footer?: string | null;
+  settings?: Json | null;
 }
 
 interface SettingsGeneralProps {
@@ -67,61 +73,71 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
         return url.toString();
       }
     } catch {
-      // Invalid URL, fall through to return empty string
+      // Invalid URL, return as-is to allow typing
     }
-    return '';
+    return trimmed;
   };
+
+  // Get settings from gym.settings JSON field
+  const gymSettings = (typeof gym.settings === 'object' && gym.settings !== null ? gym.settings : {}) as GymSettings;
 
   // Basic info
   const [gymName, setGymName] = useState(gym.name);
   const [phone, setPhone] = useState(gym.phone || '');
   const [address, setAddress] = useState(gym.address || '');
   const [email, setEmail] = useState(gym.email || '');
-  const [logoUrl, setLogoUrl] = useState(sanitizeLogoUrl(gym.logo_url || ''));
+  const [logoUrl, setLogoUrl] = useState(gym.logo_url || '');
 
-  // Identity & localisation
+  // Identity & localisation (stored in gyms table)
   const [timezone, setTimezone] = useState(gym.timezone || 'Africa/Luanda');
-  const [locale, setLocale] = useState(gym.locale || 'pt-PT');
   const [currency, setCurrency] = useState(gym.currency || 'AOA');
-  const [vatNumber, setVatNumber] = useState(gym.vat_number || '');
+  
+  // Extended settings (stored in settings JSON)
+  const [locale, setLocale] = useState(gymSettings.locale || 'pt-PT');
+  const [vatNumber, setVatNumber] = useState(gymSettings.vat_number || '');
 
-  // Operational rules
+  // Operational rules (stored in settings JSON)
   const [defaultMembership, setDefaultMembership] = useState(
-    gym.default_membership_days?.toString() || '30'
+    gymSettings.default_membership_days?.toString() || '30'
   );
   const [gracePeriod, setGracePeriod] = useState(
-    gym.grace_period_days?.toString() || '3'
+    gymSettings.grace_period_days?.toString() || '3'
   );
   const [autoSuspend, setAutoSuspend] = useState(
-    gym.auto_suspend_unpaid ?? false
+    gymSettings.auto_suspend_unpaid ?? false
   );
 
-  // Branding
+  // Branding (stored in settings JSON)
   const [primaryColor, setPrimaryColor] = useState(
-    gym.primary_color || '#000000'
+    gymSettings.primary_color || '#000000'
   );
   const [invoiceFooter, setInvoiceFooter] = useState(
-    gym.invoice_footer || ''
+    gymSettings.invoice_footer || ''
   );
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    const settings = (typeof gym.settings === 'object' && gym.settings !== null ? gym.settings : {}) as GymSettings;
+    
     setGymName(gym.name);
     setPhone(gym.phone || '');
     setAddress(gym.address || '');
     setEmail(gym.email || '');
     setLogoUrl(gym.logo_url || '');
     setTimezone(gym.timezone || 'Africa/Luanda');
-    setLocale(gym.locale || 'pt-PT');
     setCurrency(gym.currency || 'AOA');
-    setVatNumber(gym.vat_number || '');
-    setDefaultMembership(gym.default_membership_days?.toString() || '30');
-    setGracePeriod(gym.grace_period_days?.toString() || '3');
-    setAutoSuspend(gym.auto_suspend_unpaid ?? false);
-    setPrimaryColor(gym.primary_color || '#000000');
-    setInvoiceFooter(gym.invoice_footer || '');
+    
+    // Load from settings JSON
+    setLocale(settings.locale || 'pt-PT');
+    setVatNumber(settings.vat_number || '');
+    setDefaultMembership(settings.default_membership_days?.toString() || '30');
+    setGracePeriod(settings.grace_period_days?.toString() || '3');
+    setAutoSuspend(settings.auto_suspend_unpaid ?? false);
+    setPrimaryColor(settings.primary_color || '#000000');
+    setInvoiceFooter(settings.invoice_footer || '');
+    
     setHasChanges(false);
     setErrors({});
   }, [gym]);
@@ -174,16 +190,16 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
     return Object.keys(newErrors).length === 0;
   };
 
-  const logAuditTrail = async (changes: any) => {
+  const logAuditTrail = async (changes: Record<string, unknown>) => {
     try {
-      await supabase.from('audit_logs').insert({
+      await supabase.from('audit_logs').insert([{
         gym_id: gym.id,
-        user_id: user?.id,
+        user_id: user?.id || null,
         action: 'UPDATE_GYM_SETTINGS',
         entity_type: 'gym',
         entity_id: gym.id,
-        new_values: changes,
-      });
+        new_values: changes as Json,
+      }]);
     } catch (error) {
       console.error('Failed to log audit trail:', error);
       // Don't block the operation if audit logging fails
@@ -214,6 +230,20 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
       const defaultMembershipDays = parseInt(defaultMembership, 10);
       const gracePeriodDays = parseInt(gracePeriod, 10);
 
+      // Prepare settings JSON with extended fields
+      const currentSettings = (typeof gym.settings === 'object' && gym.settings !== null ? gym.settings : {}) as GymSettings;
+      const newSettings = {
+        ...currentSettings,
+        vat_number: vatNumber.trim() || null,
+        default_membership_days: defaultMembershipDays,
+        grace_period_days: gracePeriodDays,
+        auto_suspend_unpaid: autoSuspend,
+        primary_color: primaryColor,
+        invoice_footer: invoiceFooter.trim() || null,
+        locale,
+      } as Json;
+
+      // Only update columns that exist in the gyms table
       const updates = {
         name: gymName.trim(),
         phone: phone.trim() || null,
@@ -221,14 +251,8 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
         email: email.trim() || null,
         logo_url: logoUrl.trim() || null,
         timezone,
-        locale,
         currency,
-        vat_number: vatNumber.trim() || null,
-        default_membership_days: defaultMembershipDays,
-        grace_period_days: gracePeriodDays,
-        auto_suspend_unpaid: autoSuspend,
-        primary_color: primaryColor,
-        invoice_footer: invoiceFooter.trim() || null,
+        settings: newSettings,
         updated_at: new Date().toISOString(),
       };
 
@@ -249,8 +273,9 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
         title: 'Definições Guardadas',
         description: 'As definições do ginásio foram atualizadas com sucesso.',
       });
-    } catch (error: any) {
-      console.error('Settings save failed:', error?.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Settings save failed:', errorMessage);
       toast({
         title: 'Erro ao Guardar',
         description: 'Ocorreu um erro. Por favor tente novamente ou contacte o suporte.',
@@ -280,11 +305,14 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
           <Label>Logótipo</Label>
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-lg border-2 border-dashed flex items-center justify-center bg-muted/50">
-              {logoUrl ? (
+              {logoUrl && /^https?:\/\/.+/.test(logoUrl) ? (
                 <img
                   src={logoUrl}
                   alt="Logótipo do ginásio"
                   className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
                 <Upload className="w-6 h-6 text-muted-foreground" />
@@ -295,8 +323,7 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
                 placeholder="URL do Logótipo (https://...)"
                 value={logoUrl}
                 onChange={e => {
-                  const safeValue = sanitizeLogoUrl(e.target.value);
-                  setLogoUrl(safeValue);
+                  setLogoUrl(e.target.value);
                   markChanged();
                 }}
                 disabled={!canEdit}
