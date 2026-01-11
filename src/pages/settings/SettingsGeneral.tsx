@@ -33,6 +33,17 @@ import {
 } from 'lucide-react';
 import type { Json } from '@/integrations/supabase/types';
 
+// Validate URL has safe protocol (prevents javascript: XSS attacks)
+const isSafeUrl = (url: string | null | undefined): boolean => {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 interface GymSettings {
   vat_number?: string | null;
   default_membership_days?: number | null;
@@ -346,7 +357,7 @@ export default function SettingsGeneral({ gym, refreshGyms }: SettingsGeneralPro
           <div className="flex items-start gap-6">
             <div className="relative group/logo">
               <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-border/60 flex items-center justify-center bg-muted/30 overflow-hidden transition-all duration-300 group-hover/logo:border-primary/40 group-hover/logo:bg-muted/50">
-                {logoUrl && /^https?:\/\/.+/.test(logoUrl) ? (
+                {isSafeUrl(logoUrl) ? (
                   <img
                     src={logoUrl}
                     alt="Logótipo do ginásio"
